@@ -461,3 +461,11 @@ button { font: inherit; }
 .stat td:nth-child(2) { font-family: var(--cijfers); font-weight: 700; font-size: 18px; text-align: right; font-variant-numeric: lining-nums tabular-nums; }
 .stat-extra { font-size: 13px; opacity: .6; white-space: nowrap; }
 .knop.rood-knop { background: #b3262d; color: #fff; border-color: #b3262d; }
+
+.stat-tabs { justify-content: center; margin: 4px auto 10px; width: max-content; }
+.stat tr.stat-sub td:first-child { padding-left: 22px; }
+.stat tr.stat-kop td { border-top: 1px solid rgba(0,0,0,.18); }
+.stat td { padding: 3px 6px; }
+.stat-tabs .segment-knop { min-height: 44px; padding: 0 16px; }
+.venster .sub + .stat-tabs { margin-top: 0; }
+.stat td { padding: 2px 6px; }
