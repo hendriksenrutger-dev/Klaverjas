@@ -112,9 +112,9 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 
 ## Statistieken (op Rutgers verzoek)
 
-- Vanaf het beginscherm: knop "Statistieken". Alles samen (Rutger speelt alleen op sterk), alleen op het apparaat bewaard (`klaverjas_statistiek`), met een knop "Statistieken wissen" (twee keer tikken).
+- Vanaf het beginscherm: knop "Statistieken". Apart voor Amsterdams en Rotterdams (tabbladen; een potje telt bij het systeem waarmee het gespeeld is), niet per niveau (Rutger speelt alleen op sterk). Alleen op het apparaat bewaard (`klaverjas_statistiek`), met een knop "Alles wissen" (twee keer tikken). De cijfers van vóór de splitsing zijn bij Rotterdams gezet (Rutger speelde toen Rotterdams).
 - Partijen: gespeeld, gewonnen (%), verloren, op rij gewonnen en record, hoogste en laagste eindstand, grootste overwinning.
-- Potjes: gespeeld; wij speelden (gehaald, nat, pit); zij speelden (nat gespeeld, pit); gemiddeld per potje en roem (wij – zij); en met "Vergelijk met de computer" aan: hoe vaak je speelde zoals de computer of even goed.
+- Potjes: gespeeld; wij speelden en zij speelden, elk met gehaald, nat en pit; gemiddeld per potje en roem (wij – zij); en met "Vergelijk met de computer" aan: hoe vaak je speelde zoals de computer of even goed.
 
 ## Uiterlijk
 

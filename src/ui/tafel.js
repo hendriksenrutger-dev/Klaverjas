@@ -464,17 +464,25 @@ function vensterHtml(spel) {
 
 // ---------- Statistieken ----------
 function statistiekVenster(spel) {
-  const s = spel.statistiek;
-  const p = s.partijen;
-  const q = s.potjes;
-  const v = s.vergelijk;
+  const sys = spel.statSysteem ?? spel.instellingen.systeem;
+  const d = spel.statistiek.systemen[sys];
+  const p = d.partijen;
+  const q = d.potjes;
+  const v = d.vergelijk;
   const pct = (a, b) => (b ? `${Math.round((100 * a) / b)}%` : '–');
   const gem = (a, b) => (b ? Math.round(a / b) : '–');
   const getal = (x) => (x === null || x === undefined ? '–' : x);
-  const rij = (label, waarde, extra = '') => `<tr><td>${label}</td><td>${waarde}</td><td class="stat-extra">${extra}</td></tr>`;
-  const datum = new Date(s.sinds).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const rij = (label, waarde, extra = '', klasse = '') => `<tr class="${klasse}"><td>${label}</td><td>${waarde}</td><td class="stat-extra">${extra}</td></tr>`;
+  const spelend = (wie, n, gehaald, nat, pit) => `
+        ${rij(`${wie} speelden`, n, '', 'stat-kop')}
+        ${rij('gehaald', gehaald, pct(gehaald, n), 'stat-sub')}
+        ${rij('nat', nat, pct(nat, n), 'stat-sub')}
+        ${rij('pit', pit, pct(pit, n), 'stat-sub')}`;
+  const datum = new Date(spel.statistiek.sinds).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const tab = (waarde, tekst) => `<button class="segment-knop ${sys === waarde ? 'aan' : ''}" data-actie="statSysteem" data-waarde="${waarde}">${tekst}</button>`;
   return venster(`<h2>Statistieken</h2>
     <p class="sub">Sinds ${datum}</p>
+    <div class="segment stat-tabs">${tab('amsterdams', 'Amsterdams')}${tab('rotterdams', 'Rotterdams')}</div>
     <div class="stat-blokken">
       <table class="stat">
         <tr><th colspan="3">Partijen</th></tr>
@@ -489,20 +497,15 @@ function statistiekVenster(spel) {
       <table class="stat">
         <tr><th colspan="3">Potjes</th></tr>
         ${rij('Gespeeld', q.gespeeld)}
-        ${rij('Wij speelden', q.wijSpeelden)}
-        ${rij('· gehaald', q.wijGehaald, pct(q.wijGehaald, q.wijSpeelden))}
-        ${rij('· nat', q.wijNat, pct(q.wijNat, q.wijSpeelden))}
-        ${rij('· pit', q.wijPit, pct(q.wijPit, q.wijSpeelden))}
-        ${rij('Zij speelden', q.zijSpeelden)}
-        ${rij('· nat gespeeld', q.zijNat, pct(q.zijNat, q.zijSpeelden))}
-        ${rij('· pit voor zij', q.zijPit)}
-        ${rij('Gemiddeld per potje', `${gem(q.puntenWij, q.gespeeld)} – ${gem(q.puntenZij, q.gespeeld)}`, 'wij – zij')}
+        ${spelend('Wij', q.wijSpeelden, q.wijGehaald, q.wijNat, q.wijPit)}
+        ${spelend('Zij', q.zijSpeelden, q.zijGehaald, q.zijNat, q.zijPit)}
+        ${rij('Gemiddeld per potje', `${gem(q.puntenWij, q.gespeeld)} – ${gem(q.puntenZij, q.gespeeld)}`, 'wij – zij', 'stat-kop')}
         ${rij('Roem', `${q.roemWij} – ${q.roemZij}`, 'wij – zij')}
         ${v.kaarten ? rij('Zoals de computer', pct(v.zelfde + v.gelijkwaardig, v.kaarten), `van ${v.kaarten} kaarten`) : ''}
       </table>
     </div>
     <div class="venster-knoppen">
-      <button class="knop ${spel.wisVraag ? 'rood-knop' : ''}" data-actie="wisStatistiek">${spel.wisVraag ? 'Zeker weten? Tik nogmaals' : 'Statistieken wissen'}</button>
+      <button class="knop ${spel.wisVraag ? 'rood-knop' : ''}" data-actie="wisStatistiek">${spel.wisVraag ? 'Zeker weten? Tik nogmaals' : 'Alles wissen'}</button>
       <button class="knop goud" data-actie="sluit">Sluiten</button>
     </div>`, true, 'statistiek');
 }
@@ -641,6 +644,7 @@ function koppel(el, acties) {
       const { actie } = knop.dataset;
       if (actie === 'draai') acties.draai(knop.dataset.keuze);
       else if (actie === 'kiesTroef') acties.kiesTroef(knop.dataset.kleur);
+      else if (actie === 'statSysteem') acties.statSysteem(knop.dataset.waarde);
       else if (actie === 'open') acties.open(knop.dataset.venster);
       else if (actie === 'instelling') acties.instelling(knop.dataset.sleutel, knop.dataset.waarde);
       else acties[actie]?.();

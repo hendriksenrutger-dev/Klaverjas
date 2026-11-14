@@ -48,6 +48,7 @@ const spel = {
   analyseBezig: 0,
   statistiek: compleet(laadStatistiek()), // over alle partijen, los van de lopende partij
   wisVraag: false, // eerste tik op "Statistieken wissen"
+  statSysteem: null, // welk tabblad van de statistieken (standaard het ingestelde systeem)
 };
 
 let timer = null;
@@ -298,7 +299,7 @@ function verwerkAnalyse(sessie, a) {
   spel.analyseBezig = Math.max(0, spel.analyseBezig - 1);
   if (a) {
     if (a.soort === 'kaart') {
-      spel.statistiek = telVergelijk(spel.statistiek, a.oordeel);
+      spel.statistiek = telVergelijk(spel.statistiek, a.oordeel, spel.potje?.systeem ?? spel.partij?.instellingen.systeem);
       bewaarStatistiek(spel.statistiek);
     }
     spel.analyses = [...(spel.analyses ?? []), a];
@@ -377,8 +378,8 @@ function eindPotje() {
   spel.uitslag = R.uitslag(spel.potje);
   spel.partij = R.rondPotjeAf(spel.partij, spel.potje);
   spel.fase = R.partijKlaar(spel.partij) ? 'partijKlaar' : 'potjeKlaar';
-  spel.statistiek = telPotje(spel.statistiek, spel.uitslag, spel.potje.spelendTeam);
-  if (spel.fase === 'partijKlaar') spel.statistiek = telPartij(spel.statistiek, spel.partij.totaal);
+  spel.statistiek = telPotje(spel.statistiek, spel.uitslag, spel.potje.spelendTeam, spel.potje.systeem);
+  if (spel.fase === 'partijKlaar') spel.statistiek = telPartij(spel.statistiek, spel.partij.totaal, spel.partij.instellingen.systeem);
   bewaarStatistiek(spel.statistiek);
   teken();
 }
@@ -438,6 +439,10 @@ const acties = {
         f();
       }
     } else if (!hervat()) nieuwePartij();
+  },
+  statSysteem(systeem) {
+    if (['amsterdams', 'rotterdams'].includes(systeem)) spel.statSysteem = systeem;
+    teken();
   },
   wisStatistiek() {
     // Twee tikken: de eerste vraagt om bevestiging.
