@@ -421,6 +421,7 @@ const acties = {
     else if (sleutel === 'niveau' && ['makkelijk', 'normaal', 'sterk'].includes(waarde)) i.niveau = waarde;
     else if (sleutel === 'geluid') i.geluid = waarde === true || waarde === 'aan';
     else if (sleutel === 'vergelijk') i.vergelijk = waarde === true || waarde === 'aan';
+    else if (sleutel === 'gespeeld') i.gespeeld = waarde === true || waarde === 'aan';
     else return;
     spel.instellingen = i;
     geluid.zetGeluid(i.geluid);

@@ -217,7 +217,7 @@ function knoppenRechts(spel) {
   if (!spel.potje) return '';
   return `<div class="knoppen-rechts">
     <button class="knop" data-actie="open" data-venster="laatsteSlag" ${spel.laatsteSlag ? '' : 'disabled'}>${IKOON.terug}Laatste slag</button>
-    <button class="knop" data-actie="open" data-venster="gespeeld">${IKOON.lijst}Gespeeld</button>
+    ${spel.instellingen.gespeeld ? `<button class="knop" data-actie="open" data-venster="gespeeld">${IKOON.lijst}Gespeeld</button>` : ''}
   </div>`;
 }
 
@@ -293,6 +293,7 @@ function instellingenVenster(spel) {
       ${keuzeRij('Verzaakbescherming', 'verzaakbescherming', i.verzaakbescherming ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Aan: alleen kaarten die mogen zijn speelbaar')}
       ${keuzeRij('Computerspelers', 'niveau', i.niveau, [['makkelijk', 'Makkelijk'], ['normaal', 'Normaal'], ['sterk', 'Sterk']])}
       ${keuzeRij('Geluid', 'geluid', i.geluid ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Schudden en kaarten leggen')}
+      ${keuzeRij('Overzicht gespeelde kaarten', 'gespeeld', i.gespeeld ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Uit: zelf onthouden wat er gespeeld is, zoals aan tafel')}
       ${keuzeRij('Vergelijk met de computer', 'vergelijk', i.vergelijk ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Na elk potje: wat de computer met jouw kaarten had gedaan')}
       <div class="instelling">
         <div class="instelling-label">Namen</div>

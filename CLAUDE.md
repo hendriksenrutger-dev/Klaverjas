@@ -105,6 +105,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Moeilijkheid van de computerspelers: makkelijk, normaal (standaard), sterk (afgestemd met Rutger, zie RAPPORT-FASE-4.md)
 - Geluid aan (standaard) of uit
 - Vergelijk met de computer aan of uit (standaard uit, op Rutgers verzoek): na elk potje per kaart van jou wat de computer (niveau sterk, met alleen jouw kennis) had gespeeld en het verschil in punten, plus spelen/passen en een totaal over de partij. Bij een verschil kleiner dan 10 punten: "even goed" (na Rutgers voorbeeld; kleinere verschillen zijn niet betrouwbaar). Het getal is een gemiddelde schatting vooraf, geen uitslag achteraf. Altijd met "volgens de computer".
+- Overzicht gespeelde kaarten aan of uit (standaard uit, op Rutgers verzoek): uit = zelf onthouden, zoals aan tafel. De computer onthoudt wel alles, net als een goede speler.
 - Namen van de spelers (standaard Zuid, West, Noord, Oost)
 
 ## Uiterlijk
@@ -128,7 +129,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Uitslag:** bij alle slagen voor de spelende partij gewoon "Pit!".
 - **Na een potje:** "Bekijk alle slagen" (per slag de kaarten, winnaar, punten en roem) en de knop "Alle handen": de vier handen zoals ze gedeeld waren, rond de tafel.
 - **Gespeelde kaart:** schuift volledig zichtbaar vanaf de kant van de speler op zijn plek (geen infade). Het scherm wordt niet steeds helemaal opnieuw getekend: bestaande kaarten blijven staan (`src/ui/patch.js`), zodat niets opnieuw wordt opgebouwd.
-- **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten).
+- **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten, alleen als die instelling aan staat).
 - **Lettertypen:** Playfair Display voor cijfers en kaartindexen, Inter voor de interface. Bundel ze lokaal, want de app moet offline werken.
 - Knoppen en aanraakvlakken zijn minimaal 44 px.
 
