@@ -93,7 +93,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - **Spelen of passen bij het draaien:** ook via simulatie. Speel de hand met deze troef vaak uit en speel als de verwachte uitkomst boven een drempel ligt.
 - **Moeilijkheidsniveau** (instelling): makkelijk (5 simulaties, eenvoudige strategie), normaal (100, slimme strategie, laatste 3 slagen exact) en sterk (300). Akkoord van Rutger.
 - Draai de AI in een **Web Worker** zodat het scherm niet hapert. Doel: minder dan ongeveer 1 seconde per zet op de tablet.
-- Laat de computerspelers kort "nadenken" (ongeveer 0,5 tot 1 seconde) zodat je kunt volgen wat er gebeurt.
+- Laat de computerspelers kort "nadenken" zodat je kunt volgen wat er gebeurt. Na Rutgers test op de tablet ingekort tot ongeveer 0,35 tot 0,65 seconde (het voelde traag).
 
 ## Instellingen
 
@@ -113,10 +113,12 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Linksboven, onder de balk:** een paneel "Dit potje" met de punten en roem van Wij en Zij in het lopende potje.
 - **Spelers:** de maat boven (Noord), de tegenstanders links (West) en rechts (Oost). Zuid ben jij en wordt **niet** op de tafel getoond. Elke computerspeler heeft een rond avatar met een initiaal (geen foto's) en een naam, met als rol "Jouw maat · computer" of "Tegenstander". Een gouden label "Speelt" bij de spelende speler.
 - **Namen:** standaard de windrichtingen Zuid, West, Noord en Oost. Echte namen kunnen geven is een instelling.
-- **Geluid:** schudden en kaarten die neergelegd worden.
+- **Geluid:** schudden (zelf opgewekt) en kaarten die neergelegd worden (echte opname: Kenney Casino Audio, CC0, zie `assets/geluid/LICENSE.md`).
 - **Slag op tafel:** de kaarten liggen licht gedraaid op hun plek. Op jouw plek staat een gestippeld vak met "Jouw kaart".
 - **Roemmelding:** een goudkleurig label met een ster, bijvoorbeeld "Driekaart · 20 roem".
-- **Hint onder de tafel:** "Jouw beurt · je moet harten bekennen", "Tik nog een keer om te spelen", enzovoort.
+- **Hint onder de tafel:** kort, zonder uitleg van de regels (Rutger kent ze): "Jouw beurt · harten bekennen", "Tik nog een keer om te spelen", "Deze slag is voor West".
+- **Beginscherm:** bij het openen eerst een beginscherm met "Verder spelen" (met potje en stand), "Nieuwe partij" en "Instellingen". Het huisje in de bovenbalk gaat terug naar het beginscherm; het spel wacht dan.
+- **Indeling:** alle maten volgen de echte schermhoogte (ook in Chrome met adresbalk). Kaarten liggen nooit onder tekst door; niets overlapt.
 - **Hand:** acht kaarten in een lichte waaier onderaan. Kaarten die niet mogen worden grijs (opacity ongeveer 0,45). **Spelen gaat met twee tikken:** de eerste tik tilt de kaart op, de tweede speelt hem.
 - **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten).
 - **Lettertypen:** Playfair Display voor cijfers en kaartindexen, Inter voor de interface. Bundel ze lokaal, want de app moet offline werken.

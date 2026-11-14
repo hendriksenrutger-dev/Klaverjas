@@ -22,7 +22,8 @@ function context() {
 }
 
 export function ontgrendel() {
-  context();
+  const c = context();
+  if (c) laadKaartGeluiden(c);
 }
 
 let ruisBuffer = null;
@@ -52,31 +53,34 @@ function tik(c, t, { freq = 2500, q = 0.9, duur = 0.06, volume = 0.5 } = {}) {
   bron.start(t, Math.random() * 0.5, duur + 0.02);
 }
 
-// Kaart neerleggen: "fffft". Hoge, zachte sis die kort aanzwelt en eindigt met een tikje.
+// Kaart neerleggen: een echte opname ("cardSlide" uit Kenney's Casino Audio, CC0).
+// Vier varianten, willekeurig gekozen, zodat het niet steeds hetzelfde klinkt.
+const KAART_BESTANDEN = [1, 2, 3, 4].map((n) => new URL(`../../assets/geluid/kaart-${n}.ogg`, import.meta.url).href);
+let kaartBuffers = null;
+
+function laadKaartGeluiden(c) {
+  if (kaartBuffers) return;
+  kaartBuffers = [];
+  for (const url of KAART_BESTANDEN) {
+    fetch(url)
+      .then((r) => r.arrayBuffer())
+      .then((data) => c.decodeAudioData(data))
+      .then((buffer) => kaartBuffers.push(buffer))
+      .catch(() => {});
+  }
+}
+
 export function kaartNeer() {
   const c = context();
   if (!c) return;
-  const t = c.currentTime + 0.01;
-  const duur = 0.2 + Math.random() * 0.04;
-
-  const bron = ruis(c);
-  const hoog = c.createBiquadFilter();
-  hoog.type = 'highpass';
-  hoog.frequency.value = 2200;
-  const kleur = c.createBiquadFilter();
-  kleur.type = 'peaking';
-  kleur.frequency.value = 5500;
-  kleur.Q.value = 0.8;
-  kleur.gain.value = 5;
+  laadKaartGeluiden(c);
+  if (!kaartBuffers.length) return;
+  const bron = c.createBufferSource();
+  bron.buffer = kaartBuffers[Math.floor(Math.random() * kaartBuffers.length)];
   const g = c.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.linearRampToValueAtTime(0.1 * VOLUME, t + 0.05); // ff…
-  g.gain.linearRampToValueAtTime(0.17 * VOLUME, t + duur - 0.03); // …ff…
-  g.gain.exponentialRampToValueAtTime(0.0001, t + duur); // …t
-  bron.connect(hoog).connect(kleur).connect(g).connect(c.destination);
-  bron.start(t, Math.random() * 0.5, duur + 0.05);
-
-  tik(c, t + duur - 0.012, { freq: 3800, q: 1.5, duur: 0.025, volume: 0.14 });
+  g.gain.value = 0.9;
+  bron.connect(g).connect(c.destination);
+  bron.start();
 }
 
 // Schudden: "prrrrt". Eén snelle, gelijkmatige roffel van kaarten die over elkaar ritsen,

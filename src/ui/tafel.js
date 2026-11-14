@@ -37,7 +37,7 @@ function balk(spel) {
   } else troef = '';
   const nr = Math.min(potjeNummer(partij), AANTAL_POTJES);
   return `<header class="balk">
-    <div class="balk-links"><button class="knop ikoon" data-actie="open" data-venster="menu" aria-label="Menu">${IKOON.huis}</button></div>
+    <div class="balk-links"><button class="knop ikoon" data-actie="naarStart" aria-label="Beginscherm">${IKOON.huis}</button></div>
     <div class="score">
       <div class="score-team wij"><span class="score-label">Wij</span><span class="score-getal">${partij.totaal[0]}</span></div>
       <div class="potjenr">${nr} / ${AANTAL_POTJES}</div>
@@ -138,9 +138,10 @@ function hint(spel) {
   }
   if (p.beurt !== 0) return `${naam(p.beurt)} denkt na…`;
   if (spel.gekozen) return '<strong>Tik nog een keer</strong> om te spelen';
+  // Korte hint: geen uitleg van de regels (de grijze kaarten laten zien wat mag).
   const g = geldigMetReden(p.handen[0], p.slag, p.troef, p.systeem);
-  if (g.reden === 'uitkomen') return '<strong>Jouw beurt</strong> · jij komt uit';
-  return `<strong>Jouw beurt</strong> · ${klein(redenTekst(g.reden, g.gevraagd))}`;
+  if (g.reden === 'bekennen') return `<strong>Jouw beurt</strong> · ${g.gevraagd} bekennen`;
+  return '<strong>Jouw beurt</strong>';
 }
 
 // ---------- Hand ----------
@@ -343,9 +344,41 @@ function vensterHtml(spel) {
   }
 }
 
+// ---------- Beginscherm ----------
+function beginscherm(spel) {
+  const i = spel.instellingen;
+  const loopt = spel.partij ? spel.fase !== 'partijKlaar' : Boolean(spel.bewaard);
+  const info = spel.partij
+    ? { potje: Math.min(potjeNummer(spel.partij), AANTAL_POTJES), totaal: spel.partij.totaal }
+    : spel.bewaard;
+  const waaier = [
+    { kleur: 'klaveren', rang: 'B' }, { kleur: 'harten', rang: 'A' },
+    { kleur: 'schoppen', rang: 'H' }, { kleur: 'ruiten', rang: 'V' },
+  ].map((k, n) => `<div class="start-kaart" style="--n:${n - 1.5}">${kaartHtml(k)}</div>`).join('');
+  return `<div class="laken"></div>
+    <main class="start">
+      <div class="start-waaier">${waaier}</div>
+      <div class="start-kolom">
+        <h1>Klaverjas</h1>
+        <p class="start-sub">${i.systeem === 'amsterdams' ? 'Amsterdams' : 'Rotterdams'} · computerspelers ${i.niveau}</p>
+        <div class="start-knoppen">
+          ${loopt ? `<button class="knop goud start-knop" data-actie="verderSpelen">Verder spelen
+            <span class="start-knop-sub">Potje ${info.potje} van ${AANTAL_POTJES} · Wij ${info.totaal[0]} – Zij ${info.totaal[1]}</span></button>` : ''}
+          <button class="knop ${loopt ? 'licht' : 'goud'} start-knop" data-actie="nieuwePartijVraag">Nieuwe partij</button>
+          <button class="knop licht start-knop" data-actie="open" data-venster="instellingen">Instellingen</button>
+        </div>
+      </div>
+    </main>`;
+}
+
 // ---------- Alles samen ----------
 export function render(el, spel, acties) {
   NAMEN = spel.namen;
+  if (spel.scherm === 'start') {
+    el.innerHTML = `${symboolSprite()}${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`;
+    koppel(el, acties);
+    return;
+  }
   el.innerHTML = `${symboolSprite()}
     <div class="laken"></div>
     ${balk(spel)}
@@ -357,6 +390,10 @@ export function render(el, spel, acties) {
     <div class="hint">${hint(spel)}</div>
     ${hand(spel)}
     ${vensters(spel)}`;
+  koppel(el, acties);
+}
+
+function koppel(el, acties) {
   if (!el.dataset.luistert) {
     el.dataset.luistert = '1';
     el.addEventListener('click', (e) => {
