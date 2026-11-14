@@ -60,6 +60,7 @@ export function startPotje(partij, handen, draaiUitkomst) {
     uitkomer: (partij.deler + 1) % 4,
     systeem: partij.instellingen.systeem,
     verzaakbescherming: partij.instellingen.verzaakbescherming,
+    kiezer: draaiUitkomst.speler,
   });
 }
 

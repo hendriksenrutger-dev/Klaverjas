@@ -9,7 +9,7 @@ const W = await import('../src/ai/willekeurig.js');
 function speler(cfg, rng) {
   return {
     draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim', trekken: cfg.draaiTrekken ?? cfg.trekken }).keuze,
-    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
+    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, draaiInfo: cfg.draaiInfo ?? true, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
   };
 }
 
@@ -17,7 +17,7 @@ function speelDeling(spelers, handen, stapel, deler) {
   let d = R.nieuwDraaien({ stapel, deler, maxRondes: 2 });
   while (!d.uitkomst) d = R.beslis(d, d.beurt, spelers[d.beurt].draai(handen[d.beurt], d.kaart.kleur, d.beurt, deler));
   if (d.uitkomst.soort !== 'spelen') return null;
-  let p = R.nieuwPotje({ handen, troef: d.uitkomst.troef, spelendTeam: d.uitkomst.team, uitkomer: (deler + 1) % 4 });
+  let p = R.nieuwPotje({ handen, troef: d.uitkomst.troef, spelendTeam: d.uitkomst.team, uitkomer: (deler + 1) % 4, kiezer: d.uitkomst.speler });
   while (!p.klaar) p = R.speelKaart(p, p.beurt, spelers[p.beurt].kaart(p, p.beurt));
   return { u: R.uitslag(p), spelend: p.spelendTeam };
 }
@@ -88,6 +88,7 @@ if (mode === 'groot') {
     makkelijk: [{ sims: 5, strategie: 'simpel', eindspel: 0 }, { sims: 100 }],
     trekken: [{ sims: 100 }, { sims: 100, trekken: false }],
     straf15: [{ sims: 100 }, { sims: 100, straf: 40 }],
+    draaiInfo: [{ sims: 100 }, { sims: 100, draaiInfo: false }],
     strafSplit: [{ sims: 100 }, { sims: 100, straf: 40, strafBekennen: 40 }],
     trekBonus: [{ sims: 100 }, { sims: 100, trekBonus: 0 }],
     trekBonus20: [{ sims: 100, trekBonus: 20 }, { sims: 100, trekBonus: 0 }],

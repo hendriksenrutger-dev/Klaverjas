@@ -392,3 +392,23 @@ test('verdeling waarin het sein niet klopt telt minder zwaar (niet 0)', () => {
   assert.equal(seinGewicht(zonder, sein), 1 / SEIN_FACTOR);
   assert.ok(SEIN_FACTOR > 1);
 });
+
+describe('wat het draaien verraadt', () => {
+  test('het potje onthoudt wie troef koos', async () => {
+    const { nieuwePartij, deelRonde, startPotje } = await import('../src/regels/partij.js');
+    const partij = nieuwePartij({ eersteDeler: 0 });
+    const { handen } = deelRonde(partij, maakRng(1));
+    const p = startPotje(partij, handen, { soort: 'spelen', troef: 'harten', speler: 3, team: 1 });
+    assert.equal(p.kiezer, 3);
+    assert.equal(waarneming(p, 0).kiezer, 3);
+  });
+
+  test('verdeling waarin de kiezer sterke troef heeft telt zwaarder', async () => {
+    const { draaiGewicht } = await import('../src/ai/simulatie.js');
+    const w = { speler: 3, troef: 'harten', kiezer: 2, uitkomer: 0, slagen: [], slag: [] };
+    const hand3 = Ks('h8 sA s7 r10 r7 kV k9 k8');
+    const sterk = [Ks('h7 sB s9 s8 rV rB kB r8'), Ks('s10 sV rH r9 k7 kA k10 kH'), Ks('hB h9 hA h10 hH hV sH rA'), hand3];
+    const zwak = [Ks('hB h9 hA sB s9 rV rB kB'), Ks('h10 hH s10 sV rH r9 k7 r8'), Ks('h7 hV sH s8 rA kA k10 kH'), hand3];
+    assert.ok(draaiGewicht(sterk, w) > 5 * draaiGewicht(zwak, w));
+  });
+});
