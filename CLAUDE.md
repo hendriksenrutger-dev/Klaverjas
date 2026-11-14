@@ -160,3 +160,11 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 
 - Hoe worden de moeilijkheidsniveaus ingevuld?
 - Het ontwerp van de achterkant van de kaarten.
+
+## Later
+
+**Toekomstige uitbreiding, nu NIET bouwen:** online spelen met familie via Supabase, waarbij de server deelt en de zetten controleert. Houd daar nu al rekening mee:
+
+- Houd de spelregels los van het scherm (`src/regels/` blijft puur, zonder DOM).
+- Maak de spelstand serialiseerbaar: alleen gewone objecten, arrays, strings en getallen, zodat hij als JSON kan worden opgeslagen en verstuurd.
+- Verwerk elke zet als een losse actie: (stand, speler, actie) → nieuwe stand, zodat een server dezelfde regels kan gebruiken om zetten te controleren.
