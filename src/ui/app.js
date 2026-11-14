@@ -1,12 +1,14 @@
 // Spelverloop: koppelt de spelregels aan het scherm en de computerspelers.
 
 import * as R from '../regels/index.js';
-import { kiesDraai, kiesKaart } from '../ai/willekeurig.js';
+import { vraagKaart, vraagDraai } from '../ai/client.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
 
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
-const DENKTIJD = snel ? 0 : 750;
+// Computerspelers "denken" zichtbaar 0,5 tot 1 seconde (ook als het rekenen sneller gaat).
+const denktijd = () => (snel ? 0 : 500 + Math.random() * 450);
+const NIVEAU = 'normaal'; // wordt een instelling in fase 6
 const SLAG_PAUZE = snel ? 0 : 1400;
 const MELDING_TIJD = snel ? 0 : 1800;
 
@@ -32,9 +34,21 @@ const spel = {
 };
 
 let timer = null;
+let beurtToken = 0; // voorkomt dat een oud AI-antwoord in een nieuwe situatie wordt toegepast
 function later(fn, ms) {
   clearTimeout(timer);
   timer = setTimeout(fn, ms);
+}
+
+// Laat een computerspeler rekenen en wacht daarnaast minstens de denktijd.
+function computerZet(vraagFn, doeFn) {
+  const token = ++beurtToken;
+  const minimaal = new Promise((ok) => setTimeout(ok, denktijd()));
+  Promise.all([vraagFn(), minimaal])
+    .then(([antwoord]) => {
+      if (token === beurtToken) doeFn(antwoord);
+    })
+    .catch((fout) => console.error('Computerspeler:', fout));
 }
 
 function teken() {
@@ -50,6 +64,7 @@ function nieuwePartij() {
 }
 
 function startRonde() {
+  beurtToken++;
   const { handen, draaien } = R.deelRonde(spel.partij);
   spel.handen = handen;
   spel.draaien = draaien;
@@ -67,12 +82,15 @@ function startRonde() {
 function volgende() {
   teken();
   if (spel.fase === 'draaien' && spel.draaien.beurt !== JIJ) {
-    later(() => draai(spel.draaien.beurt, kiesDraai()), DENKTIJD);
+    const s = spel.draaien.beurt;
+    const d = spel.draaien;
+    computerZet(
+      () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }),
+      (keuze) => draai(s, keuze),
+    );
   } else if (spel.fase === 'spelen' && !spel.getoondeSlag && spel.potje.beurt !== JIJ) {
-    later(() => {
-      const s = spel.potje.beurt;
-      speel(s, kiesKaart(R.geldigVoor(spel.potje, s)));
-    }, DENKTIJD);
+    const s = spel.potje.beurt;
+    computerZet(() => vraagKaart(spel.potje, s, NIVEAU), (kaart) => speel(s, kaart));
   }
 }
 
