@@ -18,11 +18,94 @@ import { uitslag } from '../regels/potje.js';
 // Moeilijkheidsniveaus. Eigen voorstel, nog af te stemmen met Rutger (zie RAPPORT-FASE-4.md).
 // simulaties: aantal kaartverdelingen per zet; strategie: hoe de simulaties worden uitgespeeld;
 // eindspel: aantal laatste slagen dat exact wordt doorgerekend.
+// seinGeven/seinLezen: zelf seinen volgens Rutgers afspraken en seinen van anderen gebruiken.
+// Ook op makkelijk seinen de computerspelers, zodat Rutger als maat de seinen kan lezen.
 export const NIVEAUS = {
-  makkelijk: { simulaties: 5, strategie: 'simpel', eindspel: 0 },
-  normaal: { simulaties: 100, strategie: 'slim', eindspel: 3 },
-  sterk: { simulaties: 300, strategie: 'slim', eindspel: 3 },
+  makkelijk: { simulaties: 5, strategie: 'simpel', eindspel: 0, seinGeven: true, seinLezen: false },
+  normaal: { simulaties: 100, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true },
+  sterk: { simulaties: 300, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true },
 };
+
+// ---------- Seinen (Rutgers afspraken, zie CLAUDE.md) ----------
+// Een sein is een kaart die wordt bijgespeeld op een slag die de maat op dat moment heeft,
+// als er geen troef gevraagd is en de kaart zelf geen troef is (bekennen of afgooien maakt niet uit).
+//   7, 8 of 9 → "ik heb de aas van deze kleur"
+//   aas        → "ik heb ook de tien van deze kleur"
+// Een sein is een sterke aanwijzing, geen zekerheid.
+
+// Eigen ontwerpkeuzes, niet beproefd; bij te stellen na testen:
+export const SEIN_FACTOR = 10; // verdeling waarin een sein klopt telt zoveel keer zwaarder
+export const SEIN_BONUS = 3; // voorkeur (in punten) voor een kaart die een waar sein geeft
+export const SEIN_STRAF = 40; // afkeer (in punten) van een kaart die een vals sein zou geven
+
+const KLEINTJES = new Set(['7', '8', '9']);
+
+// Geeft het sein dat 'speler' geeft door 'kaart' te spelen op slag 'slagVoor', of null.
+export function seinVan(slagVoor, speler, kaart, troef) {
+  if (slagVoor.length === 0) return null;
+  if (slagVoor[0].kaart.kleur === troef || kaart.kleur === troef) return null;
+  const w = huidigeWinnaar(slagVoor, troef);
+  if (team(w.speler) !== team(speler)) return null;
+  if (KLEINTJES.has(kaart.rang)) return { speler, kaart: { kleur: kaart.kleur, rang: 'A' } };
+  if (kaart.rang === 'A') return { speler, kaart: { kleur: kaart.kleur, rang: '10' } };
+  return null;
+}
+
+// Alle seinen van anderen in dit potje waarvan de genoemde kaart nog onbekend is.
+export function seinenVanAnderen(w, onbekend = onbekendeKaarten(w)) {
+  const open = new Set(onbekend.map(kaartId));
+  const lijst = [];
+  for (const kaarten of [...w.slagen.map((s) => s.kaarten), w.slag]) {
+    for (let i = 1; i < kaarten.length; i++) {
+      const { speler, kaart } = kaarten[i];
+      if (speler === w.speler) continue;
+      const voor = kaarten.slice(0, i);
+      const sein = seinVan(voor, speler, kaart, w.troef);
+      if (sein && open.has(kaartId(sein.kaart))) {
+        // Bewaar ook de situatie, om later per verdeling te beoordelen of de seiner keus had.
+        Object.defineProperty(sein, 'context', { value: { voor, kaart }, enumerable: false });
+        lijst.push(sein);
+      }
+    }
+  }
+  return lijst;
+}
+
+// Kaarten die een speler vanaf een bepaald moment nog gespeeld heeft (om zijn hand van toen terug te rekenen).
+function laterGespeeld(w, speler, voor) {
+  const res = [];
+  let na = false;
+  for (const kaarten of [...w.slagen.map((s) => s.kaarten), w.slag]) {
+    for (let i = 0; i < kaarten.length; i++) {
+      if (!na && kaarten.slice(0, i).length === voor.length && kaarten[i].speler === speler &&
+          voor.every((x, j) => kaarten[j] === x)) na = true;
+      if (na && kaarten[i].speler === speler) res.push(kaarten[i].kaart);
+    }
+  }
+  return res;
+}
+
+// Gewicht van een getrokken verdeling. Klopt een sein niet, dan telt de verdeling minder mee,
+// maar alleen als de seiner in die verdeling ook een kaart had kunnen spelen die geen vals sein gaf.
+export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null) {
+  let g = 1;
+  for (const s of seinen) {
+    const heeft = (hand, k) => hand.some((c) => c.kleur === k.kleur && c.rang === k.rang);
+    if (heeft(handen[s.speler], s.kaart)) continue;
+    if (s.context && w) {
+      const toen = [...handen[s.speler], ...laterGespeeld(w, s.speler, s.context.voor)];
+      const opties = geldigeKaarten(toen, s.context.voor, w.troef, w.systeem);
+      const eerlijkKon = opties.some((k) => {
+        if (k.kleur === s.context.kaart.kleur && k.rang === s.context.kaart.rang) return false;
+        const ander = seinVan(s.context.voor, s.speler, k, w.troef);
+        return !ander || heeft(toen, ander.kaart);
+      });
+      if (!eerlijkKon) continue; // gedwongen: de kaart zegt niets
+    }
+    g /= factor;
+  }
+  return g;
+}
 
 // Drempel voor spelen bij het draaien: verwacht verschil (wij − zij) in punten.
 // Getest tegen -20, 0, 25 en 40: 10 gaf het beste resultaat (zie RAPPORT-FASE-4.md).
@@ -387,17 +470,24 @@ function verschil(u, speler) {
 
 // ---------- Kaart kiezen ----------
 // bekendeHanden: alleen voor metingen (een AI die alle kaarten ziet), nooit in het spel.
-export function kiesKaart(w, { simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN, bekendeHanden = null } = {}) {
+export function kiesKaart(w, {
+  simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
+  seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null,
+} = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
   const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie };
   const exact = 8 - w.slagen.length <= eindspel;
   const onbekend = onbekendeKaarten(w);
   const uit = uitsluitingen(w, onbekend);
+  const seinen = seinLezen && !bekendeHanden ? seinenVanAnderen(w, onbekend) : [];
   const totalen = new Array(geldig.length).fill(0);
+  let gewichtSom = 0;
   const beurtNa = (w.speler + 1) % 4;
   for (let n = 0; n < simulaties; n++) {
     const handen = bekendeHanden ? bekendeHanden.map((h) => h.slice()) : trekVerdeling(w, uit, onbekend, rng);
+    const gewicht = seinen.length ? seinGewicht(handen, seinen, seinFactor, w) : 1;
+    gewichtSom += gewicht;
     for (let i = 0; i < geldig.length; i++) {
       const kopie = handen.map((h) => h.slice());
       const k = geldig[i];
@@ -414,7 +504,7 @@ export function kiesKaart(w, { simulaties = NIVEAUS.normaal.simulaties, rng = Ma
           const afgerond = { kaarten: hulp, winnaar, punten: slagPunten(kaarten, w.troef) + (w.slagen.length === 7 ? PUNTEN_LAATSTE_SLAG : 0), roem: roemInSlag(kaarten, w.troef) };
           v = eindspelWaarde(kopie, [], [...w.slagen, afgerond], winnaar, ctx, team(w.speler));
         }
-        totalen[i] += v;
+        totalen[i] += gewicht * v;
         continue;
       }
       let u;
@@ -431,14 +521,26 @@ export function kiesKaart(w, { simulaties = NIVEAUS.normaal.simulaties, rng = Ma
         };
         u = speelUit(kopie, [], [...w.slagen, afgerond], winnaar, ctx, rng);
       }
-      totalen[i] += verschil(u, w.speler);
+      totalen[i] += gewicht * verschil(u, w.speler);
     }
   }
+  const gemiddeld = totalen.map((t) => t / gewichtSom);
+  // Zelf seinen: een waar sein krijgt een kleine voorkeur, een vals sein een afkeer.
+  const gespeeld = new Set([...w.slagen.flatMap((s) => s.kaarten), ...w.slag].map((x) => kaartId(x.kaart)));
+  const seinCorrectie = geldig.map((k) => {
+    if (!seinGeven) return 0;
+    const sein = seinVan(w.slag, w.speler, k, w.troef);
+    if (!sein || gespeeld.has(kaartId(sein.kaart))) return 0;
+    const waar = w.hand.some((c) => c.kleur === sein.kaart.kleur && c.rang === sein.kaart.rang);
+    return waar ? SEIN_BONUS : -SEIN_STRAF;
+  });
   let best = 0;
-  for (let i = 1; i < geldig.length; i++) if (totalen[i] > totalen[best]) best = i;
+  for (let i = 1; i < geldig.length; i++) {
+    if (gemiddeld[i] + seinCorrectie[i] > gemiddeld[best] + seinCorrectie[best]) best = i;
+  }
   return {
     kaart: geldig[best],
-    scores: geldig.map((k, i) => ({ kaart: k, gemiddeld: totalen[i] / simulaties })),
+    scores: geldig.map((k, i) => ({ kaart: k, gemiddeld: gemiddeld[i], sein: seinCorrectie[i] })),
   };
 }
 

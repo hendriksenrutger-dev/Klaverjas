@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { waarneming, uitsluitingen, trekVerdeling, kiesKaart, kiesDraai, kiesSimpel, kiesSlim, eindspelWaarde } from '../src/ai/simulatie.js';
+import { waarneming, uitsluitingen, trekVerdeling, kiesKaart, kiesDraai, kiesSimpel, kiesSlim, eindspelWaarde, seinVan, seinenVanAnderen, seinGewicht, SEIN_FACTOR, SEIN_BONUS, SEIN_STRAF } from '../src/ai/simulatie.js';
+import { slag } from './hulp.js';
 import { nieuwPotje, speelKaart, geldigVoor, uitslag } from '../src/regels/potje.js';
 import { maakDeck, schud, deel, kaartId, team } from '../src/regels/kaarten.js';
 import { geldigeKaarten } from '../src/regels/geldig.js';
@@ -152,8 +153,9 @@ describe('kaart kiezen', () => {
     while (!p.klaar) {
       const { kaart, scores } = kiesKaart(waarneming(p, p.beurt), { simulaties: 30, rng });
       if (scores) {
-        const best = Math.max(...scores.map((s) => s.gemiddeld));
-        const gekozen = scores.find((s) => kaartId(s.kaart) === kaartId(kaart)).gemiddeld;
+        const best = Math.max(...scores.map((s) => s.gemiddeld + s.sein));
+        const g = scores.find((s) => kaartId(s.kaart) === kaartId(kaart));
+        const gekozen = g.gemiddeld + g.sein;
         assert.equal(gekozen, best);
       }
       p = speelKaart(p, p.beurt, kaart);
@@ -230,4 +232,131 @@ describe('eindspel exact', () => {
       assert.equal(p.handen.flat().length, 8);
     }
   });
+});
+
+describe('seinen herkennen', () => {
+  const T = 'harten';
+  const sein = (start, codes, kaart) => seinVan(slag(start, codes), (start + codes.split(' ').length) % 4, K(kaart), T);
+
+  test('kleintje bekennen op een slag van de maat: ik heb de aas', () => {
+    // Speler 2 komt uit met kH (maat van 0), speler 3 k8, speler 0 legt k7 bij.
+    assert.deepEqual(sein(2, 'kH k8', 'k7'), { speler: 0, kaart: { kleur: 'klaveren', rang: 'A' } });
+  });
+
+  test('kleintje afgooien op een slag van de maat: ik heb de aas van die kleur', () => {
+    assert.deepEqual(sein(2, 'kA k8', 'r9'), { speler: 0, kaart: { kleur: 'ruiten', rang: 'A' } });
+  });
+
+  test('aas bijspelen: ik heb ook de tien', () => {
+    assert.deepEqual(sein(2, 'kA k8', 'sA'), { speler: 0, kaart: { kleur: 'schoppen', rang: '10' } });
+  });
+
+  test('tien, boer, vrouw of heer: geen sein', () => {
+    for (const k of ['s10', 'sB', 'sV', 'sH']) assert.equal(sein(2, 'kA k8', k), null);
+  });
+
+  test('maat heeft de slag niet: geen sein', () => {
+    assert.equal(sein(2, 'k8 kA', 'r7'), null);
+  });
+
+  test('wie uitkomt, seint niet', () => {
+    assert.equal(seinVan([], 0, K('r7'), T), null);
+  });
+
+  test('troef gevraagd of met troef: geen sein', () => {
+    assert.equal(sein(2, 'hA h7', 'r7'), null);
+    assert.equal(sein(2, 'kA k8', 'h8'), null);
+  });
+
+  test('maat heeft ingetroefd: wel een sein', () => {
+    // Speler 3 komt uit met k8, speler 0 (maat van 2) troeft in, speler 1 bekent, speler 2 gooit r7 af.
+    assert.deepEqual(sein(3, 'k8 h7 k9', 'r7'), { speler: 2, kaart: { kleur: 'ruiten', rang: 'A' } });
+  });
+
+  test('seinen van anderen: eigen seinen tellen niet mee', () => {
+    let p = nieuwPotje({ handen: seinHanden(), troef: 'harten', spelendTeam: 0, uitkomer: 0 });
+    for (const [sp, c] of [[0, 'kA'], [1, 'k7'], [2, 'r7'], [3, 'kB']]) p = speelKaart(p, sp, K(c));
+    assert.deepEqual(seinenVanAnderen(waarneming(p, 0)), [{ speler: 2, kaart: { kleur: 'ruiten', rang: 'A' } }]);
+    assert.deepEqual(seinenVanAnderen(waarneming(p, 2)), []);
+  });
+});
+
+function seinHanden() {
+  return [
+    Ks('kA k10 k9 h7 h8 h9 r8 r9'),
+    Ks('k7 k8 kV kH h10 hV sA hA'),
+    Ks('rA r7 s8 s9 sB hB hH s7'),
+    Ks('kB r10 rB rV rH s10 sV sH'),
+  ];
+}
+
+describe('zelf seinen', () => {
+  test('gooit liever een kleintje af van de kleur waarvan hij de aas heeft', () => {
+    // Speler 0 (Zuid) kwam uit met kA; speler 1 bekende; speler 2 (Noord, AI) heeft geen klaveren.
+    // Noord heeft rA met r7, en s8 zonder sA. Afgooien van r7 is een waar sein, s8 een vals sein.
+    let p = nieuwPotje({ handen: seinHanden(), troef: 'harten', spelendTeam: 0, uitkomer: 0 });
+    p = speelKaart(p, 0, K('kA'));
+    p = speelKaart(p, 1, K('k7'));
+    const r = kiesKaart(waarneming(p, 2), { simulaties: 200, rng: maakRng(4) });
+    const sch = r.scores.find((x) => kaartId(x.kaart) === 'schoppen-8');
+    const ru = r.scores.find((x) => kaartId(x.kaart) === 'ruiten-7');
+    assert.equal(ru.sein, SEIN_BONUS);
+    assert.equal(sch.sein, -SEIN_STRAF);
+    assert.ok(['ruiten-7', 'schoppen-B'].includes(kaartId(r.kaart)) || r.kaart.kleur === 'harten' || r.kaart.rang === 'A',
+      `gekozen ${kaartId(r.kaart)}`);
+    assert.notEqual(kaartId(r.kaart), 'schoppen-8');
+    assert.notEqual(kaartId(r.kaart), 'schoppen-9');
+    assert.notEqual(kaartId(r.kaart), 'schoppen-7');
+  });
+
+  test('seinen lezen: een sein van de maat maakt de kaart in de verdelingen waarschijnlijker', () => {
+    // Noord gooit r7 af op de slag van Zuid: "ik heb de ruiten aas".
+    let p = nieuwPotje({ handen: seinHanden(), troef: 'harten', spelendTeam: 0, uitkomer: 0 });
+    for (const [sp, c] of [[0, 'kA'], [1, 'k7'], [2, 'r7'], [3, 'kB']]) p = speelKaart(p, sp, K(c));
+    const w = waarneming(p, 0);
+    const seinen = seinenVanAnderen(w);
+    assert.deepEqual(seinen, [{ speler: 2, kaart: { kleur: 'ruiten', rang: 'A' } }]);
+  });
+});
+
+test('sein lezen: gedwongen kleintje zegt niets, vrijwillig kleintje wel', () => {
+  let p = nieuwPotje({ handen: seinHanden(), troef: 'harten', spelendTeam: 0, uitkomer: 0 });
+  for (const [sp, c] of [[0, 'kA'], [1, 'k7'], [2, 'r7'], [3, 'kB']]) p = speelKaart(p, sp, K(c));
+  const w = waarneming(p, 0);
+  const seinen = seinenVanAnderen(w);
+  // Verdeling waarin Noord de ruiten aas niet heeft, maar wel andere kaarten had kunnen afgooien: lager gewicht.
+  const zonder = [w.hand, Ks('k8 kV kH h10 hV sA hA'), Ks('r10 s8 s9 sB hB hH s7'), Ks('rA rB rV rH s10 sV sH')];
+  assert.equal(seinGewicht(zonder, seinen, 4, w), 1 / 4);
+  const met = [w.hand, Ks('k8 kV kH h10 hV sA hA'), Ks('rA s8 s9 sB hB hH s7'), Ks('r10 rB rV rH s10 sV sH')];
+  assert.equal(seinGewicht(met, seinen, 4, w), 1);
+});
+
+test('sein lezen: bekennen met alleen kleintjes zegt niets', () => {
+  // Zuid komt uit met kH, West bekent laag, Noord bekent met k7. Had Noord alleen kleine klaveren,
+  // dan was dat gedwongen; had hij ook de klaveren tien, dan was het een keus (en dus een sein).
+  const handen = [
+    Ks('kH h7 h8 h9 r8 r9 s7 s8'),
+    Ks('k9 h10 hV hA sA s9 sB sV'),
+    Ks('k7 k8 rA r7 r10 hB hH s10'),
+    Ks('kA k10 kB kV rB rV rH sH'),
+  ];
+  let p = nieuwPotje({ handen, troef: 'harten', spelendTeam: 0, uitkomer: 0 });
+  for (const [sp, c] of [[0, 'kH'], [1, 'k9'], [2, 'k7']]) p = speelKaart(p, sp, K(c));
+  const w = waarneming(p, 0);
+  const seinen = seinenVanAnderen(w);
+  assert.deepEqual(seinen, [{ speler: 2, kaart: { kleur: 'klaveren', rang: 'A' } }]);
+  const rest = (noord, oost) => [w.hand, Ks('h10 hV hA sA s9 sB sV'), Ks(noord), Ks(oost)];
+  // Noord heeft k8 (ook klein) en geen kA: gedwongen, gewicht 1.
+  assert.equal(seinGewicht(rest('k8 rA r7 r10 hB hH s10', 'kA k10 kB kV rB rV rH sH'), seinen, 4, w), 1);
+  // Noord had ook kV (geen sein) maar speelde k7 zonder kA: vals sein met keus, gewicht 1/4.
+  assert.equal(seinGewicht(rest('kV rA r7 r10 hB hH s10', 'kA k10 kB k8 rB rV rH sH'), seinen, 4, w), 1 / 4);
+});
+
+test('verdeling waarin het sein niet klopt telt minder zwaar (niet 0)', () => {
+  const sein = [{ speler: 2, kaart: { kleur: 'ruiten', rang: 'A' } }];
+  const met = [[], [], Ks('rA r8'), []];
+  const zonder = [[], Ks('rA'), Ks('r8'), []];
+  assert.equal(seinGewicht(met, sein), 1);
+  assert.equal(seinGewicht(zonder, sein), 1 / SEIN_FACTOR);
+  assert.ok(SEIN_FACTOR > 1);
 });

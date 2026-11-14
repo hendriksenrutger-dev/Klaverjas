@@ -9,7 +9,7 @@ const W = await import('../src/ai/willekeurig.js');
 function speler(cfg, rng) {
   return {
     draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim' }).keuze,
-    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
+    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
   };
 }
 
@@ -80,6 +80,11 @@ if (mode === 'groot') {
     kaart: [{ sims: 100, draaiStrategie: 'simpel' }, { sims: 100, strategie: 'simpel', eindspel: 0 }],
     draai: [{ sims: 100, strategie: 'simpel', eindspel: 0, draaiStrategie: 'slim' }, { sims: 100, strategie: 'simpel', eindspel: 0, draaiStrategie: 'simpel' }],
     sims: [{ sims: 300 }, { sims: 100 }],
+    lezen: [{ sims: 100 }, { sims: 100, lezen: false }],
+    lezen10: [{ sims: 100, factor: 10 }, { sims: 100, lezen: false }],
+    geven: [{ sims: 100 }, { sims: 100, geven: false }],
+    factor2: [{ sims: 100, factor: 2 }, { sims: 100 }],
+    factor10: [{ sims: 100, factor: 10 }, { sims: 100 }],
     makkelijk: [{ sims: 5, strategie: 'simpel', eindspel: 0 }, { sims: 100 }],
     eind4: [{ sims: 100, eindspel: 4 }, { sims: 100, eindspel: 3 }],
   }[welke];
