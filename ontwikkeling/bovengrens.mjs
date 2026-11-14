@@ -1,0 +1,20 @@
+// Stap 1 "computer beter laten spelen": hoeveel valt er te winnen?
+// Gebruik: node ontwikkeling/bovengrens.mjs <vals|sterk|eindspel4|eindspel5> <delingen> <zaad>
+// - vals: een computer die alle kaarten ziet (zelfde rekenmethode) tegen normaal. Bovengrens van
+//   wat beter inschatten van de kaartverdeling kan opleveren.
+// - sterk: 300 simulaties tegen 100 (normaal).
+// - eindspel4/5: de laatste 4 of 5 slagen exact doorrekenen in plaats van 3.
+// Beide teams draaien (spelen/passen) op dezelfde manier, zodat alleen het kaartspel verschilt.
+import { duel } from './duel.mjs';
+
+const [, , welke, n = '150', z = '41'] = process.argv;
+const basis = { sims: 100, draaiStrategie: 'simpel' };
+const A = {
+  vals: { ...basis, vals: true, sims: 20 },
+  sterk: { ...basis, sims: 300 },
+  eindspel4: { ...basis, eindspel: 4 },
+  eindspel5: { ...basis, eindspel: 5 },
+}[welke];
+if (!A) throw new Error('onbekende vergelijking');
+const start = Date.now();
+console.log(welke, 'vs normaal', duel(A, basis, +n, +z), `${Math.round((Date.now() - start) / 1000)} s`);
