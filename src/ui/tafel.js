@@ -303,7 +303,7 @@ function instellingenVenster(spel) {
 }
 
 // ---------- Vergelijk met de computer ----------
-const kort = (k) => `<span class="${ROOD.has(k.kleur) ? 'rood' : ''}">${SYMBOOL[k.kleur]}${k.rang}</span>`;
+const kort = (k) => `<span class="kaartje ${ROOD.has(k.kleur) ? 'rood' : 'zwart'}">${SYMBOOL[k.kleur]}${k.rang}</span>`;
 const metTeken = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 
 // Analyses van het potje dat in de uitslag staat.

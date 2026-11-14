@@ -345,7 +345,8 @@ button { font: inherit; }
 .slag-kaarten .met-naam { font-size: 13px; }
 /* Vergelijk met de computer */
 .vgl { margin-top: 2px; font-size: 13px; font-weight: 600; white-space: nowrap; color: #555; }
-.vgl .rood { color: var(--rood); }
+.vgl .kaartje.rood { color: var(--rood); }
+.vgl .kaartje.zwart { color: var(--zwart); }
 .vgl.zelfde { color: #2e7d4f; font-size: 15px; }
 .vgl.minder { color: #9a3b1c; }
 .vgl.beter { color: #2e7d4f; }
