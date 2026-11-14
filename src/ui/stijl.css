@@ -1,0 +1,157 @@
+/* Eenvoudige stijl voor fase 2. Het echte ontwerp volgt in fase 3. */
+:root {
+  --kh: min(13.3vw, 19.8vh); /* kaarthoogte: ~170px op 1280x860 */
+  --kb: calc(var(--kh) * 0.694);
+  --goud: #e8c873;
+  --creme: #fbf8f1;
+  --rood: #b3262d;
+  --zwart: #1b1b1b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: clip; }
+body {
+  background: #164f33;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+#app {
+  height: 100%;
+  overflow: clip;
+  display: grid;
+  grid-template-rows: 56px 1fr 36px calc(var(--kh) * 0.85);
+}
+
+/* Bovenbalk */
+.balk {
+  display: flex; align-items: center; gap: 16px; padding: 0 12px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.score { flex: 1; display: flex; justify-content: center; gap: 24px; font-size: 20px; font-weight: 600; }
+.score .wij { color: var(--goud); }
+.potjenr { opacity: 0.8; }
+.troeflabel {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--creme); color: var(--zwart); border-radius: 22px; padding: 6px 14px 6px 6px; font-size: 15px;
+}
+.troeflabel.stil { padding: 6px 14px; opacity: 0.8; }
+.troefsymbool {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ccc;
+  display: grid; place-items: center; font-size: 20px; color: var(--zwart);
+}
+.troefsymbool.rood { color: var(--rood); }
+
+.knop {
+  min-width: 44px; min-height: 44px; padding: 0 14px; border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(0, 0, 0, 0.25); color: #fff;
+  font: inherit; font-size: 16px; cursor: pointer;
+}
+.knop:disabled { opacity: 0.4; }
+.knop.groot { min-height: 52px; padding: 0 28px; font-size: 18px; background: var(--goud); color: var(--zwart); border: none; font-weight: 600; }
+
+/* Tafel */
+.tafel { position: relative; overflow: hidden; }
+.laken {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, #2e8a5c 0%, #227049 50%, #164f33 100%);
+}
+.laken::after {
+  content: ''; position: absolute; inset: 6% 12%; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.paneel {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  background: rgba(0, 0, 0, 0.3); border-radius: 10px; padding: 8px 12px; font-size: 14px;
+}
+.paneel-titel { font-weight: 600; margin-bottom: 4px; }
+.paneel td, .paneel th { padding: 1px 8px 1px 0; text-align: right; font-weight: normal; }
+.paneel td:first-child { text-align: left; }
+
+/* Spelers */
+.speler { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 2; }
+.speler.noord { top: 8px; left: 50%; transform: translateX(-50%); }
+.speler.west { left: 16px; top: 50%; transform: translateY(-50%); }
+.speler.oost { right: 16px; top: 50%; transform: translateY(-50%); }
+.speler.zuid { left: 16px; bottom: 8px; }
+.avatar {
+  width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(0, 0, 0, 0.35); border: 2px solid rgba(255, 255, 255, 0.4); font-size: 22px; font-weight: 600;
+}
+.aan-beurt .avatar { border-color: var(--goud); box-shadow: 0 0 0 4px rgba(232, 200, 115, 0.35); }
+.naam { font-weight: 600; display: flex; gap: 6px; align-items: center; }
+.rol { font-size: 12px; opacity: 0.75; }
+.speelt, .deler, .past { font-size: 11px; padding: 2px 6px; border-radius: 8px; font-weight: 600; }
+.speelt { background: var(--goud); color: var(--zwart); }
+.deler { background: rgba(255, 255, 255, 0.2); }
+.past { background: rgba(0, 0, 0, 0.4); }
+.ruggen { display: flex; margin-top: 4px; }
+.rug {
+  width: 14px; height: 20px; margin-left: -6px; border-radius: 3px;
+  background: #1d5e3d; border: 1px solid var(--goud);
+}
+
+/* Kaarten */
+.kaart {
+  position: relative; width: var(--kb); height: var(--kh);
+  background: var(--creme); color: var(--zwart); border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -5px;
+}
+.kaart.rood { color: var(--rood); }
+.kaart .hoek { position: absolute; top: 6px; left: 8px; text-align: center; line-height: 1.05; font-weight: 700; font-size: calc(var(--kh) * 0.13); }
+.kaart .hoek.onder { top: auto; left: auto; bottom: 6px; right: 8px; transform: rotate(180deg); }
+.kaart .midden { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--kh) * 0.38); }
+
+/* Slag */
+.slag, .draaien { position: absolute; inset: 0; z-index: 1; }
+.slagplek { position: absolute; left: 50%; top: 50%; }
+.slagplek.noord { transform: translate(-50%, -105%) rotate(-3deg); }
+.slagplek.zuid { transform: translate(-50%, 5%) rotate(2deg); }
+.slagplek.west { transform: translate(-125%, -50%) rotate(-6deg); }
+.slagplek.oost { transform: translate(25%, -50%) rotate(5deg); }
+.leeg {
+  width: var(--kb); height: var(--kh); border-radius: 12px; border: 2px dashed rgba(255, 255, 255, 0.35);
+  display: grid; place-items: center; font-size: 13px; opacity: 0.8;
+}
+.roem {
+  position: absolute; left: 50%; top: 4%; transform: translateX(-50%);
+  background: var(--goud); color: var(--zwart); padding: 8px 16px; border-radius: 20px; font-weight: 600; white-space: nowrap;
+}
+.draaien { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+.draai-tekst { font-size: 18px; }
+.draai-knoppen { display: flex; gap: 12px; }
+
+.knoppen-rechts { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 8px; z-index: 2; }
+
+/* Hint en hand */
+.hint { display: grid; place-items: center; font-size: 17px; background: rgba(0, 0, 0, 0.2); }
+.hand { display: flex; justify-content: center; align-items: flex-start; padding-top: 10px; }
+.handplek { margin: 0 calc(var(--kb) * -0.12); transform: translateY(var(--y)) rotate(var(--hoek)); transform-origin: 50% 120%; }
+.hand .kaart { cursor: pointer; transition: transform 0.15s; }
+.hand .kaart.opgetild { transform: translateY(-28px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45); }
+.hand .kaart.grijs { opacity: 0.45; }
+
+/* Vensters */
+.venster-achter {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: grid; place-items: center; z-index: 10;
+}
+.venster {
+  background: var(--creme); color: var(--zwart); border-radius: 16px; padding: 24px 32px; min-width: 360px; text-align: center;
+}
+.venster h2 { margin-top: 0; }
+.venster .knop:not(.groot) { color: var(--zwart); border-color: #999; background: #eee; }
+.uitslag { margin: 0 auto 12px; border-collapse: collapse; }
+.uitslag td, .uitslag th { padding: 4px 14px; text-align: right; }
+.uitslag td:first-child { text-align: left; font-weight: 600; }
+.eindstand { font-size: 20px; font-weight: 700; }
+.rij-kaarten { display: flex; gap: 12px; justify-content: center; }
+.met-naam { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+/* Staand: vraag om te draaien */
+#draai-melding { display: none; }
+@media (orientation: portrait) {
+  #app { display: none; }
+  #draai-melding { display: grid; place-items: center; height: 100%; font-size: 24px; }
+}
