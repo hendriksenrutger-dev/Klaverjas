@@ -8,8 +8,8 @@ const W = await import('../src/ai/willekeurig.js');
 
 function speler(cfg, rng) {
   return {
-    draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim' }).keuze,
-    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
+    draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim', trekken: cfg.draaiTrekken ?? cfg.trekken }).keuze,
+    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
   };
 }
 
@@ -86,6 +86,10 @@ if (mode === 'groot') {
     factor2: [{ sims: 100, factor: 2 }, { sims: 100 }],
     factor10: [{ sims: 100, factor: 10 }, { sims: 100 }],
     makkelijk: [{ sims: 5, strategie: 'simpel', eindspel: 0 }, { sims: 100 }],
+    trekken: [{ sims: 100 }, { sims: 100, trekken: false }],
+    trekBonus: [{ sims: 100 }, { sims: 100, trekBonus: 0 }],
+    trekBonus20: [{ sims: 100, trekBonus: 20 }, { sims: 100, trekBonus: 0 }],
+    trekkenKaart: [{ sims: 100, draaiTrekken: false }, { sims: 100, trekken: false }],
     eind4: [{ sims: 100, eindspel: 4 }, { sims: 100, eindspel: 3 }],
   }[welke];
   console.log(JSON.stringify({ welke, zaad: +z, ...duel(V[0], V[1], +n, +z) }));

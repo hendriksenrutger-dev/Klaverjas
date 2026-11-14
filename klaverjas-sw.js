@@ -1,13 +1,13 @@
 // Service worker van Klaverjas: netwerk eerst, cache als terugval (Rutgers vaste patroon).
 // Alle apps van Rutger delen hetzelfde origin: deze worker raakt alleen caches die met 'klaverjas-' beginnen.
 
-const CACHE = 'klaverjas-v4';
+const CACHE = 'klaverjas-v5';
 
 // Alles wat nodig is om offline te spelen, al bij de eerste keer openen opgeslagen.
 const BESTANDEN = [
   './',
   'assets/geluid/deel.ogg',
-  'assets/geluid/kaart-D.ogg',
+  'assets/geluid/kaart-F.ogg',
   'assets/geluid/schudden.ogg',
   'assets/iconen/apple-touch-icon.png',
   'assets/iconen/icoon-192.png',

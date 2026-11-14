@@ -89,3 +89,29 @@ Sterk is in de metingen niet beter dan normaal. Verder sterker maken vraagt een 
 (bijvoorbeeld zoeken over wat spelers wel en niet weten) en de seinen uit fase 5 helpen ook.
 
 `ontwikkeling/verloop.mjs` toont een potje zet voor zet met de scores per kaart, om de keuzes te beoordelen.
+
+---
+
+# Aanvulling: troef trekken (na Rutgers test)
+
+Rutger zag dat de maat troef liet zitten terwijl Oost nog hoge troef had.
+
+**Oorzaak:** in de simulaties kennen alle spelers elkaars kaarten. Troef trekken lijkt daar "altijd
+later nog te kunnen" en wordt daardoor te weinig gekozen (bekende zwakte van deze methode).
+Gemeten: als de spelende partij uitkomt met ≥3 troeven en de tegenpartij nog troef heeft, trok de AI
+in 75–80% van de gevallen troef, maar soms niet terwijl hij de hoogste troef had.
+
+**Geprobeerd:**
+1. Ruimere trek-vuistregel in de simulaties (ook zonder baastroef trekken bij meer troef): geen meetbaar
+   verschil (−0,4 en −0,75 punt per potje over ±1900 potjes) en vaker nat door te optimistisch spelen →
+   niet gebruikt.
+2. Voorkeur voor troef uitkomen in de uiteindelijke keuze (`TREK_BONUS`): volle voorkeur voor de hoogste
+   troef die nog in het spel is, halve voorkeur voor een lage troef als de speler minstens zoveel troeven
+   heeft als er nog elders zijn. Gemeten tegen geen voorkeur (±1250 potjes per waarde):
+   voorkeur 10 → −1,0; voorkeur 20 → +0,5 punt per potje. Geen meetbaar verschil in sterkte.
+
+**Gekozen:** voorkeur 10. Niet sterker of zwakker in duels, maar speelt natuurlijker: met de hoogste
+troef trekt de spelende partij nu troef zolang de tegenpartij nog troef kan hebben. Zonder hoogste troef
+(bijv. ♣A ♣10 tegen ♣B bij de tegenpartij) blijft het een rekenkundige afweging.
+
+`ontwikkeling/troefstatistiek.mjs` toont hoe vaak er getrokken wordt, met voorbeelden.

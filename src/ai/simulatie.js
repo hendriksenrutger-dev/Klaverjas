@@ -39,6 +39,12 @@ export const SEIN_FACTOR_ZWAK = 2; // idem, als de seiner geen goedkoop eerlijk 
 export const SEIN_BONUS = 3; // voorkeur (in punten) voor een kaart die een waar sein geeft
 export const SEIN_STRAF = 40; // afkeer (in punten) van een kaart die een vals sein zou geven
 
+// Troef trekken. In de simulaties kennen alle spelers elkaars kaarten; daardoor lijkt troef trekken
+// "altijd later nog kan" en wordt het te weinig gekozen (bekende zwakte van deze methode).
+// Daarom een kleine voorkeur voor troef uitkomen door de spelende partij zolang de tegenpartij
+// nog troef kan hebben. Eigen ontwerpkeuze, gemeten in RAPPORT-FASE-4.md; bij te stellen.
+export const TREK_BONUS = 10;
+
 const KLEINTJES = new Set(['7', '8', '9']);
 
 // Geeft het sein dat 'speler' geeft door 'kaart' te spelen op slag 'slagVoor', of null.
@@ -310,8 +316,9 @@ export function kiesSlim(handen, slag, ctx, speler, rng) {
   if (slag.length === 0) {
     const tegenTroef = tegen.some((p) => heeftKleur(handen[p], troef));
     const mijnTroef = g.filter((k) => k.kleur === troef);
-    // Spelende partij: troef trekken met een baastroef zolang de tegenpartij troef heeft.
+    // Spelende partij: troef trekken zolang de tegenpartij troef heeft.
     if (mijnTeam === spelendTeam && tegenTroef && mijnTroef.length) {
+      // Met een baastroef altijd.
       const baas = mijnTroef.filter((k) => isBaas(k, handen, speler, troef));
       if (baas.length) return baas[0];
     }
@@ -481,11 +488,12 @@ function verschil(u, speler) {
 // bekendeHanden: alleen voor metingen (een AI die alle kaarten ziet), nooit in het spel.
 export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
-  seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null,
+  seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
+  trekBonus = TREK_BONUS,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
-  const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie };
+  const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie, trekken };
   const exact = 8 - w.slagen.length <= eindspel;
   const onbekend = onbekendeKaarten(w);
   const uit = uitsluitingen(w, onbekend);
@@ -543,13 +551,28 @@ export function kiesKaart(w, {
     const waar = w.hand.some((c) => c.kleur === sein.kaart.kleur && c.rang === sein.kaart.rang);
     return waar ? SEIN_BONUS : -SEIN_STRAF;
   });
+  // Troef trekken: voorkeur als de spelende partij uitkomt en er nog troef bij anderen kan zitten.
+  const trekCorrectie = geldig.map(() => 0);
+  if (trekBonus && w.slag.length === 0 && team(w.speler) === w.spelendTeam) {
+    const mijnTroef = w.hand.filter((k) => k.kleur === w.troef);
+    const elders = onbekend.filter((k) => k.kleur === w.troef);
+    if (mijnTroef.length && elders.length) {
+      const hoogsteElders = Math.max(...elders.map((k) => sterkte(k, w.troef)));
+      geldig.forEach((k, i) => {
+        if (k.kleur !== w.troef) return;
+        if (sterkte(k, w.troef) > hoogsteElders) trekCorrectie[i] = trekBonus;
+        else if (mijnTroef.length >= elders.length) trekCorrectie[i] = trekBonus / 2;
+      });
+    }
+  }
+  const totaal = (i) => gemiddeld[i] + seinCorrectie[i] + trekCorrectie[i];
   let best = 0;
   for (let i = 1; i < geldig.length; i++) {
-    if (gemiddeld[i] + seinCorrectie[i] > gemiddeld[best] + seinCorrectie[best]) best = i;
+    if (totaal(i) > totaal(best)) best = i;
   }
   return {
     kaart: geldig[best],
-    scores: geldig.map((k, i) => ({ kaart: k, gemiddeld: gemiddeld[i], sein: seinCorrectie[i] })),
+    scores: geldig.map((k, i) => ({ kaart: k, gemiddeld: gemiddeld[i], sein: seinCorrectie[i], trek: trekCorrectie[i] })),
   };
 }
 
@@ -557,11 +580,11 @@ export function kiesKaart(w, {
 // Speelt de hand vaak uit met deze troef (andere handen willekeurig) en speelt als het
 // verwachte verschil (wij − zij) boven de drempel ligt.
 export function kiesDraai(hand, kleur, {
-  speler, deler, systeem = 'amsterdams', simulaties = DRAAI_SIMULATIES, drempel = DRAAI_DREMPEL, rng = Math.random, strategie = 'slim',
+  speler, deler, systeem = 'amsterdams', simulaties = DRAAI_SIMULATIES, drempel = DRAAI_DREMPEL, rng = Math.random, strategie = 'slim', trekken = true,
 } = {}) {
   const ids = new Set(hand.map(kaartId));
   const rest = maakDeck().filter((k) => !ids.has(kaartId(k)));
-  const ctx = { troef: kleur, systeem, spelendTeam: team(speler), strategie };
+  const ctx = { troef: kleur, systeem, spelendTeam: team(speler), strategie, trekken };
   let som = 0;
   for (let n = 0; n < simulaties; n++) {
     const geschud = schudIn(rest.slice(), rng);

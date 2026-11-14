@@ -151,8 +151,14 @@ button { font: inherit; }
 .slagplek.zuid { transform: translate(-50%, 5px) rotate(2deg); }
 .slagplek.west { transform: translate(calc(-100% - var(--kb-tafel) / 2 - 12px), -50%) rotate(-4deg); }
 .slagplek.oost { transform: translate(calc(var(--kb-tafel) / 2 + 12px), -50%) rotate(4deg); }
-.slagplek.nieuw .kaart { animation: neerleggen 0.14s ease-out; }
-@keyframes neerleggen { from { opacity: 0; transform: scale(1.08) translateY(-8px); } }
+.slagplek.nieuw .kaart { animation: inschuiven 0.18s cubic-bezier(.25,.8,.35,1); }
+/* Een gespeelde kaart schuift vanaf de kant van de speler op zijn plek: meteen volledig zichtbaar. */
+.slagplek.noord { --van: 0, -45%; }
+.slagplek.zuid { --van: 0, 55%; }
+.slagplek.west { --van: -45%, 0; }
+.slagplek.oost { --van: 45%, 0; }
+@keyframes inschuiven { from { transform: translate(var(--van)); } }
+@keyframes neerleggen { from { transform: scale(1.06) translateY(-6px); } }
 .slagplek.winnaar .kaart { box-shadow: 0 0 0 3px rgba(232, 200, 115, 0.85), 0 6px 14px rgba(0, 0, 0, 0.3); }
 .jouw-kaart {
   width: calc(var(--kh) * 0.694); height: var(--kh); border-radius: calc(var(--kh) * 0.07);
@@ -306,6 +312,22 @@ button { font: inherit; }
 .slag-info .wij { color: #8a6a14; }
 .slag-kaarten { display: flex; gap: 10px; --kh: 86px; }
 .slag-kaarten .met-naam { font-size: 13px; }
+
+/* Alle handen (na een potje) */
+.handen-tafel {
+  display: grid; grid-template-columns: auto auto auto; grid-template-areas: '. noord .' 'west midden oost' '. zuid .';
+  gap: 10px 18px; align-items: center; justify-items: center; margin-top: 8px;
+}
+.handen-blok { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.handen-blok.noord { grid-area: noord; } .handen-blok.west { grid-area: west; }
+.handen-blok.oost { grid-area: oost; } .handen-blok.zuid { grid-area: zuid; }
+.handen-naam { display: flex; gap: 8px; align-items: center; font-size: 16px; }
+.handen-midden { grid-area: midden; width: 56px; height: 56px; border-radius: 50%; background: #fff; border: 2px solid var(--goud); display: grid; place-items: center; color: var(--zwart); }
+.handen-midden.rood { color: var(--rood); }
+.handen-midden .sym { width: 30px; height: 30px; fill: currentColor; }
+.hand-kaarten { display: flex; --kh: min(88px, 12.5dvh); }
+.hand-kaarten .kaart { margin-left: calc(var(--kh) * -0.28); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.hand-kaarten .kaart:first-child { margin-left: 0; }
 
 /* Gespeeld-overzicht */
 .gespeeld { display: grid; grid-template-columns: auto repeat(8, 48px); gap: 6px 6px; align-items: center; margin-top: 10px; }

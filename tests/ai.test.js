@@ -153,9 +153,9 @@ describe('kaart kiezen', () => {
     while (!p.klaar) {
       const { kaart, scores } = kiesKaart(waarneming(p, p.beurt), { simulaties: 30, rng });
       if (scores) {
-        const best = Math.max(...scores.map((s) => s.gemiddeld + s.sein));
+        const best = Math.max(...scores.map((s) => s.gemiddeld + s.sein + s.trek));
         const g = scores.find((s) => kaartId(s.kaart) === kaartId(kaart));
-        const gekozen = g.gemiddeld + g.sein;
+        const gekozen = g.gemiddeld + g.sein + g.trek;
         assert.equal(gekozen, best);
       }
       p = speelKaart(p, p.beurt, kaart);
