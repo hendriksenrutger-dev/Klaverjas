@@ -462,6 +462,51 @@ function vensterHtml(spel) {
   }
 }
 
+// ---------- Statistieken ----------
+function statistiekVenster(spel) {
+  const s = spel.statistiek;
+  const p = s.partijen;
+  const q = s.potjes;
+  const v = s.vergelijk;
+  const pct = (a, b) => (b ? `${Math.round((100 * a) / b)}%` : '–');
+  const gem = (a, b) => (b ? Math.round(a / b) : '–');
+  const getal = (x) => (x === null || x === undefined ? '–' : x);
+  const rij = (label, waarde, extra = '') => `<tr><td>${label}</td><td>${waarde}</td><td class="stat-extra">${extra}</td></tr>`;
+  const datum = new Date(s.sinds).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+  return venster(`<h2>Statistieken</h2>
+    <p class="sub">Sinds ${datum}</p>
+    <div class="stat-blokken">
+      <table class="stat">
+        <tr><th colspan="3">Partijen</th></tr>
+        ${rij('Gespeeld', p.gespeeld)}
+        ${rij('Gewonnen', p.gewonnen, pct(p.gewonnen, p.gespeeld))}
+        ${rij('Verloren', p.verloren, p.gelijk ? `${p.gelijk} gelijk` : '')}
+        ${rij('Op rij gewonnen', p.reeks, `record ${p.recordReeks}`)}
+        ${rij('Hoogste eindstand', getal(p.hoogste))}
+        ${rij('Laagste eindstand', getal(p.laagste))}
+        ${rij('Grootste overwinning', getal(p.grootsteWinst))}
+      </table>
+      <table class="stat">
+        <tr><th colspan="3">Potjes</th></tr>
+        ${rij('Gespeeld', q.gespeeld)}
+        ${rij('Wij speelden', q.wijSpeelden)}
+        ${rij('· gehaald', q.wijGehaald, pct(q.wijGehaald, q.wijSpeelden))}
+        ${rij('· nat', q.wijNat, pct(q.wijNat, q.wijSpeelden))}
+        ${rij('· pit', q.wijPit, pct(q.wijPit, q.wijSpeelden))}
+        ${rij('Zij speelden', q.zijSpeelden)}
+        ${rij('· nat gespeeld', q.zijNat, pct(q.zijNat, q.zijSpeelden))}
+        ${rij('· pit voor zij', q.zijPit)}
+        ${rij('Gemiddeld per potje', `${gem(q.puntenWij, q.gespeeld)} – ${gem(q.puntenZij, q.gespeeld)}`, 'wij – zij')}
+        ${rij('Roem', `${q.roemWij} – ${q.roemZij}`, 'wij – zij')}
+        ${v.kaarten ? rij('Zoals de computer', pct(v.zelfde + v.gelijkwaardig, v.kaarten), `van ${v.kaarten} kaarten`) : ''}
+      </table>
+    </div>
+    <div class="venster-knoppen">
+      <button class="knop ${spel.wisVraag ? 'rood-knop' : ''}" data-actie="wisStatistiek">${spel.wisVraag ? 'Zeker weten? Tik nogmaals' : 'Statistieken wissen'}</button>
+      <button class="knop goud" data-actie="sluit">Sluiten</button>
+    </div>`, true, 'statistiek');
+}
+
 // ---------- Beginscherm ----------
 function beginscherm(spel) {
   const i = spel.instellingen;
@@ -483,7 +528,10 @@ function beginscherm(spel) {
           ${loopt ? `<button class="knop goud start-knop" data-actie="verderSpelen">Verder spelen
             <span class="start-knop-sub">Potje ${info.potje} van ${AANTAL_POTJES} · Wij ${info.totaal[0]} – Zij ${info.totaal[1]}</span></button>` : ''}
           <button class="knop ${loopt ? 'licht' : 'goud'} start-knop" data-actie="nieuwePartijVraag">Nieuwe partij</button>
-          <button class="knop licht start-knop" data-actie="open" data-venster="instellingen">Instellingen</button>
+          <div class="start-rij">
+            <button class="knop licht start-knop" data-actie="open" data-venster="statistiek">Statistieken</button>
+            <button class="knop licht start-knop" data-actie="open" data-venster="instellingen">Instellingen</button>
+          </div>
         </div>
       </div>
     </main>`;
@@ -504,7 +552,7 @@ export function render(el, spel, acties) {
   NAMEN = spel.namen;
   if (spel.scherm === 'start') {
     zorgVoorSprite();
-    patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`);
+    patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : spel.venster === 'statistiek' ? statistiekVenster(spel) : ''}`);
     vulPlaatjes(el);
     koppel(el, acties);
     return;

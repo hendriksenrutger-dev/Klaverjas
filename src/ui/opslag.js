@@ -3,6 +3,7 @@
 
 const SLEUTEL_INSTELLINGEN = 'klaverjas_instellingen';
 const SLEUTEL_PARTIJ = 'klaverjas_partij';
+const SLEUTEL_STATISTIEK = 'klaverjas_statistiek';
 const VERSIE = 1;
 
 export const STANDAARD = Object.freeze({
@@ -71,4 +72,12 @@ export function wisPartij() {
   } catch {
     // niets
   }
+}
+
+export function laadStatistiek() {
+  return lees(SLEUTEL_STATISTIEK)?.statistiek ?? null;
+}
+
+export function bewaarStatistiek(statistiek) {
+  schrijf(SLEUTEL_STATISTIEK, { statistiek });
 }
