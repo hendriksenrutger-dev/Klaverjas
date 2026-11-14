@@ -8,9 +8,10 @@
 
 :root {
   /* Alle maten volgen de echte schermhoogte (dvh: zonder de balken van de browser).
-     Verticale indeling: balk · rij van Noord (84px) · slag (1,7 kaart) · hint · hand. */
+     Verticale indeling: balk · rij van Noord (66px) · slag (2 kaarten + ruimte, niets overlapt) · hint · hand. */
   --balk-h: clamp(56px, 9dvh, 76px);
-  --kh: min(15vw, calc((100dvh - var(--balk-h) - 162px) / 2.95)); /* kaarthoogte op tafel */
+  --kh: min(15vw, calc((100dvh - var(--balk-h) - 142px) / 3.25)); /* kaarthoogte op tafel */
+  --kb-tafel: calc(var(--kh) * 0.694);
   /* hand: 8 kaarten plat naast elkaar, zo groot als past */
   --hk: min(calc((100vw - 48px - 7 * 8px) / 8 / 0.694), calc(var(--kh) * 1.1)); /* hand */
   --goud: #e8c873;
@@ -21,8 +22,8 @@
   --laken-2: #227049;
   --laken-3: #164f33;
   --hand-ruimte: calc(var(--hk) + 14px);
-  /* Midden van de slag: onder de rij van Noord; de bovenste kaart begint 84px onder de balk. */
-  --midden-y: calc(var(--balk-h) + 84px + var(--kh) * 0.85);
+  /* Midden van de slag: onder de rij van Noord; de bovenste kaart begint 66px onder de balk. */
+  --midden-y: calc(var(--balk-h) + 66px + var(--kh) + 6px);
   --cijfers: 'Playfair Display', Georgia, serif;
 }
 .score-getal, .potjenr, .dit-potje td, .uitslag td, .stand b, .gespeeld .cel, .avatar, .eindstand, .venster h2 { font-variant-numeric: lining-nums tabular-nums; }
@@ -113,13 +114,13 @@ button { font: inherit; }
 
 /* ---------- Spelers ---------- */
 .speler { position: absolute; z-index: 3; display: flex; align-items: center; gap: 10px; }
-.speler.noord { top: calc(var(--balk-h) + 8px); left: 50%; transform: translateX(-50%); }
-.speler.west { left: 16px; top: calc(var(--midden-y) - 32px); flex-direction: column; text-align: center; }
-.speler.oost { right: 16px; top: calc(var(--midden-y) - 32px); flex-direction: column; text-align: center; }
+.speler.noord { top: calc(var(--balk-h) + 5px); left: 50%; transform: translateX(-50%); }
+.speler.west { left: 16px; top: calc(var(--midden-y) - 28px); flex-direction: column; text-align: center; }
+.speler.oost { right: 16px; top: calc(var(--midden-y) - 28px); flex-direction: column; text-align: center; }
 .avatar {
-  width: 64px; height: 64px; border-radius: 50%; flex: none;
+  width: 56px; height: 56px; border-radius: 50%; flex: none;
   display: grid; place-items: center;
-  font-family: var(--cijfers); font-weight: 700; font-size: 29px;
+  font-family: var(--cijfers); font-weight: 700; font-size: 26px;
   background: linear-gradient(160deg, #3a9a6a, #1d5e3d);
   border: 2px solid rgba(255, 255, 255, 0.35);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
@@ -146,10 +147,10 @@ button { font: inherit; }
 /* ---------- Slag en draaien ---------- */
 .midden { position: absolute; left: 50%; top: var(--midden-y); width: 0; height: 0; z-index: 4; }
 .slagplek { position: absolute; left: 0; top: 0; transition: transform 0.25s; }
-.slagplek.noord { transform: translate(-50%, -85%) rotate(-4deg); }
-.slagplek.zuid { transform: translate(-50%, -15%) rotate(3deg); }
-.slagplek.west { transform: translate(-100%, -50%) translateX(calc(var(--kh) * -0.32)) rotate(-8deg); }
-.slagplek.oost { transform: translate(0, -50%) translateX(calc(var(--kh) * 0.32)) rotate(7deg); }
+.slagplek.noord { transform: translate(-50%, calc(-100% - 5px)) rotate(-3deg); }
+.slagplek.zuid { transform: translate(-50%, 5px) rotate(2deg); }
+.slagplek.west { transform: translate(calc(-100% - var(--kb-tafel) / 2 - 12px), -50%) rotate(-4deg); }
+.slagplek.oost { transform: translate(calc(var(--kb-tafel) / 2 + 12px), -50%) rotate(4deg); }
 .slagplek.nieuw .kaart { animation: neerleggen 0.14s ease-out; }
 @keyframes neerleggen { from { opacity: 0; transform: scale(1.08) translateY(-8px); } }
 .slagplek.winnaar .kaart { box-shadow: 0 0 0 3px rgba(232, 200, 115, 0.85), 0 6px 14px rgba(0, 0, 0, 0.3); }
@@ -160,7 +161,7 @@ button { font: inherit; }
 }
 .roem {
   position: absolute; top: 0; transform: translateY(-50%);
-  left: calc(var(--kh) * 0.32 + var(--kh) * 0.694 + 26px);
+  left: calc(var(--kb-tafel) * 1.5 + 30px);
   display: flex; align-items: center; gap: 8px;
   background: rgba(8, 30, 19, 0.6); color: var(--goud);
   border: 1.5px solid rgba(232, 200, 115, 0.7);
@@ -174,7 +175,7 @@ button { font: inherit; }
 .roem .woord { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600; }
 @keyframes verschijn { from { opacity: 0; transform: translateY(-50%) scale(0.85); } }
 
-.draaien { position: absolute; left: 0; top: calc(var(--kh) * -0.85); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.draaien { position: absolute; left: 0; top: calc(var(--kh) * -1 - 5px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .draaien .stapel { position: relative; }
 .draaien .stapel .kaart.rug { position: absolute; left: 5px; top: 5px; }
 .draaien .stapel .kaart.rug + .kaart.rug { left: 10px; top: 10px; }
@@ -199,7 +200,7 @@ button { font: inherit; }
 /* ---------- Pijl naar de winnaar van de slag ---------- */
 .pijl { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 5; pointer-events: none; }
 .pijl svg {
-  position: absolute; width: 92px; height: 92px; left: -46px; top: -46px;
+  position: absolute; width: 64px; height: 64px; left: -32px; top: -32px;
   transform: rotate(var(--richting)) translateY(-8px);
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
   animation: pijl-in 0.3s ease-out;

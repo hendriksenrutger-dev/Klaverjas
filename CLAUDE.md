@@ -114,9 +114,9 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Spelers:** de maat boven (Noord), de tegenstanders links (West) en rechts (Oost). Zuid ben jij en wordt **niet** op de tafel getoond. Elke computerspeler heeft een rond avatar met een initiaal (geen foto's) en een naam, met als rol "Jouw maat · computer" of "Tegenstander". Een gouden label "Speelt" bij de spelende speler.
 - **Namen:** standaard de windrichtingen Zuid, West, Noord en Oost. Echte namen kunnen geven is een instelling.
 - **Geluid:** schudden (zelf opgewekt) en kaarten die neergelegd worden (echte opname: Kenney Casino Audio, CC0, zie `assets/geluid/LICENSE.md`).
-- **Slag op tafel:** de kaarten liggen licht gedraaid op hun plek. Op jouw plek staat een gestippeld vak met "Jouw kaart".
+- **Slag op tafel:** de kaarten liggen licht gedraaid op hun plek, in een kruis, **zonder over elkaar te liggen**. Op jouw plek staat een gestippeld vak met "Jouw kaart".
 - **Roemmelding:** een goudkleurig label met een ster, bijvoorbeeld "Driekaart · 20 roem".
-- **Hint onder de tafel:** kort, zonder uitleg van de regels (Rutger kent ze): "Jouw beurt · harten bekennen", "Tik nog een keer om te spelen", "Deze slag is voor West".
+- **Hint onder de tafel:** kort, zonder uitleg van de regels (Rutger kent ze): "Jouw beurt", "Tik nog een keer om te spelen", "Deze slag is voor West".
 - **Beginscherm:** bij het openen eerst een beginscherm met "Verder spelen" (met potje en stand), "Nieuwe partij" en "Instellingen". Het huisje in de bovenbalk gaat terug naar het beginscherm; het spel wacht dan.
 - **Indeling:** alle maten volgen de echte schermhoogte (ook in Chrome met adresbalk). Kaarten liggen nooit onder tekst door; niets overlapt.
 - **Hand:** acht kaarten in een lichte waaier onderaan. Kaarten die niet mogen worden grijs (opacity ongeveer 0,45). **Spelen gaat met twee tikken:** de eerste tik tilt de kaart op, de tweede speelt hem.

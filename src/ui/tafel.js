@@ -23,7 +23,6 @@ const IKOON = {
   lijst: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="7" rx="1.5"/><rect x="14" y="4" width="7" height="7" rx="1.5"/><rect x="3" y="13" width="7" height="7" rx="1.5"/><rect x="14" y="13" width="7" height="7" rx="1.5"/></svg>',
 };
 
-const klein = (s) => s.charAt(0).toLowerCase() + s.slice(1);
 
 // ---------- Bovenbalk ----------
 function balk(spel) {
@@ -126,7 +125,7 @@ function hint(spel) {
   if (spel.fase === 'draaien') {
     if (spel.draaien.uitkomst) return '';
     return spel.draaien.beurt === 0
-      ? `<strong>Jouw beurt</strong> · spelen of passen op ${klein(KLEURNAAM[spel.draaien.kaart.kleur])}?`
+      ? '<strong>Jouw beurt</strong>'
       : `${naam(spel.draaien.beurt)} denkt na…`;
   }
   if (spel.fase === 'opnieuwDelen') return 'Opnieuw delen…';
@@ -138,9 +137,7 @@ function hint(spel) {
   }
   if (p.beurt !== 0) return `${naam(p.beurt)} denkt na…`;
   if (spel.gekozen) return '<strong>Tik nog een keer</strong> om te spelen';
-  // Korte hint: geen uitleg van de regels (de grijze kaarten laten zien wat mag).
-  const g = geldigMetReden(p.handen[0], p.slag, p.troef, p.systeem);
-  if (g.reden === 'bekennen') return `<strong>Jouw beurt</strong> · ${g.gevraagd} bekennen`;
+  // Korte hint zonder uitleg (de grijze kaarten laten zien wat mag).
   return '<strong>Jouw beurt</strong>';
 }
 
