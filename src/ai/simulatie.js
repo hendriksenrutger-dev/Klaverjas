@@ -643,21 +643,15 @@ export function kiesKaart(w, {
 
 // Hoe erg een kaart een menselijke vuistregel breekt (0 = niet).
 // - Als tegenpartij kom je niet met troef uit.
-// - Een kaart die nog een slag kan worden gooi je niet weg op een slag die je er niet mee wint:
-//   een vrije kaart (niemand anders heeft nog een hogere), of een kaart die gedekt is door je
-//   eigen hogere kaarten (zoals een heer naast je aas, met de tien nog in het spel).
+// - Een vrije kaart (de hoogste die nog in zijn kleur zit, geen troef) gooi je niet weg
+//   op een slag die je er niet mee wint.
 export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w)) {
   if (w.slag.length === 0) {
     return team(w.speler) !== w.spelendTeam && k.kleur === w.troef ? 1 : 0;
   }
-  if (k.kleur === w.troef || punten(k, w.troef) === 0) return 0;
-  const hoger = (c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef);
-  const hogerElders = onbekend.filter(hoger).length;
-  const hogerZelf = w.hand.filter(hoger).length;
-  if (hogerElders > 0) {
-    // Gedekte kaart (zoals een heer naast je aas): alleen bij afgooien, niet bij bekennen.
-    if (hogerElders > hogerZelf || k.kleur === w.slag[0].kaart.kleur) return 0;
-  }
+  if (k.kleur === w.troef) return 0;
+  const vrij = !onbekend.some((c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef));
+  if (!vrij || punten(k, w.troef) === 0) return 0;
   const wint = huidigeWinnaar([...w.slag, { speler: w.speler, kaart: k }], w.troef).speler === w.speler;
   return wint ? 0 : 1;
 }
