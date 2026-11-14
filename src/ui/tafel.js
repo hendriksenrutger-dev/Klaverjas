@@ -2,7 +2,7 @@
 
 import { kaartId, team } from '../regels/kaarten.js';
 import { stand } from '../regels/potje.js';
-import { geldigMetReden, redenTekst } from '../regels/geldig.js';
+import { redenTekst } from '../regels/geldig.js';
 import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
 import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD } from './kaart.js';
 
@@ -32,7 +32,7 @@ function balk(spel) {
     const wie = potje.spelendTeam === 0 ? 'wij spelen' : 'zij spelen';
     troef = `<div class="troeflabel"><span class="troefrond ${ROOD.has(potje.troef) ? 'rood' : ''}">${symbool(potje.troef)}</span>Troef · ${KLEURNAAM[potje.troef]} <span class="licht">· ${wie}</span></div>`;
   } else if (draaien) {
-    troef = '<div class="troeflabel stil">Troef bepalen…</div>';
+    troef = `<div class="troeflabel stil">${spel.fase === 'delen' ? 'Schudden en delen…' : 'Troef bepalen…'}</div>`;
   } else troef = '';
   const nr = Math.min(potjeNummer(partij), AANTAL_POTJES);
   return `<header class="balk">
@@ -60,23 +60,27 @@ function ditPotje(spel) {
 function spelerHtml(spel, i) {
   const s = PLEKKEN[i];
   const n = NAMEN[i];
-  const speelt = spel.potje && spel.draaien?.uitkomst?.speler === i;
+  const speelt = spel.draaien?.uitkomst?.soort === 'spelen' && spel.draaien.uitkomst.speler === i;
   const aanBeurt =
     (spel.fase === 'spelen' && !spel.getoondeSlag && spel.potje.beurt === i) ||
-    (spel.fase === 'draaien' && !spel.draaien.uitkomst && spel.draaien.beurt === i);
+    (spel.fase === 'draaien' && !spel.draaien.uitkomst && !spel.draaiMelding && spel.draaien.beurt === i);
   const labels = [];
   if (speelt) labels.push('<span class="label speelt">Speelt</span>');
-  if (spel.fase === 'draaien' || spel.fase === 'opnieuwDelen') {
+
+  if (spel.fase === 'draaien' || spel.fase === 'opnieuwDelen' || spel.fase === 'delen') {
     if (spel.partij.deler === i) labels.push('<span class="label deelt">Deelt</span>');
-    if (spel.draaiKeuzes[i] === 'passen') labels.push('<span class="label past">Past</span>');
+    if (spel.draaiKeuzes[i] === 'passen' && !aanBeurt) labels.push('<span class="label past">Past</span>');
   }
-  const aantal = spel.potje ? spel.potje.handen[i].length : spel.handen?.[i]?.length ?? 0;
+  const aantal = spel.fase === 'delen' ? spel.zichtbaar?.[i] ?? 0
+    : spel.potje ? spel.potje.handen[i].length : spel.handen?.[i]?.length ?? 0;
   const ruggen = i === 0 ? '' : `<div class="ruggen">${rugHtml().repeat(aantal)}</div>`;
   return `<div class="speler ${s.plek} ${s.klasse} ${aanBeurt ? 'aan-beurt' : ''}">
     <div class="avatar">${n.charAt(0).toUpperCase()}</div>
     <div class="speler-tekst">
       <div class="naam">${n}${labels.join('')}</div>
-      ${s.rol ? `<div class="rol">${s.rol}</div>` : ''}
+      ${aanBeurt && i !== 0
+        ? '<div class="rol denkt">denkt na<span class="puntjes"><i>.</i><i>.</i><i>.</i></span></div>'
+        : s.rol ? `<div class="rol">${s.rol}</div>` : ''}
       ${ruggen}
     </div>
   </div>`;
@@ -84,14 +88,23 @@ function spelerHtml(spel, i) {
 
 // ---------- Midden van de tafel ----------
 function midden(spel) {
+  if (spel.fase === 'delen') {
+    return `<div class="midden"><div class="delen-midden"><div class="stapel stapel-delen ${spel.schudt ? 'schudt' : ''}">${rugHtml()}${rugHtml()}${rugHtml()}</div></div></div>`;
+  }
   if (spel.fase === 'draaien' || spel.fase === 'opnieuwDelen') {
     const d = spel.draaien;
-    const jij = spel.fase === 'draaien' && d.beurt === 0 && !d.uitkomst;
-    const tekst = spel.fase === 'opnieuwDelen'
-      ? 'Iedereen past. <strong>Er wordt opnieuw gedeeld.</strong>'
-      : `Voorgestelde troef: <strong>${KLEURNAAM[d.kaart.kleur]}</strong>${d.rondes ? ` · ronde ${d.rondes + 1}` : ''}${spel.partij.deler === 0 ? ' · jij deelt' : ''}`;
+    const m = spel.draaiMelding;
+    const jij = spel.fase === 'draaien' && d.beurt === 0 && !d.uitkomst && !m;
+    const kleur = m?.kleur ?? d.kaart.kleur;
+    let tekst;
+    if (spel.fase === 'opnieuwDelen') tekst = 'Iedereen past. <strong>Er wordt opnieuw gedeeld.</strong>';
+    else if (m?.soort === 'speelt') tekst = `<span class="draai-groot"><strong>${naam(m.speler)}</strong> speelt · troef ${KLEURNAAM[kleur].toLowerCase()}</span>`;
+    else if (m?.soort === 'iedereenPast') tekst = '<span class="draai-groot">Iedereen past</span>';
+    else tekst = `Voorgestelde troef: <strong>${KLEURNAAM[kleur]}</strong>${d.rondes ? ` · ronde ${d.rondes + 1}` : ''}${spel.partij.deler === 0 ? ' · jij deelt' : ''}`;
+    // Alleen de kleur, groot: geen hele speelkaart (die verwart met de slag).
+    const tegel = `<div class="troef-tegel ${ROOD.has(kleur) ? 'rood' : ''} ${spel.nieuweKaart === kaartId(d.kaart) ? 'nieuw' : ''} ${m?.soort === 'speelt' ? 'gekozen' : ''} ${m?.soort === 'iedereenPast' ? 'gepast' : ''}">${symbool(kleur)}</div>`;
     return `<div class="midden"><div class="draaien">
-      <div class="stapel ${spel.nieuweKaart === kaartId(d.kaart) ? 'nieuw' : ''}">${rugHtml()}${kaartHtml(d.kaart)}</div>
+      ${tegel}
       <div class="draai-tekst">${tekst}</div>
       ${jij ? `<div class="draai-knoppen">
         <button class="knop goud" data-actie="draai" data-keuze="spelen">Spelen</button>
@@ -123,7 +136,7 @@ function midden(spel) {
 // ---------- Hint ----------
 function hint(spel) {
   if (spel.fase === 'draaien') {
-    if (spel.draaien.uitkomst) return '';
+    if (spel.draaien.uitkomst || spel.draaiMelding) return '';
     return spel.draaien.beurt === 0
       ? '<strong>Jouw beurt</strong>'
       : `${naam(spel.draaien.beurt)} denkt na…`;
@@ -166,17 +179,17 @@ export function sorteerHand(kaarten, troef) {
 }
 
 function hand(spel) {
+  // Tijdens het delen: alleen de ruggen van de kaarten die al gedeeld zijn.
+  if (spel.fase === 'delen') {
+    return `<div class="hand">${rugHtml().repeat(spel.zichtbaar?.[0] ?? 0)}</div>`;
+  }
   const kaarten = spel.potje ? spel.potje.handen[0] : spel.handen?.[0] ?? [];
   const gesorteerd = sorteerHand(kaarten, spel.potje?.troef ?? null);
-  const p = spel.potje;
-  const mijnBeurt = spel.fase === 'spelen' && !spel.getoondeSlag && p.beurt === 0;
-  const geldig = mijnBeurt ? new Set(geldigMetReden(p.handen[0], p.slag, p.troef, p.systeem).kaarten.map(kaartId)) : null;
+  // Geen grijze kaarten: Rutger kent de regels. Met verzaakbescherming schudt een kaart die niet mag.
   return `<div class="hand">${gesorteerd
-    .map((k, i) => {
+    .map((k) => {
       const id = kaartId(k);
-      const grijs = geldig && !geldig.has(id) ? 'grijs' : '';
-      const op = spel.gekozen === id ? 'opgetild' : '';
-      return kaartHtml(k, { klasse: `${grijs} ${op}`, id });
+      return kaartHtml(k, { klasse: spel.gekozen === id ? 'opgetild' : '', id });
     })
     .join('')}</div>`;
 }
@@ -303,7 +316,7 @@ function uitslagVenster(spel) {
     kop = wijSpelen ? 'Wij zijn nat' : 'Zij zijn nat';
     uitleg = 'De tegenpartij krijgt alle punten en alle roem.';
   } else if (u.pit !== null) {
-    kop = u.pit === 0 ? 'Pit voor wij!' : 'Pit voor zij!';
+    kop = 'Pit!';
     uitleg = 'Alle slagen gehaald: 100 roem extra.';
   }
   const klaar = spel.fase === 'partijKlaar';

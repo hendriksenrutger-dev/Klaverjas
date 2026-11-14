@@ -9,8 +9,12 @@ import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij } from '
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
 // Computerspelers "denken" zichtbaar 0,5 tot 1 seconde (ook als het rekenen sneller gaat).
 const denktijd = () => (snel ? 0 : 350 + Math.random() * 300);
+// Bij spelen of passen denken de computers iets langer, zodat je kunt volgen wie wat kiest.
+const denktijdDraai = () => (snel ? 0 : 1000 + Math.random() * 400);
+const AANKONDIGING = snel ? 0 : 1800; // "Oost speelt · troef Ruiten"
+const IEDEREEN_PAST = snel ? 0 : 1500;
 const SLAG_PAUZE = snel ? 0 : 1000;
-const MELDING_TIJD = snel ? 0 : 1500;
+const MELDING_TIJD = snel ? 0 : 2000;
 
 const JIJ = 0;
 
@@ -49,9 +53,9 @@ const PAUZE = new Set(['instellingen', 'menu', 'nieuwBevestig']);
 let uitgesteld = null;
 
 // Laat een computerspeler rekenen en wacht daarnaast minstens de denktijd.
-function computerZet(vraagFn, doeFn) {
+function computerZet(vraagFn, doeFn, tijd = denktijd()) {
   const token = ++beurtToken;
-  const minimaal = new Promise((ok) => setTimeout(ok, denktijd()));
+  const minimaal = new Promise((ok) => setTimeout(ok, tijd));
   Promise.all([vraagFn(), minimaal])
     .then(([antwoord]) => {
       if (token !== beurtToken) return;
@@ -93,26 +97,92 @@ function startRonde() {
   spel.handen = handen;
   spel.draaien = draaien;
   spel.draaiKeuzes = {};
-  spel.nieuweKaart = R.kaartId(draaien.kaart);
   spel.potje = null;
-  geluid.schudden();
   spel.getoondeSlag = null;
   spel.roemMelding = null;
   spel.uitslag = null;
   spel.gekozen = null;
   spel.laatsteSlag = null;
+  spel.draaiMelding = null;
+  schudEnDeel(beurtToken);
+}
+
+const wacht = (ms) => new Promise((ok) => setTimeout(ok, ms));
+
+// Eerst schudden (geluid, de stapel ligt in het midden), daarna delen in pakjes van 3-2-3
+// rond de tafel, links van de deler beginnend: elk pakje vliegt naar zijn speler, met een tikje.
+async function schudEnDeel(token) {
+  spel.fase = 'delen';
+  spel.zichtbaar = [0, 0, 0, 0];
+  teken();
+  if (!snel) {
+    await geluid.gereed();
+    const duur = geluid.schudden();
+    spel.schudt = true;
+    teken();
+    await wacht(duur ? duur * 1000 - 150 : 700);
+    spel.schudt = false;
+    for (const [ronde, aantal] of [3, 2, 3].entries()) {
+      for (let n = 1; n <= 4; n++) {
+        if (token !== beurtToken) return;
+        const speler = (spel.partij.deler + n) % 4;
+        vliegPakje(speler);
+        geluid.deelTik();
+        await wacht(110);
+        spel.zichtbaar[speler] += aantal;
+        teken();
+        await wacht(40);
+      }
+      if (ronde < 2) await wacht(120);
+    }
+    await wacht(200);
+  }
+  if (token !== beurtToken) return;
+  spel.zichtbaar = null;
   spel.fase = 'draaien';
+  spel.nieuweKaart = R.kaartId(spel.draaien.kaart);
+  geluid.kaartNeer();
   volgende();
+}
+
+// Een pakje kaartruggen vliegt van de stapel in het midden naar de plek van de speler.
+function vliegPakje(speler) {
+  const van = document.querySelector('.stapel-delen');
+  const doelSel = speler === JIJ ? '.hand' : `.speler.${['zuid', 'west', 'noord', 'oost'][speler]} .ruggen`;
+  const naar = document.querySelector(doelSel);
+  if (!van || !naar) return;
+  const a = van.getBoundingClientRect();
+  const b = naar.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'vliegend';
+  el.innerHTML = van.querySelector('.kaart.rug')?.outerHTML ?? '';
+  el.style.left = `${a.left}px`;
+  el.style.top = `${a.top}px`;
+  el.style.width = `${a.width}px`;
+  el.style.height = `${a.height}px`;
+  document.body.appendChild(el);
+  const dx = b.left + b.width / 2 - (a.left + a.width / 2);
+  const dy = b.top + b.height / 2 - (a.top + a.height / 2);
+  const schaal = speler === JIJ ? 0.9 : 0.35;
+  const draai = (Math.random() - 0.5) * 30;
+  el.animate(
+    [
+      { transform: 'translate(0, 0) scale(1) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${schaal}) rotate(${draai}deg)`, opacity: 0.9 },
+    ],
+    { duration: 220, easing: 'cubic-bezier(.3,.7,.4,1)' },
+  ).onfinish = () => el.remove();
 }
 
 function volgende() {
   teken();
-  if (spel.fase === 'draaien' && spel.draaien.beurt !== JIJ) {
+  if (spel.fase === 'draaien' && !spel.draaien.uitkomst && !spel.draaiMelding && spel.draaien.beurt !== JIJ) {
     const s = spel.draaien.beurt;
     const d = spel.draaien;
     computerZet(
       () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, spel.instellingen.niveau),
       (keuze) => draai(s, keuze),
+      denktijdDraai(),
     );
   } else if (spel.fase === 'spelen' && !spel.getoondeSlag && spel.potje.beurt !== JIJ) {
     const s = spel.potje.beurt;
@@ -127,9 +197,13 @@ function draai(speler, keuze) {
   const u = spel.draaien.uitkomst;
 
   if (u?.soort === 'spelen') {
-    spel.potje = R.startPotje(spel.partij, spel.handen, u);
-    spel.fase = 'spelen';
-    volgende();
+    // Eerst duidelijk aankondigen wie speelt, dan pas het potje beginnen.
+    spel.draaiMelding = { soort: 'speelt', speler, kleur: u.troef };
+    teken();
+    later(() => {
+      spel.draaiMelding = null;
+      begin(u);
+    }, AANKONDIGING);
   } else if (u?.soort === 'opnieuwDelen') {
     spel.fase = 'opnieuwDelen';
     teken();
@@ -139,18 +213,26 @@ function draai(speler, keuze) {
     }, MELDING_TIJD);
   } else {
     if (spel.draaien.kaart !== vorigeKaart) {
-      // Iedereen paste: even laten zien, dan de nieuwe kaart.
+      // Iedereen paste: dat eerst laten zien (met de oude kleur), dan de nieuwe kleur.
+      spel.draaiMelding = { soort: 'iedereenPast', kleur: vorigeKaart.kleur };
       teken();
       later(() => {
+        spel.draaiMelding = null;
         spel.draaiKeuzes = {};
         spel.nieuweKaart = R.kaartId(spel.draaien.kaart);
         geluid.kaartNeer();
         volgende();
-      }, snel ? 0 : 600);
+      }, IEDEREEN_PAST);
       return;
     }
     volgende();
   }
+}
+
+function begin(uitkomst) {
+  spel.potje = R.startPotje(spel.partij, spel.handen, uitkomst);
+  spel.fase = 'spelen';
+  volgende();
 }
 
 function speel(speler, kaart) {
@@ -193,7 +275,7 @@ function eindPotje() {
 
 const acties = {
   draai(keuze) {
-    if (spel.fase === 'draaien' && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst) {
+    if (spel.fase === 'draaien' && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && !spel.draaiMelding) {
       draai(JIJ, keuze);
     }
   },
@@ -203,7 +285,14 @@ const acties = {
     const kaart = hand.find((k) => R.kaartId(k) === id);
     if (!kaart) return;
     const mag = R.geldigVoor(spel.potje, JIJ).some((k) => R.kaartId(k) === id);
-    if (!mag && spel.potje.verzaakbescherming) return;
+    if (!mag && spel.potje.verzaakbescherming) {
+      // Mag niet: de kaart schudt kort (geen uitleg, geen grijze kaarten).
+      document.querySelector(`.hand [data-kaart="${id}"]`)?.animate(
+        [{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }],
+        { duration: 260 },
+      );
+      return;
+    }
     if (spel.gekozen === id) speel(JIJ, kaart);
     else {
       spel.gekozen = id;
@@ -314,8 +403,16 @@ function hervat() {
         if (spel.potje.klaar) eindPotje();
         else volgende();
         break;
+      case 'delen':
       case 'draaien':
-        volgende();
+        spel.fase = 'draaien';
+        spel.zichtbaar = null;
+        spel.draaiMelding = null;
+        if (spel.draaien.uitkomst?.soort === 'spelen') begin(spel.draaien.uitkomst);
+        else if (spel.draaien.uitkomst?.soort === 'opnieuwDelen') {
+          spel.partij = R.naOpnieuwDelen(spel.partij);
+          startRonde();
+        } else volgende();
         break;
       case 'potjeKlaar':
       case 'partijKlaar':
@@ -332,6 +429,18 @@ function hervat() {
 }
 
 geluid.zetGeluid(spel.instellingen.geluid);
+
+// Plaatjes van heer, vrouw en boer vooraf laden en decoderen, zodat een gespeelde kaart
+// meteen met tekening verschijnt (niet eerst even wit).
+const plaatjes = [];
+for (const kleur of R.KLEUREN) {
+  for (const rang of ['H', 'V', 'B']) {
+    const img = new Image();
+    img.src = new URL(`../../assets/kaarten/${kleur}-${rang}.webp`, import.meta.url).href;
+    img.decode?.().catch(() => {});
+    plaatjes.push(img);
+  }
+}
 
 // Geluid mag pas na een eerste aanraking.
 window.addEventListener('pointerdown', geluid.ontgrendel, { once: false, passive: true });

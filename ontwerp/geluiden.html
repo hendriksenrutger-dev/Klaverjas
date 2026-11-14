@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Klaverjas · geluiden kiezen</title>
+  <style>
+    body { margin: 0; padding: 24px; font: 18px system-ui, sans-serif; background: #227049; color: #fff; }
+    h1 { margin-top: 0; }
+    .rij { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+    button { min-width: 120px; min-height: 64px; font-size: 22px; font-weight: 600; border: none; border-radius: 14px; background: #e8c873; color: #1b1b1b; }
+    p { max-width: 720px; opacity: .9; }
+  </style>
+</head>
+<body>
+  <h1>Geluiden kiezen</h1>
+  <p>Tik op een letter om het geluid voor het spelen van een kaart te horen. Laat Claude weten welke je mooi vindt (meerdere mag: de app wisselt ze af).</p>
+  <div class="rij" id="kaart"></div>
+  <h2>Schudden en delen</h2>
+  <div class="rij">
+    <button data-naam="schudden">Schudden</button>
+    <button data-naam="deel">Eén pakje delen</button>
+    <button id="alles">Schudden + delen</button>
+  </div>
+  <script>
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const cache = {};
+    async function buffer(naam) {
+      if (!cache[naam]) cache[naam] = fetch(`../assets/geluid/${naam}.ogg`).then((r) => r.arrayBuffer()).then((d) => ctx.decodeAudioData(d));
+      return cache[naam];
+    }
+    async function speel(naam, wanneer = 0) {
+      if (ctx.state === 'suspended') await ctx.resume();
+      const b = await buffer(naam);
+      const s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(ctx.currentTime + wanneer);
+      return b.duration;
+    }
+    for (const k of ['D']) {
+      const knop = document.createElement('button'); knop.textContent = k; knop.dataset.naam = `kaart-${k}`;
+      document.getElementById('kaart').appendChild(knop);
+    }
+    document.addEventListener('click', async (e) => {
+      const naam = e.target.dataset?.naam;
+      if (naam) speel(naam);
+      if (e.target.id === 'alles') {
+        const d = await speel('schudden');
+        let t = d;
+        for (let k = 0; k < 12; k++) { await speel('deel', t); t += 0.13 + (k === 3 || k === 7 ? 0.12 : 0); }
+      }
+    });
+  </script>
+</body>
+</html>

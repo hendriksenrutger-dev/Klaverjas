@@ -45,7 +45,7 @@ function hoek(k, onder = false) {
 function midden(k) {
   if (k.rang === 'A') return `<div class="aas"><div class="aas-rond">${symbool(k.kleur)}</div></div>`;
   if (k.rang === 'H' || k.rang === 'V' || k.rang === 'B') {
-    return `<div class="plaatje"><img src="assets/kaarten/${k.kleur}-${k.rang}.webp" alt="" draggable="false"></div>`;
+    return `<div class="plaatje"><img src="assets/kaarten/${k.kleur}-${k.rang}.webp" alt="" draggable="false" decoding="sync"></div>`;
   }
   return `<div class="pips">${PIPS[k.rang]
     .map(([x, y]) => `<span class="pip ${y > 50 ? 'om' : ''}" style="left:${x}%;top:${y}%">${symbool(k.kleur)}</span>`)
