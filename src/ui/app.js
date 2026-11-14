@@ -73,8 +73,19 @@ function teken() {
   const typen = document.activeElement?.matches?.('input[data-naam]');
   if (!typen) render(document.getElementById('app'), spel, acties);
   spel.nieuweKaart = null; // volgende keer tekenen: niet opnieuw animeren
+  // Opslaan pas na een animatie, zodat een vliegende kaart niet hapert.
+  clearTimeout(bewaarTimer);
+  if (spel.partij) bewaarTimer = setTimeout(bewaarNu, 400);
+}
+
+let bewaarTimer = null;
+function bewaarNu() {
+  clearTimeout(bewaarTimer);
   if (spel.partij) bewaarPartij(Object.fromEntries(BEWAAR.map((k) => [k, spel[k]])));
 }
+// App gaat naar de achtergrond of sluit: meteen opslaan.
+addEventListener('pagehide', bewaarNu);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') bewaarNu(); });
 
 // Regels-instellingen voor een (nieuwe) partij.
 function regelInstellingen() {
