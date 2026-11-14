@@ -469,3 +469,4 @@ button { font: inherit; }
 .stat-tabs .segment-knop { min-height: 44px; padding: 0 16px; }
 .venster .sub + .stat-tabs { margin-top: 0; }
 .stat td { padding: 2px 6px; }
+.start-kolom h1 { margin-bottom: 22px; }

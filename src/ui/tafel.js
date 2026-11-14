@@ -512,7 +512,6 @@ function statistiekVenster(spel) {
 
 // ---------- Beginscherm ----------
 function beginscherm(spel) {
-  const i = spel.instellingen;
   const loopt = spel.partij ? spel.fase !== 'partijKlaar' : Boolean(spel.bewaard);
   const info = spel.partij
     ? { potje: Math.min(potjeNummer(spel.partij), AANTAL_POTJES), totaal: spel.partij.totaal }
@@ -525,8 +524,7 @@ function beginscherm(spel) {
     <main class="start">
       <div class="start-waaier">${waaier}</div>
       <div class="start-kolom">
-        <h1>Klaverjas</h1>
-        <p class="start-sub">${i.systeem === 'amsterdams' ? 'Amsterdams' : 'Rotterdams'} · computerspelers ${i.niveau}</p>
+        <h1>Klaverjassen</h1>
         <div class="start-knoppen">
           ${loopt ? `<button class="knop goud start-knop" data-actie="verderSpelen">Verder spelen
             <span class="start-knop-sub">Potje ${info.potje} van ${AANTAL_POTJES} · Wij ${info.totaal[0]} – Zij ${info.totaal[1]}</span></button>` : ''}
