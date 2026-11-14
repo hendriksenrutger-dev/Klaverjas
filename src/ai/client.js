@@ -1,5 +1,5 @@
 // Praat met de AI-worker. Valt terug op rekenen in de hoofdthread als workers niet werken.
-import { kiesKaart, kiesDraai, waarneming, NIVEAUS } from './simulatie.js';
+import { kiesKaart, kiesDraai, kiesVerplicht, waarneming, NIVEAUS } from './simulatie.js';
 
 // Elk kanaal heeft een eigen worker: de vergelijking met de computer rekent op de
 // achtergrond en mag de zetten van de computerspelers niet ophouden.
@@ -69,4 +69,15 @@ export function analyseerKaart(potje, speler) {
 export function analyseerDraai(hand, kleur, opties) {
   opties = { ...opties, strategie: NIVEAUS.sterk.strategie };
   return vraagAchtergrond('draai', { hand, kleur, opties }, () => kiesDraai(hand, kleur, opties)).then((r) => r.keuze);
+}
+
+// Verplicht spelen: welke troefkleur kiest de computer (of had hij gekozen)?
+export function vraagVerplicht(hand, opties, niveau = 'normaal') {
+  opties = { ...opties, strategie: (NIVEAUS[niveau] ?? NIVEAUS.normaal).strategie };
+  return vraag('verplicht', { hand, opties }, () => kiesVerplicht(hand, opties)).then((r) => r.kleur);
+}
+
+export function analyseerVerplicht(hand, opties) {
+  opties = { ...opties, strategie: NIVEAUS.sterk.strategie };
+  return vraagAchtergrond('verplicht', { hand, opties }, () => kiesVerplicht(hand, opties)).then((r) => r.kleur);
 }

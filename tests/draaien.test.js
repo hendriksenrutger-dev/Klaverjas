@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { nieuwDraaien, beslis, gedraaideKaarten } from '../src/regels/draaien.js';
 import { Ks } from './hulp.js';
@@ -78,4 +78,40 @@ test('instelling 3 rondes: derde kleur wordt nog gedraaid', () => {
 
 test('maxRondes moet 2 of 3 zijn', () => {
   assert.throws(() => nieuwDraaien({ stapel, deler: 0, maxRondes: 4 }));
+});
+
+describe('troefkeuze verplicht', async () => {
+  const { nieuwVerplicht, kiesTroef } = await import('../src/regels/draaien.js');
+  const { nieuwePartij, deelRonde, startPotje } = await import('../src/regels/partij.js');
+
+  test('de voorhand (links van de deler) kiest zelf troef en speelt', () => {
+    const d = nieuwVerplicht({ deler: 2 });
+    assert.equal(d.beurt, 3);
+    const k = kiesTroef(d, 3, 'harten');
+    assert.deepEqual(k.uitkomst, { soort: 'spelen', troef: 'harten', speler: 3, team: 1 });
+  });
+
+  test('alleen de voorhand mag kiezen, en maar één keer', () => {
+    const d = nieuwVerplicht({ deler: 0 });
+    assert.throws(() => kiesTroef(d, 2, 'harten'));
+    assert.throws(() => kiesTroef(kiesTroef(d, 1, 'ruiten'), 1, 'harten'));
+    assert.throws(() => kiesTroef(d, 1, 'sterren'));
+  });
+
+  test('een partij met verplicht spelen deelt zonder draaistapel en start het potje', () => {
+    const partij = nieuwePartij({ instellingen: { troefkeuze: 'verplicht' }, eersteDeler: 1 });
+    const { handen, draaien } = deelRonde(partij, () => 0.3);
+    assert.equal(draaien.verplicht, true);
+    assert.equal(draaien.beurt, 2);
+    const potje = startPotje(partij, handen, kiesTroef(draaien, 2, 'klaveren').uitkomst);
+    assert.equal(potje.troef, 'klaveren');
+    assert.equal(potje.spelendTeam, 0);
+    assert.equal(potje.beurt, 2); // de voorhand komt ook uit
+  });
+
+  test('standaard blijft traditioneel draaien', () => {
+    const { draaien } = deelRonde(nieuwePartij(), () => 0.3);
+    assert.ok(!draaien.verplicht);
+    assert.ok(draaien.kaart);
+  });
 });

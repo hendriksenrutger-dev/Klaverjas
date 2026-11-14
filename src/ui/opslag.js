@@ -13,6 +13,7 @@ export const STANDAARD = Object.freeze({
   geluid: true,
   vergelijk: false, // vergelijk met de computer
   gespeeld: false, // knop met overzicht van gespeelde kaarten
+  troefkeuze: 'traditioneel', // of 'verplicht'
   namen: ['Zuid', 'West', 'Noord', 'Oost'],
 });
 
@@ -46,6 +47,7 @@ export function laadInstellingen() {
   if (typeof i.geluid !== 'boolean') i.geluid = STANDAARD.geluid;
   if (typeof i.vergelijk !== 'boolean') i.vergelijk = STANDAARD.vergelijk;
   if (typeof i.gespeeld !== 'boolean') i.gespeeld = STANDAARD.gespeeld;
+  if (!['traditioneel', 'verplicht'].includes(i.troefkeuze)) i.troefkeuze = STANDAARD.troefkeuze;
   if (!Array.isArray(i.namen) || i.namen.length !== 4) i.namen = [...STANDAARD.namen];
   i.namen = i.namen.map((n, k) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : STANDAARD.namen[k]));
   return i;

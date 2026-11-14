@@ -1,7 +1,7 @@
 // Een partij van 16 potjes.
 
 import { maakDeck, schud, deel } from './kaarten.js';
-import { nieuwDraaien } from './draaien.js';
+import { nieuwDraaien, nieuwVerplicht } from './draaien.js';
 import { nieuwPotje, uitslag } from './potje.js';
 import { AMSTERDAMS } from './geldig.js';
 
@@ -11,6 +11,7 @@ export const STANDAARD_INSTELLINGEN = Object.freeze({
   systeem: AMSTERDAMS, // of 'rotterdams'
   rondesVoorOpnieuwDelen: 2, // of 3
   verzaakbescherming: true,
+  troefkeuze: 'traditioneel', // of 'verplicht': de voorhand kiest zelf troef en moet spelen
   // Wie deelt opnieuw na rondpassen. Afgesproken met Rutger: dezelfde deler.
   opnieuwDelenDoor: 'zelfde',
 });
@@ -35,6 +36,7 @@ export function potjeNummer(partij) {
 // Schudt en deelt, en legt een aparte geschudde stapel klaar om te draaien.
 export function deelRonde(partij, rng = Math.random) {
   const handen = deel(schud(maakDeck(), rng), partij.deler);
+  if (partij.instellingen.troefkeuze === 'verplicht') return { handen, draaien: nieuwVerplicht({ deler: partij.deler }) };
   const draaien = nieuwDraaien({
     stapel: schud(maakDeck(), rng),
     deler: partij.deler,

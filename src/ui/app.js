@@ -1,7 +1,7 @@
 // Spelverloop: koppelt de spelregels aan het scherm en de computerspelers.
 
 import * as R from '../regels/index.js';
-import { vraagKaart, vraagDraai, analyseerKaart, analyseerDraai } from '../ai/client.js';
+import { vraagKaart, vraagDraai, vraagVerplicht, analyseerKaart, analyseerDraai, analyseerVerplicht } from '../ai/client.js';
 import { beoordeelKaart, legeVergelijking, telOp } from '../ai/vergelijk.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
@@ -100,7 +100,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // Regels-instellingen voor een (nieuwe) partij.
 function regelInstellingen() {
   const i = spel.instellingen;
-  return { systeem: i.systeem, rondesVoorOpnieuwDelen: i.rondesVoorOpnieuwDelen, verzaakbescherming: i.verzaakbescherming };
+  return { systeem: i.systeem, rondesVoorOpnieuwDelen: i.rondesVoorOpnieuwDelen, verzaakbescherming: i.verzaakbescherming, troefkeuze: i.troefkeuze };
 }
 
 function nieuwePartij() {
@@ -167,8 +167,10 @@ async function schudEnDeel(token) {
   if (token !== beurtToken) return;
   spel.zichtbaar = null;
   spel.fase = 'draaien';
-  spel.nieuweKaart = R.kaartId(spel.draaien.kaart);
-  geluid.kaartNeer();
+  if (spel.draaien.kaart) {
+    spel.nieuweKaart = R.kaartId(spel.draaien.kaart);
+    geluid.kaartNeer();
+  }
   volgende();
 }
 
@@ -203,7 +205,15 @@ function vliegPakje(speler) {
 
 function volgende() {
   teken();
-  if (spel.fase === 'draaien' && !spel.draaien.uitkomst && !spel.draaiMelding && spel.draaien.beurt !== JIJ) {
+  if (spel.fase === 'draaien' && spel.draaien.verplicht && !spel.draaien.uitkomst && spel.draaien.beurt !== JIJ) {
+    // Verplicht spelen: de voorhand kiest zelf troef.
+    const s = spel.draaien.beurt;
+    computerZet(
+      () => vraagVerplicht(spel.handen[s], { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, spel.instellingen.niveau),
+      (kleur) => kiesTroef(s, kleur),
+      denktijdDraai(),
+    );
+  } else if (spel.fase === 'draaien' && !spel.draaien.uitkomst && !spel.draaiMelding && spel.draaien.beurt !== JIJ) {
     const s = spel.draaien.beurt;
     const d = spel.draaien;
     computerZet(
@@ -215,6 +225,17 @@ function volgende() {
     const s = spel.potje.beurt;
     computerZet(() => vraagKaart(spel.potje, s, spel.instellingen.niveau), (kaart) => speel(s, kaart));
   }
+}
+
+function kiesTroef(speler, kleur) {
+  spel.draaien = R.kiesTroef(spel.draaien, speler, kleur);
+  const u = spel.draaien.uitkomst;
+  spel.draaiMelding = { soort: 'speelt', speler, kleur: u.troef };
+  teken();
+  later(() => {
+    spel.draaiMelding = null;
+    begin(u);
+  }, AANKONDIGING);
 }
 
 function draai(speler, keuze) {
@@ -303,6 +324,16 @@ function vergelijkDraai(keuze) {
     .catch(() => verwerkAnalyse(sessie, null));
 }
 
+function vergelijkTroef(kleur) {
+  if (!vergelijkAan()) return;
+  const sessie = analyseSessie;
+  const basis = { soort: 'troef', potje: spel.partij.potjes.length, jij: kleur };
+  spel.analyseBezig++;
+  analyseerVerplicht(spel.handen[JIJ], { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem })
+    .then((computer) => verwerkAnalyse(sessie, { ...basis, computer }))
+    .catch(() => verwerkAnalyse(sessie, null));
+}
+
 function speel(speler, kaart) {
   const voor = spel.potje;
   if (speler === JIJ) vergelijkKaart(voor, kaart);
@@ -343,8 +374,14 @@ function eindPotje() {
 }
 
 const acties = {
+  kiesTroef(kleur) {
+    if (spel.fase === 'draaien' && spel.draaien.verplicht && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && R.KLEUREN.includes(kleur)) {
+      vergelijkTroef(kleur);
+      kiesTroef(JIJ, kleur);
+    }
+  },
   draai(keuze) {
-    if (spel.fase === 'draaien' && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && !spel.draaiMelding) {
+    if (spel.fase === 'draaien' && !spel.draaien.verplicht && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && !spel.draaiMelding) {
       vergelijkDraai(keuze);
       draai(JIJ, keuze);
     }
@@ -422,6 +459,7 @@ const acties = {
     else if (sleutel === 'geluid') i.geluid = waarde === true || waarde === 'aan';
     else if (sleutel === 'vergelijk') i.vergelijk = waarde === true || waarde === 'aan';
     else if (sleutel === 'gespeeld') i.gespeeld = waarde === true || waarde === 'aan';
+    else if (sleutel === 'troefkeuze' && ['traditioneel', 'verplicht'].includes(waarde)) i.troefkeuze = waarde;
     else return;
     spel.instellingen = i;
     geluid.zetGeluid(i.geluid);

@@ -1,6 +1,20 @@
 // Troef bepalen door te draaien van een aparte, geschudde stapel.
 
-import { team } from './kaarten.js';
+import { team, KLEUREN } from './kaarten.js';
+
+// Troefkeuze verplicht (instelling, met Rutger afgesproken): er wordt niet gedraaid. De voorhand
+// (links van de deler, die ook uitkomt) kiest zelf een troefkleur en moet spelen.
+export function nieuwVerplicht({ deler }) {
+  return { verplicht: true, kaart: null, deler, beurt: (deler + 1) % 4, uitkomst: null };
+}
+
+export function kiesTroef(d, speler, kleur) {
+  if (!d.verplicht) throw new Error('Alleen bij verplicht spelen');
+  if (d.uitkomst) throw new Error('De troef is al gekozen');
+  if (speler !== d.beurt) throw new Error(`Speler ${speler} is niet aan de beurt`);
+  if (!KLEUREN.includes(kleur)) throw new Error(`Onbekende kleur: ${kleur}`);
+  return { ...d, uitkomst: { soort: 'spelen', troef: kleur, speler, team: team(speler) } };
+}
 
 export function nieuwDraaien({ stapel, deler, maxRondes = 2 }) {
   if (maxRondes !== 2 && maxRondes !== 3) throw new Error('maxRondes is 2 of 3');

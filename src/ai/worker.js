@@ -1,5 +1,5 @@
 // Web Worker: rekent de zetten van de computerspelers uit, zodat het scherm niet hapert.
-import { kiesKaart, kiesDraai } from './simulatie.js';
+import { kiesKaart, kiesDraai, kiesVerplicht } from './simulatie.js';
 
 self.onmessage = (e) => {
   const { id, soort, data } = e.data;
@@ -7,6 +7,7 @@ self.onmessage = (e) => {
     let resultaat;
     if (soort === 'kaart') resultaat = kiesKaart(data.waarneming, data.niveau);
     else if (soort === 'draai') resultaat = kiesDraai(data.hand, data.kleur, data.opties);
+    else if (soort === 'verplicht') resultaat = kiesVerplicht(data.hand, data.opties);
     else throw new Error(`Onbekende vraag: ${soort}`);
     self.postMessage({ id, resultaat });
   } catch (fout) {

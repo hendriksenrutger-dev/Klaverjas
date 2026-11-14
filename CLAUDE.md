@@ -57,6 +57,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 3. **Past iedereen,** dan wordt de volgende kaart gedraaid. **Een kleur waarop al gepast is, telt niet en wordt overgeslagen.** Er wordt doorgedraaid tot er een nieuwe kleur verschijnt. Twee keer klaveren is dus één ronde.
 4. Na **2 rondes** waarin iedereen past, wordt opnieuw gedeeld. Dit is een instelling: **2 (standaard) of 3**.
 5. Na rondpassen deelt **dezelfde deler** opnieuw. Het potje telt niet mee.
+6. **Instelling troefkeuze: traditioneel (standaard, zoals hierboven) of verplicht** (op Rutgers verzoek). Verplicht: er wordt niet gedraaid; de voorhand (links van de deler, die ook uitkomt) kiest zelf een troefkleur en moet spelen. De computer kiest de kleur met de beste verwachte uitkomst.
 
 ### Uitkomen
 
@@ -100,6 +101,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 ## Instellingen
 
 - Amsterdams (standaard) of Rotterdams
+- Troefkeuze traditioneel (standaard) of verplicht
 - Opnieuw delen na 2 (standaard) of 3 rondes passen
 - Verzaakbescherming aan (standaard) of uit
 - Moeilijkheid van de computerspelers: makkelijk, normaal (standaard), sterk (afgestemd met Rutger, zie RAPPORT-FASE-4.md)

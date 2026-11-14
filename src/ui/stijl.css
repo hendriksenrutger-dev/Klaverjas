@@ -183,6 +183,10 @@ button { font: inherit; }
 .draai-tekst { font-size: 21px; text-align: center; white-space: nowrap; }
 .draai-tekst strong { color: var(--goud); }
 .draai-knoppen { display: flex; gap: 12px; }
+.troef-kiezen .troefknop { min-width: 64px; min-height: 64px; padding: 0; display: grid; place-items: center; color: var(--zwart); background: var(--creme); border-color: rgba(232, 200, 115, 0.7); }
+.troef-kiezen .troefknop.rood { color: var(--rood); }
+.troef-kiezen .troefknop .sym { width: 34px; height: 34px; fill: currentColor; }
+.troef-schijf.open { font-family: var(--cijfers); font-size: calc(var(--kh) * 0.3); font-weight: 700; color: #8a6a14; display: grid; place-items: center; }
 
 /* ---------- Troef draaien: schijf in het midden, keuzes als tekstballonnen op de plek van elke speler ---------- */
 .troef-schijf {
