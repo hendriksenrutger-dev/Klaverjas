@@ -184,6 +184,19 @@ button { font: inherit; }
 .draai-tekst strong { color: var(--goud); }
 .draai-knoppen { display: flex; gap: 12px; }
 
+/* ---------- Schudden en delen ---------- */
+.delen-midden { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
+.stapel-delen { position: relative; width: var(--kb-tafel); height: var(--kh); }
+.stapel-delen .kaart.rug { position: absolute; left: 0; top: 0; }
+.stapel-delen .kaart.rug:nth-child(2) { left: 3px; top: -3px; }
+.stapel-delen .kaart.rug:nth-child(3) { left: 6px; top: -6px; }
+.stapel-delen.schudt .kaart.rug:nth-child(1) { animation: schud-l 0.32s ease-in-out infinite; }
+.stapel-delen.schudt .kaart.rug:nth-child(3) { animation: schud-r 0.32s ease-in-out infinite; }
+@keyframes schud-l { 50% { transform: translateX(-22%) rotate(-6deg); } }
+@keyframes schud-r { 50% { transform: translateX(22%) rotate(6deg); } }
+.vliegend { position: fixed; z-index: 20; pointer-events: none; }
+.vliegend .kaart { width: 100%; height: 100%; }
+
 /* ---------- Groot troefsymbool ---------- */
 .troef-groot {
   position: absolute; right: 18px; top: calc(var(--balk-h) + 10px); z-index: 3;
@@ -226,7 +239,6 @@ button { font: inherit; }
 }
 .hand .kaart { --kh: var(--hk); cursor: pointer; transition: transform 0.16s ease-out, box-shadow 0.16s, opacity 0.2s; }
 .hand .kaart.opgetild { transform: translateY(calc(var(--hk) * -0.12)); box-shadow: 0 0 0 3px var(--goud), 0 10px 22px rgba(0, 0, 0, 0.4); }
-.hand .kaart.grijs { opacity: 0.45; }
 
 /* ---------- Vensters ---------- */
 .venster-achter {

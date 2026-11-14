@@ -64,7 +64,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 
 ### Verzaken
 
-- Instelling **verzaakbescherming**, **standaard aan**: alleen geldige kaarten zijn speelbaar, ongeldige zijn grijs.
+- Instelling **verzaakbescherming**, **standaard aan**: alleen geldige kaarten zijn speelbaar. Ongeldige kaarten worden **niet** grijs (Rutger kent de regels); tikt hij er een aan, dan schudt de kaart kort.
 - **Uit:** elke kaart is speelbaar. Bij een ongeldige kaart:
   - De app ziet dat **direct** en toont een duidelijke melding.
   - **Het potje stopt meteen.**
@@ -119,7 +119,9 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Hint onder de tafel:** kort, zonder uitleg van de regels (Rutger kent ze): "Jouw beurt", "Tik nog een keer om te spelen", "Deze slag is voor West".
 - **Beginscherm:** bij het openen eerst een beginscherm met "Verder spelen" (met potje en stand), "Nieuwe partij" en "Instellingen". Het huisje in de bovenbalk gaat terug naar het beginscherm; het spel wacht dan.
 - **Indeling:** alle maten volgen de echte schermhoogte (ook in Chrome met adresbalk). Kaarten liggen nooit onder tekst door; niets overlapt.
-- **Hand:** acht kaarten in een lichte waaier onderaan. Kaarten die niet mogen worden grijs (opacity ongeveer 0,45). **Spelen gaat met twee tikken:** de eerste tik tilt de kaart op, de tweede speelt hem.
+- **Hand:** acht kaarten plat naast elkaar onderaan, zonder grijze kaarten. **Spelen gaat met twee tikken:** de eerste tik tilt de kaart op, de tweede speelt hem.
+- **Schudden en delen:** eerst het schudgeluid met de stapel in het midden, daarna vliegen de kaarten in pakjes van 3-2-3 naar de spelers, met bij elk pakje een tikje.
+- **Uitslag:** bij alle slagen voor de spelende partij gewoon "Pit!".
 - **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten).
 - **Lettertypen:** Playfair Display voor cijfers en kaartindexen, Inter voor de interface. Bundel ze lokaal, want de app moet offline werken.
 - Knoppen en aanraakvlakken zijn minimaal 44 px.
