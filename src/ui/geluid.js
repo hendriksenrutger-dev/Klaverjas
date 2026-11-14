@@ -52,74 +52,70 @@ function tik(c, t, { freq = 2500, q = 0.9, duur = 0.06, volume = 0.5 } = {}) {
   bron.start(t, Math.random() * 0.5, duur + 0.02);
 }
 
-// Zachte plof van een kaart op het laken.
-function plof(c, t, volume = 0.25) {
-  const osc = c.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(160, t);
-  osc.frequency.exponentialRampToValueAtTime(70, t + 0.06);
-  const g = c.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(volume * VOLUME, t + 0.004);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-  osc.connect(g).connect(c.destination);
-  osc.start(t);
-  osc.stop(t + 0.18);
-}
-
-// Een kaart die over het laken schuift en tot stilstand komt:
-// zachte, gefilterde ruis die langzaam aanzwelt en wegsterft, met een dalende toon.
+// Kaart neerleggen: "fffft". Hoge, zachte sis die kort aanzwelt en eindigt met een tikje.
 export function kaartNeer() {
   const c = context();
   if (!c) return;
   const t = c.currentTime + 0.01;
-  const duur = 0.24 + Math.random() * 0.04;
+  const duur = 0.2 + Math.random() * 0.04;
 
   const bron = ruis(c);
-  const laag = c.createBiquadFilter();
-  laag.type = 'lowpass';
-  laag.frequency.setValueAtTime(3800, t);
-  laag.frequency.exponentialRampToValueAtTime(900, t + duur);
-  const band = c.createBiquadFilter();
-  band.type = 'bandpass';
-  band.Q.value = 0.6;
-  band.frequency.setValueAtTime(2200 + Math.random() * 400, t);
-  band.frequency.exponentialRampToValueAtTime(700, t + duur);
-
+  const hoog = c.createBiquadFilter();
+  hoog.type = 'highpass';
+  hoog.frequency.value = 2200;
+  const kleur = c.createBiquadFilter();
+  kleur.type = 'peaking';
+  kleur.frequency.value = 5500;
+  kleur.Q.value = 0.8;
+  kleur.gain.value = 5;
   const g = c.createGain();
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.32 * VOLUME, t + 0.035); // aanzetten
-  g.gain.setValueAtTime(0.32 * VOLUME, t + 0.065);
-  g.gain.exponentialRampToValueAtTime(0.12 * VOLUME, t + duur * 0.7); // schuiven
-  g.gain.exponentialRampToValueAtTime(0.0001, t + duur); // stilstaan
-
-  bron.connect(laag).connect(band).connect(g).connect(c.destination);
+  g.gain.linearRampToValueAtTime(0.1 * VOLUME, t + 0.05); // ff…
+  g.gain.linearRampToValueAtTime(0.17 * VOLUME, t + duur - 0.03); // …ff…
+  g.gain.exponentialRampToValueAtTime(0.0001, t + duur); // …t
+  bron.connect(hoog).connect(kleur).connect(g).connect(c.destination);
   bron.start(t, Math.random() * 0.5, duur + 0.05);
+
+  tik(c, t + duur - 0.012, { freq: 3800, q: 1.5, duur: 0.025, volume: 0.14 });
 }
 
-// Schudden: twee keer ritsen (veel snelle tikjes die vertragen) en daarna de stapel recht tikken.
+// Schudden: "prrrrt". Eén snelle, gelijkmatige roffel van kaarten die over elkaar ritsen,
+// met een zacht begin (p) en een tikje aan het eind (t).
 export function schudden() {
   const c = context();
   if (!c) return;
   let t = c.currentTime + 0.02;
-  for (let ronde = 0; ronde < 2; ronde++) {
-    const aantal = 22;
-    for (let i = 0; i < aantal; i++) {
-      const voortgang = i / aantal;
-      tik(c, t, {
-        freq: 3200 + Math.random() * 1800,
-        q: 1.4,
-        duur: 0.03 + Math.random() * 0.015,
-        volume: 0.12 + 0.18 * Math.sin(Math.PI * voortgang),
-      });
-      t += 0.024 + voortgang * 0.028; // eerst sneller, dan langzamer
-    }
-    t += 0.2;
-    // stapel samenschuiven
-    tik(c, t, { freq: 900, q: 0.6, duur: 0.25, volume: 0.25 });
-    t += 0.28;
+
+  // p
+  tik(c, t, { freq: 1200, q: 0.7, duur: 0.06, volume: 0.18 });
+  t += 0.05;
+
+  // rrrr: ~38 tikjes per seconde, licht onregelmatig
+  const aantal = 34;
+  const begin = t;
+  for (let i = 0; i < aantal; i++) {
+    const v = i / aantal;
+    tik(c, t, {
+      freq: 2600 + Math.random() * 1600,
+      q: 1.3,
+      duur: 0.022,
+      volume: 0.13 + 0.1 * Math.sin(Math.PI * Math.min(1, v * 1.2)),
+    });
+    t += 0.026 + (Math.random() - 0.5) * 0.006;
   }
-  // recht tikken op tafel
-  plof(c, t, 0.3);
-  tik(c, t, { freq: 1500, q: 0.8, duur: 0.05, volume: 0.3 });
+  // zachte ruis onder de roffel
+  const bron = ruis(c);
+  const f = c.createBiquadFilter();
+  f.type = 'bandpass';
+  f.frequency.value = 3000;
+  f.Q.value = 0.7;
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, begin);
+  g.gain.linearRampToValueAtTime(0.05 * VOLUME, begin + 0.1);
+  g.gain.linearRampToValueAtTime(0.0001, t);
+  bron.connect(f).connect(g).connect(c.destination);
+  bron.start(begin, 0, t - begin + 0.05);
+
+  // t
+  tik(c, t + 0.02, { freq: 3200, q: 1.2, duur: 0.035, volume: 0.35 });
 }
