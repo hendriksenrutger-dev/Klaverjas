@@ -129,6 +129,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Slag op tafel:** de kaarten liggen licht gedraaid op hun plek, in een kruis, **zonder over elkaar te liggen**. Op jouw plek staat een gestippeld vak met "Jouw kaart".
 - **Roemmelding:** een goudkleurig label met een ster, bijvoorbeeld "Driekaart · 20 roem".
 - **Hint onder de tafel:** kort, zonder uitleg van de regels (Rutger kent ze): "Jouw beurt", "Tik nog een keer om te spelen", "Deze slag is voor West".
+- **Naam van de app:** "Klaverjassen" (titel op het beginscherm, naam op het startscherm van de tablet). Geen regel met instellingen onder de titel (Rutgers keuze).
 - **Beginscherm:** bij het openen eerst een beginscherm met "Verder spelen" (met potje en stand), "Nieuwe partij" en "Instellingen". Het huisje in de bovenbalk gaat terug naar het beginscherm; het spel wacht dan. Na de laatste partij staat naast "Nieuwe partij" ook een knop "Beginscherm".
 - **Indeling:** alle maten volgen de echte schermhoogte (ook in Chrome met adresbalk). Kaarten liggen nooit onder tekst door; niets overlapt.
 - **Hand:** acht kaarten plat naast elkaar onderaan, zonder grijze kaarten. **Spelen gaat met twee tikken:** de eerste tik tilt de kaart op, de tweede speelt hem.
