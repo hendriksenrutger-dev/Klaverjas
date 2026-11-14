@@ -4,6 +4,7 @@ import * as R from '../regels/index.js';
 import { vraagKaart, vraagDraai } from '../ai/client.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
+import { laadPlaatjes } from './plaatjes.js';
 import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij } from './opslag.js';
 
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
@@ -73,8 +74,19 @@ function teken() {
   const typen = document.activeElement?.matches?.('input[data-naam]');
   if (!typen) render(document.getElementById('app'), spel, acties);
   spel.nieuweKaart = null; // volgende keer tekenen: niet opnieuw animeren
+  // Opslaan pas na een animatie, zodat een vliegende kaart niet hapert.
+  clearTimeout(bewaarTimer);
+  if (spel.partij) bewaarTimer = setTimeout(bewaarNu, 400);
+}
+
+let bewaarTimer = null;
+function bewaarNu() {
+  clearTimeout(bewaarTimer);
   if (spel.partij) bewaarPartij(Object.fromEntries(BEWAAR.map((k) => [k, spel[k]])));
 }
+// App gaat naar de achtergrond of sluit: meteen opslaan.
+addEventListener('pagehide', bewaarNu);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') bewaarNu(); });
 
 // Regels-instellingen voor een (nieuwe) partij.
 function regelInstellingen() {
@@ -430,17 +442,8 @@ function hervat() {
 
 geluid.zetGeluid(spel.instellingen.geluid);
 
-// Plaatjes van heer, vrouw en boer vooraf laden en decoderen, zodat een gespeelde kaart
-// meteen met tekening verschijnt (niet eerst even wit).
-const plaatjes = [];
-for (const kleur of R.KLEUREN) {
-  for (const rang of ['H', 'V', 'B']) {
-    const img = new Image();
-    img.src = new URL(`../../assets/kaarten/${kleur}-${rang}.webp`, import.meta.url).href;
-    img.decode?.().catch(() => {});
-    plaatjes.push(img);
-  }
-}
+// Plaatjes van heer, vrouw en boer vooraf laden en decoderen; ze worden op canvas getekend.
+laadPlaatjes(new URL('../../assets/kaarten/', import.meta.url));
 
 // Geluid mag pas na een eerste aanraking.
 window.addEventListener('pointerdown', geluid.ontgrendel, { once: false, passive: true });

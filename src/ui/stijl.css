@@ -151,13 +151,7 @@ button { font: inherit; }
 .slagplek.zuid { transform: translate(-50%, 5px) rotate(2deg); }
 .slagplek.west { transform: translate(calc(-100% - var(--kb-tafel) / 2 - 12px), -50%) rotate(-4deg); }
 .slagplek.oost { transform: translate(calc(var(--kb-tafel) / 2 + 12px), -50%) rotate(4deg); }
-.slagplek.nieuw .kaart { animation: inschuiven 0.18s cubic-bezier(.25,.8,.35,1); }
-/* Een gespeelde kaart schuift vanaf de kant van de speler op zijn plek: meteen volledig zichtbaar. */
-.slagplek.noord { --van: 0, -45%; }
-.slagplek.zuid { --van: 0, 55%; }
-.slagplek.west { --van: -45%, 0; }
-.slagplek.oost { --van: 45%, 0; }
-@keyframes inschuiven { from { transform: translate(var(--van)); } }
+.slagplek .kaart { will-change: transform; }
 @keyframes neerleggen { from { transform: scale(1.06) translateY(-6px); } }
 .slagplek.winnaar .kaart { box-shadow: 0 0 0 3px rgba(232, 200, 115, 0.85), 0 6px 14px rgba(0, 0, 0, 0.3); }
 .jouw-kaart {

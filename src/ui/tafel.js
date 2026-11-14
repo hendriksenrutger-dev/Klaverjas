@@ -6,6 +6,7 @@ import { redenTekst } from '../regels/geldig.js';
 import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
 import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD } from './kaart.js';
 import { patchHtml } from './patch.js';
+import { vulPlaatjes } from './plaatjes.js';
 
 const KLEURNAAM = { klaveren: 'Klaveren', ruiten: 'Ruiten', harten: 'Harten', schoppen: 'Schoppen' };
 const PLEKKEN = [
@@ -432,10 +433,14 @@ export function render(el, spel, acties) {
   if (spel.scherm === 'start') {
     zorgVoorSprite();
     patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`);
+    vulPlaatjes(el);
     koppel(el, acties);
     return;
   }
   zorgVoorSprite();
+  // Posities van vóór het bijwerken: daarvandaan vliegt een gespeelde kaart en schuift de hand.
+  const voor = new Map();
+  for (const k of el.querySelectorAll('.hand [data-kaart]')) voor.set(k.dataset.kaart, k.getBoundingClientRect());
   patchHtml(el, `
     <div class="laken"></div>
     ${balk(spel)}
@@ -447,7 +452,60 @@ export function render(el, spel, acties) {
     <div class="hint">${hint(spel)}</div>
     ${hand(spel)}
     ${vensters(spel)}`);
+  vulPlaatjes(el);
   koppel(el, acties);
+  if (spel.nieuweKaart) vliegNaarSlag(el, spel.nieuweKaart, voor);
+  schuifHand(el, voor);
+}
+
+const VLIEG_MS = 300;
+const VLIEG_EASING = 'cubic-bezier(.2,.75,.3,1)';
+
+// Een gespeelde kaart vliegt vanaf de speler naar zijn plek op tafel: vanaf jouw hand,
+// of vanaf de kaarten van de computerspeler. Alleen transform: dat loopt soepel op de tablet.
+function vliegNaarSlag(el, id, voor) {
+  const kaart = el.querySelector(`.slagplek.nieuw [data-sleutel="${id}"]`) ?? el.querySelector('.slagplek.nieuw .kaart');
+  if (!kaart || kaart.dataset.gevlogen === id) return;
+  kaart.dataset.gevlogen = id;
+  const plek = kaart.closest('.slagplek');
+  const naar = kaart.getBoundingClientRect();
+  let van = voor.get(id);
+  if (!van) {
+    const p = PLEKKEN.find((x) => plek.classList.contains(x.plek))?.plek;
+    const bron = el.querySelector(`.speler.${p} .ruggen .kaart:last-child`) ?? el.querySelector(`.speler.${p} .avatar`);
+    van = bron?.getBoundingClientRect();
+  }
+  if (!van || !naar.width) return;
+  // Verschuiving in schermpixels, omgerekend naar het (licht gedraaide) assenstelsel van de plek.
+  const m = new DOMMatrix(getComputedStyle(plek).transform);
+  const hoek = Math.atan2(m.b, m.a);
+  const dx = van.left + van.width / 2 - (naar.left + naar.width / 2);
+  const dy = van.top + van.height / 2 - (naar.top + naar.height / 2);
+  const x = dx * Math.cos(-hoek) - dy * Math.sin(-hoek);
+  const y = dx * Math.sin(-hoek) + dy * Math.cos(-hoek);
+  const schaal = Math.max(0.3, Math.min(1.2, van.width / naar.width));
+  const graden = (-hoek * 180) / Math.PI;
+  kaart.animate(
+    [
+      { transform: `translate(${x}px, ${y}px) rotate(${graden}deg) scale(${schaal})` },
+      { transform: 'none' },
+    ],
+    { duration: VLIEG_MS, easing: VLIEG_EASING },
+  );
+}
+
+// Na het spelen van een kaart schuiven de overige kaarten in je hand vloeiend dicht.
+function schuifHand(el, voor) {
+  if (!voor.size) return;
+  for (const k of el.querySelectorAll('.hand [data-kaart]')) {
+    const oud = voor.get(k.dataset.kaart);
+    if (!oud) continue;
+    const nu = k.getBoundingClientRect();
+    const dx = oud.left - nu.left;
+    const dy = oud.top - nu.top;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
+    k.animate([{ translate: `${dx}px ${dy}px` }, { translate: '0 0' }], { duration: 260, easing: VLIEG_EASING });
+  }
 }
 
 function koppel(el, acties) {

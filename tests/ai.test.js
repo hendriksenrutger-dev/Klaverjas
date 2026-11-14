@@ -412,3 +412,29 @@ describe('wat het draaien verraadt', () => {
     assert.ok(draaiGewicht(sterk, w) > 5 * draaiGewicht(zwak, w));
   });
 });
+
+describe('vuistregels bij bijna gelijke kaarten', async () => {
+  const { vuistregelStraf } = await import('../src/ai/simulatie.js');
+  const basis = (o) => ({ troef: 'ruiten', spelendTeam: 1, systeem: 'amsterdams', slagen: [], slag: [], aantallen: [8, 8, 8, 8], uitkomer: 0, kiezer: 3, ...o });
+
+  test('tegenpartij komt niet met troef uit, de spelende partij wel', () => {
+    const tegen = basis({ speler: 0, hand: Ks('rH r7 kA') });
+    assert.equal(vuistregelStraf(tegen, K('rH')), 1);
+    assert.equal(vuistregelStraf(tegen, K('kA')), 0);
+    const spelend = basis({ speler: 1, hand: Ks('rH r7 kA') });
+    assert.equal(vuistregelStraf(spelend, K('rH')), 0);
+  });
+
+  test('een vrije aas gooi je niet weg op een slag die je niet wint', () => {
+    const slagNu = [{ speler: 1, kaart: K('s9') }, { speler: 2, kaart: K('hB') }];
+    const w = basis({ speler: 3, hand: Ks('hA k10 kV'), slag: slagNu });
+    assert.equal(vuistregelStraf(w, K('hA')), 1);
+    assert.equal(vuistregelStraf(w, K('kV')), 0);
+    assert.equal(vuistregelStraf(w, K('k10')), 0); // niet vrij: ♣A zit er nog in
+  });
+
+  test('een vrije kaart die de slag wint mag gewoon', () => {
+    const w = basis({ speler: 3, hand: Ks('hA k10 kV'), slag: [{ speler: 2, kaart: K('h7') }] });
+    assert.equal(vuistregelStraf(w, K('hA')), 0);
+  });
+});

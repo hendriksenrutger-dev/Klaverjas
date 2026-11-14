@@ -48,6 +48,9 @@ export const SEIN_STRAF_BEKENNEN = 15;
 // Daarom een kleine voorkeur voor troef uitkomen door de spelende partij zolang de tegenpartij
 // nog troef kan hebben. Eigen ontwerpkeuze, gemeten in RAPPORT-FASE-4.md; bij te stellen.
 export const TREK_BONUS = 10;
+// Vuistregels: scoren kaarten binnen deze marge (in verschilpunten wij − zij), dan beslist
+// een menselijke vuistregel in plaats van het toeval van de simulatie. Eigen ontwerpkeuze.
+export const VUISTREGEL_MARGE = 8;
 
 const KLEINTJES = new Set(['7', '8', '9']);
 
@@ -540,7 +543,7 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -624,10 +627,33 @@ export function kiesKaart(w, {
   for (let i = 1; i < geldig.length; i++) {
     if (totaal(i) > totaal(best)) best = i;
   }
+  const regel = geldig.map((k) => (vuistregels ? vuistregelStraf(w, k, onbekend) : 0));
+  if (vuistregels && regel[best] > 0) {
+    // Binnen de marge de kaart die geen vuistregel breekt (bij gelijke straf: hoogste score).
+    for (let i = 0; i < geldig.length; i++) {
+      if (totaal(best) - totaal(i) > marge) continue;
+      if (regel[i] < regel[best] || (regel[i] === regel[best] && totaal(i) > totaal(best))) best = i;
+    }
+  }
   return {
     kaart: geldig[best],
-    scores: geldig.map((k, i) => ({ kaart: k, gemiddeld: gemiddeld[i], sein: seinCorrectie[i], trek: trekCorrectie[i] })),
+    scores: geldig.map((k, i) => ({ kaart: k, gemiddeld: gemiddeld[i], sein: seinCorrectie[i], trek: trekCorrectie[i], regel: regel[i] })),
   };
+}
+
+// Hoe erg een kaart een menselijke vuistregel breekt (0 = niet).
+// - Als tegenpartij kom je niet met troef uit.
+// - Een vrije kaart (de hoogste die nog in zijn kleur zit, geen troef) gooi je niet weg
+//   op een slag die je er niet mee wint.
+export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w)) {
+  if (w.slag.length === 0) {
+    return team(w.speler) !== w.spelendTeam && k.kleur === w.troef ? 1 : 0;
+  }
+  if (k.kleur === w.troef) return 0;
+  const vrij = !onbekend.some((c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef));
+  if (!vrij || punten(k, w.troef) === 0) return 0;
+  const wint = huidigeWinnaar([...w.slag, { speler: w.speler, kaart: k }], w.troef).speler === w.speler;
+  return wint ? 0 : 1;
 }
 
 // ---------- Spelen of passen bij het draaien ----------
