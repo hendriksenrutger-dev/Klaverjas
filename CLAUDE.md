@@ -125,7 +125,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Schudden en delen:** eerst het schudgeluid met de stapel in het midden, daarna vliegen de kaarten in pakjes van 3-2-3 naar de spelers, met bij elk pakje een tikje.
 - **Uitslag:** bij alle slagen voor de spelende partij gewoon "Pit!".
 - **Na een potje:** "Bekijk alle slagen" (per slag de kaarten, winnaar, punten en roem) en de knop "Alle handen": de vier handen zoals ze gedeeld waren, rond de tafel.
-- **Gespeelde kaart:** schuift volledig zichtbaar vanaf de kant van de speler op zijn plek (geen infade).
+- **Gespeelde kaart:** schuift volledig zichtbaar vanaf de kant van de speler op zijn plek (geen infade). Het scherm wordt niet steeds helemaal opnieuw getekend: bestaande kaarten blijven staan (`src/ui/patch.js`), zodat niets opnieuw wordt opgebouwd.
 - **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten).
 - **Lettertypen:** Playfair Display voor cijfers en kaartindexen, Inter voor de interface. Bundel ze lokaal, want de app moet offline werken.
 - Knoppen en aanraakvlakken zijn minimaal 44 px.

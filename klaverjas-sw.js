@@ -50,6 +50,7 @@ const BESTANDEN = [
   'src/ui/kaart.css',
   'src/ui/kaart.js',
   'src/ui/opslag.js',
+  'src/ui/patch.js',
   'src/ui/stijl.css',
   'src/ui/tafel.js',
 ];

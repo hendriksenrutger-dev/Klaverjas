@@ -5,6 +5,7 @@ import { stand } from '../regels/potje.js';
 import { redenTekst } from '../regels/geldig.js';
 import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
 import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD } from './kaart.js';
+import { patchHtml } from './patch.js';
 
 const KLEURNAAM = { klaveren: 'Klaveren', ruiten: 'Ruiten', harten: 'Harten', schoppen: 'Schoppen' };
 const PLEKKEN = [
@@ -118,9 +119,9 @@ function midden(spel) {
     const gespeeld = opTafel.find((x) => x.speler === i);
     if (gespeeld) {
       const nieuw = spel.nieuweKaart === kaartId(gespeeld.kaart) ? 'nieuw' : '';
-      return `<div class="slagplek ${s.plek} ${nieuw} ${winnaar === i ? 'winnaar' : ''}">${kaartHtml(gespeeld.kaart)}</div>`;
+      return `<div class="slagplek ${s.plek} ${nieuw} ${winnaar === i ? 'winnaar' : ''}" data-sleutel="plek-${s.plek}">${kaartHtml(gespeeld.kaart)}</div>`;
     }
-    if (i === 0) return '<div class="slagplek zuid"><div class="jouw-kaart">Jouw kaart</div></div>';
+    if (i === 0) return '<div class="slagplek zuid" data-sleutel="plek-zuid"><div class="jouw-kaart">Jouw kaart</div></div>';
     return '';
   }).join('');
   const RICHTING = { noord: '0deg', oost: '90deg', zuid: '180deg', west: '270deg' };
@@ -419,12 +420,12 @@ export function render(el, spel, acties) {
   NAMEN = spel.namen;
   if (spel.scherm === 'start') {
     zorgVoorSprite();
-    el.innerHTML = `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`;
+    patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`);
     koppel(el, acties);
     return;
   }
   zorgVoorSprite();
-  el.innerHTML = `
+  patchHtml(el, `
     <div class="laken"></div>
     ${balk(spel)}
     ${ditPotje(spel)}
@@ -434,7 +435,7 @@ export function render(el, spel, acties) {
     ${knoppenRechts(spel)}
     <div class="hint">${hint(spel)}</div>
     ${hand(spel)}
-    ${vensters(spel)}`;
+    ${vensters(spel)}`);
   koppel(el, acties);
 }
 
