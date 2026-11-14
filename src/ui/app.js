@@ -1,7 +1,8 @@
 // Spelverloop: koppelt de spelregels aan het scherm en de computerspelers.
 
 import * as R from '../regels/index.js';
-import { vraagKaart, vraagDraai } from '../ai/client.js';
+import { vraagKaart, vraagDraai, analyseerKaart, analyseerDraai } from '../ai/client.js';
+import { beoordeelKaart, legeVergelijking, telOp } from '../ai/vergelijk.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
 import { laadPlaatjes } from './plaatjes.js';
@@ -40,6 +41,10 @@ const spel = {
   nieuweKaart: null, // kaartId die net op tafel kwam (alleen die krijgt de animatie)
   roemMelding: null,
   uitslag: null,
+  // Vergelijk met de computer (instelling): per kaart/keuze van jou wat de computer had gedaan.
+  analyses: [], // { soort: 'kaart'|'draai', potje, slag?, ... }
+  vergelijking: null, // totalen over de partij
+  analyseBezig: 0,
 };
 
 let timer = null;
@@ -67,7 +72,7 @@ function computerZet(vraagFn, doeFn, tijd = denktijd()) {
 }
 
 // Welke delen van de toestand bewaard worden (alles is gewone data, dus JSON).
-const BEWAAR = ['partij', 'fase', 'handen', 'draaien', 'draaiKeuzes', 'potje', 'laatsteSlag', 'uitslag', 'verzaakReden'];
+const BEWAAR = ['partij', 'fase', 'handen', 'draaien', 'draaiKeuzes', 'potje', 'laatsteSlag', 'uitslag', 'verzaakReden', 'analyses', 'vergelijking'];
 
 function teken() {
   // Niet opnieuw tekenen terwijl er in een tekstveld getypt wordt.
@@ -75,6 +80,10 @@ function teken() {
   if (!typen) render(document.getElementById('app'), spel, acties);
   spel.nieuweKaart = null; // volgende keer tekenen: niet opnieuw animeren
   // Opslaan pas na een animatie, zodat een vliegende kaart niet hapert.
+  bewaarLater();
+}
+
+function bewaarLater() {
   clearTimeout(bewaarTimer);
   if (spel.partij) bewaarTimer = setTimeout(bewaarNu, 400);
 }
@@ -99,11 +108,17 @@ function nieuwePartij() {
   spel.laatsteSlag = null;
   spel.venster = null;
   spel.scherm = 'tafel';
+  spel.analyses = [];
+  spel.vergelijking = legeVergelijking();
+  analyseSessie++;
   startRonde();
 }
 
 function startRonde() {
   beurtToken++;
+  // Alleen de vergelijking van het vorige en het huidige potje bewaren.
+  const nr = spel.partij.potjes.length;
+  spel.analyses = (spel.analyses ?? []).filter((a) => a.potje >= nr - 1);
   uitgesteld = null;
   const { handen, draaien } = R.deelRonde(spel.partij);
   spel.handen = handen;
@@ -247,8 +262,50 @@ function begin(uitkomst) {
   volgende();
 }
 
+// ---------- Vergelijk met de computer ----------
+let analyseSessie = 0; // een nieuwe partij negeert antwoorden die nog onderweg waren
+
+function vergelijkAan() {
+  return spel.instellingen.vergelijk && spel.partij;
+}
+
+function verwerkAnalyse(sessie, a) {
+  if (sessie !== analyseSessie) return;
+  spel.analyseBezig = Math.max(0, spel.analyseBezig - 1);
+  if (a) {
+    spel.analyses = [...(spel.analyses ?? []), a];
+    spel.vergelijking = telOp(spel.vergelijking ?? legeVergelijking(), a);
+  }
+  if (spel.scherm === 'tafel' && ['potjeKlaar', 'partijKlaar'].includes(spel.fase)) teken();
+  else bewaarLater();
+}
+
+function vergelijkKaart(voor, kaart) {
+  if (!vergelijkAan()) return;
+  const geldig = R.geldigVoor(voor, JIJ);
+  if (geldig.length < 2 || !geldig.some((k) => R.zelfdeKaart(k, kaart))) return;
+  const sessie = analyseSessie;
+  const basis = { soort: 'kaart', potje: spel.partij.potjes.length, slag: voor.slagen.length, kaart };
+  spel.analyseBezig++;
+  analyseerKaart(voor, JIJ)
+    .then((r) => verwerkAnalyse(sessie, { ...basis, computer: r.kaart, ...beoordeelKaart(r.scores, r.kaart, kaart) }))
+    .catch(() => verwerkAnalyse(sessie, null));
+}
+
+function vergelijkDraai(keuze) {
+  if (!vergelijkAan()) return;
+  const d = spel.draaien;
+  const sessie = analyseSessie;
+  const basis = { soort: 'draai', potje: spel.partij.potjes.length, kleur: d.kaart.kleur, jij: keuze };
+  spel.analyseBezig++;
+  analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem })
+    .then((computer) => verwerkAnalyse(sessie, { ...basis, computer }))
+    .catch(() => verwerkAnalyse(sessie, null));
+}
+
 function speel(speler, kaart) {
   const voor = spel.potje;
+  if (speler === JIJ) vergelijkKaart(voor, kaart);
   spel.verzaakReden = R.geldigMetReden(voor.handen[speler], voor.slag, voor.troef, voor.systeem);
   spel.potje = R.speelKaart(voor, speler, kaart);
   spel.nieuweKaart = R.kaartId(kaart);
@@ -288,6 +345,7 @@ function eindPotje() {
 const acties = {
   draai(keuze) {
     if (spel.fase === 'draaien' && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && !spel.draaiMelding) {
+      vergelijkDraai(keuze);
       draai(JIJ, keuze);
     }
   },
@@ -362,6 +420,7 @@ const acties = {
     else if (sleutel === 'verzaakbescherming') i.verzaakbescherming = waarde === true || waarde === 'aan';
     else if (sleutel === 'niveau' && ['makkelijk', 'normaal', 'sterk'].includes(waarde)) i.niveau = waarde;
     else if (sleutel === 'geluid') i.geluid = waarde === true || waarde === 'aan';
+    else if (sleutel === 'vergelijk') i.vergelijk = waarde === true || waarde === 'aan';
     else return;
     spel.instellingen = i;
     geluid.zetGeluid(i.geluid);
@@ -401,6 +460,10 @@ function hervat() {
   try {
     for (const k of BEWAAR) spel[k] = bewaard[k] ?? null;
     spel.draaiKeuzes ??= {};
+    spel.analyses ??= [];
+    spel.vergelijking ??= legeVergelijking();
+    spel.analyseBezig = 0;
+    analyseSessie++;
     spel.venster = null;
     spel.gekozen = null;
     spel.getoondeSlag = null;
