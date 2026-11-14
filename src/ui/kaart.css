@@ -20,7 +20,7 @@
   border: 1px solid rgba(27, 27, 27, 0.1);
   pointer-events: none;
 }
-.kaart.rood { color: var(--kaart-rood, #df0000); } /* rood van Knoll, zodat cijferkaarten en plaatjes aansluiten */
+.kaart.rood { color: var(--rood); }
 .kaart .sym { display: block; fill: currentColor; }
 
 .kaart .index {

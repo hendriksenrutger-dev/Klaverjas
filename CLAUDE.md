@@ -99,6 +99,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Opnieuw delen na 2 (standaard) of 3 rondes passen
 - Verzaakbescherming aan (standaard) of uit
 - Moeilijkheid van de computerspelers (nog af te stemmen)
+- Namen van de spelers (standaard Zuid, West, Noord, Oost)
 
 ## Uiterlijk
 
@@ -107,7 +108,9 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Tafel:** groen laken met een zachte radiale verlichting in het midden (#2E8A5C naar #227049 naar #164F33) en een dunne lichte ovale lijn op de tafel.
 - **Bovenbalk** (half doorzichtig donker): menuknop met een huisje links. In het midden de score van Wij (in goud #E8C873) en Zij (wit), en het potje "9 / 16". Rechts een crèmekleurig troeflabel met een rond symbool van de troefkleur en de tekst "Troef · Schoppen · wij spelen", en een knop voor instellingen.
 - **Linksboven, onder de balk:** een paneel "Dit potje" met de punten en roem van Wij en Zij in het lopende potje.
-- **Spelers:** de maat boven, de tegenstanders links en rechts, jij linksonder. Elke speler heeft een rond avatar met een initiaal (geen foto's) en een naam, met als rol "Jouw maat · computer" of "Tegenstander". Een gouden label "Speelt" bij de spelende speler.
+- **Spelers:** de maat boven (Noord), de tegenstanders links (West) en rechts (Oost). Zuid ben jij en wordt **niet** op de tafel getoond. Elke computerspeler heeft een rond avatar met een initiaal (geen foto's) en een naam, met als rol "Jouw maat · computer" of "Tegenstander". Een gouden label "Speelt" bij de spelende speler.
+- **Namen:** standaard de windrichtingen Zuid, West, Noord en Oost. Echte namen kunnen geven is een instelling.
+- **Geluid:** schudden en kaarten die neergelegd worden.
 - **Slag op tafel:** de kaarten liggen licht gedraaid op hun plek. Op jouw plek staat een gestippeld vak met "Jouw kaart".
 - **Roemmelding:** een goudkleurig label met een ster, bijvoorbeeld "Driekaart · 20 roem".
 - **Hint onder de tafel:** "Jouw beurt · je moet harten bekennen", "Tik nog een keer om te spelen", enzovoort.
@@ -119,7 +122,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 ### Kaarten
 
 - **Formaat:** ongeveer 118 × 170 px op het ontwerpformaat van 1280 × 860. Schaal mee met het scherm.
-- **Stijl:** crème (#FBF8F1), afgeronde hoeken van 12 px, een zachte schaduw en een dun binnenkader. Rood #B3262D, zwart #1B1B1B.
+- **Stijl:** crème (#FBF8F1), afgeronde hoeken van 12 px, een zachte schaduw en een dun binnenkader. Rood #B3262D, zwart #1B1B1B. Rutger heeft gekozen voor dit rood, ook al gebruikt Knoll feller rood (#DF0000).
 - **Hoekindexen:** in Nederlandse letters **A, H, V, B**, 10, 9, 8 en 7, met het kleursymbool eronder. Rechtsonder hetzelfde, 180° gedraaid.
 - **7 tot en met 10:** symbolen in het standaardpatroon van speelkaarten (twee kolommen plus het midden). De onderste helft staat ondersteboven. Als richtlijn, in procenten van het binnenvlak (x, y):
   - 7: (22,12) (78,12) (50,31) (22,50) (78,50) (22,88) (78,88)

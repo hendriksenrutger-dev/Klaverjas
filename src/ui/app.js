@@ -3,6 +3,7 @@
 import * as R from '../regels/index.js';
 import { kiesDraai, kiesKaart } from '../ai/willekeurig.js';
 import { render } from './tafel.js';
+import * as geluid from './geluid.js';
 
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
 const DENKTIJD = snel ? 0 : 750;
@@ -23,6 +24,8 @@ const spel = {
   laatsteSlag: null, // vorige slag, om terug te kijken
   venster: null, // laatsteSlag | gespeeld | menu | nieuwBevestig | instellingen
   verzaakReden: null,
+  // Namen van de spelers. Standaard windrichtingen; zelf namen kiezen wordt een instelling (fase 6).
+  namen: ['Zuid', 'West', 'Noord', 'Oost'],
   nieuweKaart: null, // kaartId die net op tafel kwam (alleen die krijgt de animatie)
   roemMelding: null,
   uitslag: null,
@@ -53,6 +56,7 @@ function startRonde() {
   spel.draaiKeuzes = {};
   spel.nieuweKaart = R.kaartId(draaien.kaart);
   spel.potje = null;
+  geluid.schudden();
   spel.uitslag = null;
   spel.gekozen = null;
   spel.laatsteSlag = null;
@@ -96,6 +100,7 @@ function draai(speler, keuze) {
       later(() => {
         spel.draaiKeuzes = {};
         spel.nieuweKaart = R.kaartId(spel.draaien.kaart);
+        geluid.kaartNeer();
         volgende();
       }, snel ? 0 : 900);
       return;
@@ -109,6 +114,7 @@ function speel(speler, kaart) {
   spel.verzaakReden = R.geldigMetReden(voor.handen[speler], voor.slag, voor.troef, voor.systeem);
   spel.potje = R.speelKaart(voor, speler, kaart);
   spel.nieuweKaart = R.kaartId(kaart);
+  geluid.kaartNeer();
   spel.gekozen = null;
 
   if (spel.potje.verzaking) {
@@ -175,6 +181,9 @@ const acties = {
     teken();
   },
 };
+
+// Geluid mag pas na een eerste aanraking.
+window.addEventListener('pointerdown', geluid.ontgrendel, { once: false, passive: true });
 
 // Voor automatische tests en foutzoeken.
 window.klaverjas = { spel, acties, regels: R };

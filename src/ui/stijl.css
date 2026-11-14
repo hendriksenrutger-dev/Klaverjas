@@ -75,7 +75,7 @@ button { font: inherit; }
   border: 1.5px solid rgba(27, 27, 27, 0.15); background: #fff;
   display: grid; place-items: center; color: var(--zwart);
 }
-.troefrond.rood { color: #df0000; }
+.troefrond.rood { color: var(--rood); }
 .troefrond .sym { width: 20px; height: 20px; fill: currentColor; }
 
 .knop {
@@ -109,7 +109,6 @@ button { font: inherit; }
 .speler.noord { top: calc(var(--balk-h) + 10px); left: 50%; transform: translateX(-50%); }
 .speler.west { left: 18px; top: 44%; transform: translateY(-50%); flex-direction: column; text-align: center; }
 .speler.oost { right: 18px; top: 44%; transform: translateY(-50%); flex-direction: column; text-align: center; }
-.speler.zuid { left: 18px; bottom: calc(var(--kh) * 0.95 + 46px); }
 .avatar {
   width: 56px; height: 56px; border-radius: 50%; flex: none;
   display: grid; place-items: center;
@@ -120,7 +119,6 @@ button { font: inherit; }
   transition: box-shadow 0.25s, border-color 0.25s;
 }
 .speler.maat .avatar { background: linear-gradient(160deg, #f0d891, #c9a54c); color: var(--zwart); }
-.speler.jij .avatar { background: linear-gradient(160deg, #f0d891, #c9a54c); color: var(--zwart); }
 .aan-beurt .avatar { border-color: var(--goud); box-shadow: 0 0 0 5px rgba(232, 200, 115, 0.3), 0 3px 10px rgba(0, 0, 0, 0.3); }
 .speler-tekst { display: flex; flex-direction: column; gap: 2px; }
 .speler.west .speler-tekst, .speler.oost .speler-tekst { align-items: center; }
@@ -227,7 +225,7 @@ button { font: inherit; }
 .gespeeld { display: grid; grid-template-columns: auto repeat(8, 40px); gap: 6px 6px; align-items: center; margin-top: 10px; }
 .gespeeld .kleurkop { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; padding-right: 10px; }
 .gespeeld .kleurkop .sym { width: 18px; height: 18px; fill: currentColor; }
-.gespeeld .kleurkop.rood { color: #df0000; }
+.gespeeld .kleurkop.rood { color: var(--rood); }
 .gespeeld .kleurkop .troef { font-size: 10px; background: var(--goud); padding: 1px 6px; border-radius: 6px; color: var(--zwart); }
 .gespeeld .cel {
   height: 40px; border-radius: 8px; display: grid; place-items: center;
@@ -235,7 +233,7 @@ button { font: inherit; }
   background: rgba(0,0,0,.04); color: rgba(0,0,0,.22); border: 1px dashed rgba(0,0,0,.12);
 }
 .gespeeld .cel.weg { background: #fff; color: var(--zwart); border: 1px solid rgba(0,0,0,.15); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-.gespeeld .cel.weg.rood { color: #df0000; }
+.gespeeld .cel.weg.rood { color: var(--rood); }
 .gespeeld .cel.mijn { background: rgba(232, 200, 115, 0.22); color: #7a5c12; border: 2px solid var(--goud); }
 .legenda { display: flex; gap: 16px; justify-content: center; font-size: 12px; opacity: 0.7; margin-top: 12px; }
 

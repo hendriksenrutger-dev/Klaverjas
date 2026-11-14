@@ -7,12 +7,15 @@ import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
 import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD } from './kaart.js';
 
 const KLEURNAAM = { klaveren: 'Klaveren', ruiten: 'Ruiten', harten: 'Harten', schoppen: 'Schoppen' };
-export const SPELERS = [
-  { naam: 'Jij', initiaal: 'J', rol: '', plek: 'zuid', klasse: 'jij' },
-  { naam: 'West', initiaal: 'W', rol: 'Tegenstander', plek: 'west', klasse: '' },
-  { naam: 'Maat', initiaal: 'M', rol: 'Jouw maat · computer', plek: 'noord', klasse: 'maat' },
-  { naam: 'Oost', initiaal: 'O', rol: 'Tegenstander', plek: 'oost', klasse: '' },
+const PLEKKEN = [
+  { rol: '', plek: 'zuid', klasse: 'jij' },
+  { rol: 'Tegenstander', plek: 'west', klasse: '' },
+  { rol: 'Jouw maat · computer', plek: 'noord', klasse: 'maat' },
+  { rol: 'Tegenstander', plek: 'oost', klasse: '' },
 ];
+// Naam zoals hij in zinnen verschijnt: speler 0 is altijd "Jij".
+let NAMEN = ['Zuid', 'West', 'Noord', 'Oost'];
+const naam = (i) => (i === 0 ? 'Jij' : NAMEN[i]);
 const ROEMNAAM = {
   driekaart: 'Driekaart', vierkaart: 'Vierkaart', stuk: 'Stuk',
   vierBoeren: 'Vier boeren', vierGelijk: 'Vier gelijke', pit: 'Pit',
@@ -60,7 +63,8 @@ function ditPotje(spel) {
 
 // ---------- Spelers ----------
 function spelerHtml(spel, i) {
-  const s = SPELERS[i];
+  const s = PLEKKEN[i];
+  const n = NAMEN[i];
   const speelt = spel.potje && spel.draaien?.uitkomst?.speler === i;
   const aanBeurt =
     (spel.fase === 'spelen' && !spel.getoondeSlag && spel.potje.beurt === i) ||
@@ -74,9 +78,9 @@ function spelerHtml(spel, i) {
   const aantal = spel.potje ? spel.potje.handen[i].length : spel.handen?.[i]?.length ?? 0;
   const ruggen = i === 0 ? '' : `<div class="ruggen">${rugHtml().repeat(aantal)}</div>`;
   return `<div class="speler ${s.plek} ${s.klasse} ${aanBeurt ? 'aan-beurt' : ''}">
-    <div class="avatar">${s.initiaal}</div>
+    <div class="avatar">${n.charAt(0).toUpperCase()}</div>
     <div class="speler-tekst">
-      <div class="naam">${s.naam}${labels.join('')}</div>
+      <div class="naam">${n}${labels.join('')}</div>
       ${s.rol ? `<div class="rol">${s.rol}</div>` : ''}
       ${ruggen}
     </div>
@@ -90,7 +94,7 @@ function midden(spel) {
     const jij = spel.fase === 'draaien' && d.beurt === 0 && !d.uitkomst;
     const tekst = spel.fase === 'opnieuwDelen'
       ? 'Iedereen past. <strong>Er wordt opnieuw gedeeld.</strong>'
-      : `Voorgestelde troef: <strong>${KLEURNAAM[d.kaart.kleur]}</strong>${d.rondes ? ` · ronde ${d.rondes + 1}` : ''}`;
+      : `Voorgestelde troef: <strong>${KLEURNAAM[d.kaart.kleur]}</strong>${d.rondes ? ` · ronde ${d.rondes + 1}` : ''}${spel.partij.deler === 0 ? ' · jij deelt' : ''}`;
     return `<div class="midden"><div class="draaien">
       <div class="stapel ${spel.nieuweKaart === kaartId(d.kaart) ? 'nieuw' : ''}">${rugHtml()}${kaartHtml(d.kaart)}</div>
       <div class="draai-tekst">${tekst}</div>
@@ -102,7 +106,7 @@ function midden(spel) {
   if (!spel.potje) return '';
   const opTafel = spel.getoondeSlag ?? spel.potje.slag;
   const winnaar = spel.getoondeSlag && !spel.potje.verzaking ? spel.potje.slagen.at(-1).winnaar : null;
-  const plekken = SPELERS.map((s, i) => {
+  const plekken = PLEKKEN.map((s, i) => {
     const gespeeld = opTafel.find((x) => x.speler === i);
     if (gespeeld) {
       const nieuw = spel.nieuweKaart === kaartId(gespeeld.kaart) ? 'nieuw' : '';
@@ -123,16 +127,16 @@ function hint(spel) {
     if (spel.draaien.uitkomst) return '';
     return spel.draaien.beurt === 0
       ? `<strong>Jouw beurt</strong> · spelen of passen op ${klein(KLEURNAAM[spel.draaien.kaart.kleur])}?`
-      : `${SPELERS[spel.draaien.beurt].naam} denkt na…`;
+      : `${naam(spel.draaien.beurt)} denkt na…`;
   }
   if (spel.fase === 'opnieuwDelen') return 'Opnieuw delen…';
   if (spel.fase !== 'spelen') return '';
   const p = spel.potje;
   if (spel.getoondeSlag) {
     const w = p.slagen.at(-1).winnaar;
-    return w === 0 ? 'Jij hebt de slag' : `${SPELERS[w].naam} heeft de slag`;
+    return w === 0 ? 'Jij hebt de slag' : `${naam(w)} heeft de slag`;
   }
-  if (p.beurt !== 0) return `${SPELERS[p.beurt].naam} denkt na…`;
+  if (p.beurt !== 0) return `${naam(p.beurt)} denkt na…`;
   if (spel.gekozen) return '<strong>Tik nog een keer</strong> om te spelen';
   const g = geldigMetReden(p.handen[0], p.slag, p.troef, p.systeem);
   if (g.reden === 'uitkomen') return '<strong>Jouw beurt</strong> · jij komt uit';
@@ -197,8 +201,8 @@ function venster(inhoud, sluitbaar = true) {
 function laatsteSlagVenster(spel) {
   const s = spel.laatsteSlag;
   return venster(`<h2>Laatste slag</h2>
-    <p class="sub">Gewonnen door ${SPELERS[s.winnaar].naam} · ${s.punten} punten${s.roem.totaal ? ` · ${s.roem.totaal} roem` : ''}</p>
-    <div class="rij-kaarten">${s.kaarten.map((x) => `<div class="met-naam ${x.speler === s.winnaar ? 'winnaar' : ''}">${kaartHtml(x.kaart)}<div>${SPELERS[x.speler].naam}</div></div>`).join('')}</div>
+    <p class="sub">Gewonnen door ${naam(s.winnaar)} · ${s.punten} punten${s.roem.totaal ? ` · ${s.roem.totaal} roem` : ''}</p>
+    <div class="rij-kaarten">${s.kaarten.map((x) => `<div class="met-naam ${x.speler === s.winnaar ? 'winnaar' : ''}">${kaartHtml(x.kaart)}<div>${naam(x.speler)}</div></div>`).join('')}</div>
     <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`);
 }
 
@@ -256,7 +260,7 @@ function uitslagVenster(spel) {
     const v = u.verzaakt;
     kop = 'Verzaakt!';
     const g = spel.verzaakReden;
-    uitleg = `<span class="melding-rood">${SPELERS[v.speler].naam} speelde ${kaartNaam(v.kaart)}, maar dat mocht niet.</span><br>${g ? `${redenTekst(g.reden, g.gevraagd)}.<br>` : ''}De tegenpartij krijgt 162 + 100 punten en alle roem.`;
+    uitleg = `<span class="melding-rood">${naam(v.speler)} speelde ${kaartNaam(v.kaart)}, maar dat mocht niet.</span><br>${g ? `${redenTekst(g.reden, g.gevraagd)}.<br>` : ''}De tegenpartij krijgt 162 + 100 punten en alle roem.`;
   } else if (u.nat) {
     kop = wijSpelen ? 'Wij zijn nat' : 'Zij zijn nat';
     uitleg = 'De tegenpartij krijgt alle punten en alle roem.';
@@ -293,11 +297,12 @@ function vensters(spel) {
 
 // ---------- Alles samen ----------
 export function render(el, spel, acties) {
+  NAMEN = spel.namen;
   el.innerHTML = `${symboolSprite()}
     <div class="laken"></div>
     ${balk(spel)}
     ${ditPotje(spel)}
-    ${[2, 1, 3, 0].map((i) => spelerHtml(spel, i)).join('')}
+    ${[2, 1, 3].map((i) => spelerHtml(spel, i)).join('')}
     ${midden(spel)}
     ${knoppenRechts(spel)}
     <div class="hint">${hint(spel)}</div>
