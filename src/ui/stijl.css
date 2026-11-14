@@ -7,7 +7,9 @@
 @font-face { font-family: 'Playfair Display'; font-weight: 700; font-display: swap; src: url('../../assets/lettertypen/playfair-display-latin-700-normal.woff2') format('woff2'); }
 
 :root {
-  --kh: min(13.3vw, 19.8vh); /* kaarthoogte: 170px op 1280 × 860 */
+  --kh: min(13vw, 18.6vh); /* kaarthoogte op tafel: ~160px op 1280 × 860 */
+  /* hand: 8 kaarten plat naast elkaar, zo groot als past */
+  --hk: min(25vh, calc((100vw - 48px - 7 * 8px) / 8 / 0.694));
   --goud: #e8c873;
   --creme: #fbf8f1;
   --rood: #b3262d;
@@ -15,7 +17,8 @@
   --laken-1: #2e8a5c;
   --laken-2: #227049;
   --laken-3: #164f33;
-  --balk-h: 60px;
+  --balk-h: 78px;
+  --hand-ruimte: calc(var(--hk) + 18px);
   --cijfers: 'Playfair Display', Georgia, serif;
 }
 .score-getal, .potjenr, .dit-potje td, .uitslag td, .stand b, .gespeeld .cel, .avatar, .eindstand, .venster h2 { font-variant-numeric: lining-nums tabular-nums; }
@@ -54,65 +57,65 @@ button { font: inherit; }
 }
 .balk-links, .balk-rechts { display: flex; align-items: center; gap: 10px; }
 .balk-rechts { justify-content: flex-end; }
-.score { display: flex; align-items: baseline; gap: 22px; }
+.score { display: flex; align-items: baseline; gap: 30px; }
 .score-team { display: flex; align-items: baseline; gap: 8px; }
-.score-label { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
-.score-getal { font-family: var(--cijfers); font-weight: 700; font-size: 28px; }
+.score-label { font-size: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
+.score-getal { font-family: var(--cijfers); font-weight: 700; font-size: 42px; }
 .score-team.wij { color: var(--goud); }
-.potjenr { font-family: var(--cijfers); font-weight: 600; font-size: 18px; opacity: 0.8; padding: 2px 12px; border-left: 1px solid rgba(255,255,255,.2); border-right: 1px solid rgba(255,255,255,.2); }
+.potjenr { font-family: var(--cijfers); font-weight: 600; font-size: 27px; opacity: 0.85; padding: 2px 18px; border-left: 1px solid rgba(255,255,255,.2); border-right: 1px solid rgba(255,255,255,.2); }
 
 .troeflabel {
   display: flex; align-items: center; gap: 9px;
   background: var(--creme); color: var(--zwart);
-  border-radius: 24px; padding: 5px 16px 5px 5px; font-size: 15px; font-weight: 600;
+  border-radius: 30px; padding: 6px 20px 6px 6px; font-size: 20px; font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   white-space: nowrap;
 }
 .troeflabel .licht { font-weight: 400; opacity: 0.7; }
 .troeflabel.stil { padding: 8px 16px; font-weight: 400; opacity: 0.85; }
 .troefrond {
-  width: 34px; height: 34px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   border: 1.5px solid rgba(27, 27, 27, 0.15); background: #fff;
   display: grid; place-items: center; color: var(--zwart);
 }
 .troefrond.rood { color: var(--rood); }
-.troefrond .sym { width: 20px; height: 20px; fill: currentColor; }
+.troefrond .sym { width: 26px; height: 26px; fill: currentColor; }
 
 .knop {
-  min-width: 44px; min-height: 44px; padding: 0 16px; border-radius: 12px;
+  min-width: 52px; min-height: 52px; padding: 0 20px; border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(0, 0, 0, 0.22); color: #fff;
-  font-size: 15px; font-weight: 600; cursor: pointer;
+  font-size: 19px; font-weight: 600; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
 }
 .knop:active { transform: translateY(1px); }
 .knop:disabled { opacity: 0.4; }
-.knop.ikoon { padding: 0; width: 44px; }
-.knop.ikoon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.knop.goud { background: var(--goud); color: var(--zwart); border: none; min-height: 52px; padding: 0 30px; font-size: 17px; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+.knop.ikoon { padding: 0; width: 56px; height: 56px; }
+.knop.ikoon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.knop.goud { background: var(--goud); color: var(--zwart); border: none; min-height: 60px; padding: 0 36px; font-size: 21px; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
 .knop.licht { background: rgba(255,255,255,.12); }
 
 /* ---------- Dit potje ---------- */
 .dit-potje {
   position: absolute; top: calc(var(--balk-h) + 12px); left: 12px; z-index: 3;
   background: rgba(8, 30, 19, 0.42); border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px; padding: 10px 14px 8px; min-width: 190px;
+  border-radius: 16px; padding: 12px 18px 10px; min-width: 250px;
 }
-.dit-potje h3 { margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+.dit-potje h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
 .dit-potje table { border-collapse: collapse; width: 100%; }
-.dit-potje th { font-size: 11px; font-weight: 600; opacity: 0.6; text-align: right; padding: 0 0 2px 12px; }
-.dit-potje td { font-family: var(--cijfers); font-weight: 700; font-size: 18px; text-align: right; padding: 1px 0 1px 12px; }
-.dit-potje td:first-child { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; text-align: left; padding-left: 0; }
+.dit-potje th { font-size: 15px; font-weight: 600; opacity: 0.6; text-align: right; padding: 0 0 2px 12px; }
+.dit-potje td { font-family: var(--cijfers); font-weight: 700; font-size: 27px; text-align: right; padding: 1px 0 1px 12px; }
+.dit-potje td:first-child { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; text-align: left; padding-left: 0; }
 .dit-potje tr.wij td { color: var(--goud); }
 
 /* ---------- Spelers ---------- */
 .speler { position: absolute; z-index: 3; display: flex; align-items: center; gap: 10px; }
-.speler.noord { top: calc(var(--balk-h) + 10px); left: 50%; transform: translateX(-50%); }
-.speler.west { left: 18px; top: 44%; transform: translateY(-50%); flex-direction: column; text-align: center; }
-.speler.oost { right: 18px; top: 44%; transform: translateY(-50%); flex-direction: column; text-align: center; }
+.speler.noord { top: calc(var(--balk-h) + 12px); left: 50%; transform: translateX(-50%); }
+.speler.west { left: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; text-align: center; }
+.speler.oost { right: 20px; top: 50%; transform: translateY(-50%); flex-direction: column; text-align: center; }
 .avatar {
-  width: 56px; height: 56px; border-radius: 50%; flex: none;
+  width: 76px; height: 76px; border-radius: 50%; flex: none;
   display: grid; place-items: center;
-  font-family: var(--cijfers); font-weight: 700; font-size: 24px;
+  font-family: var(--cijfers); font-weight: 700; font-size: 34px;
   background: linear-gradient(160deg, #3a9a6a, #1d5e3d);
   border: 2px solid rgba(255, 255, 255, 0.35);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
@@ -122,18 +125,22 @@ button { font: inherit; }
 .aan-beurt .avatar { border-color: var(--goud); box-shadow: 0 0 0 5px rgba(232, 200, 115, 0.3), 0 3px 10px rgba(0, 0, 0, 0.3); }
 .speler-tekst { display: flex; flex-direction: column; gap: 2px; }
 .speler.west .speler-tekst, .speler.oost .speler-tekst { align-items: center; }
-.naam { font-weight: 600; font-size: 15px; display: flex; gap: 6px; align-items: center; }
-.rol { font-size: 12px; opacity: 0.7; }
-.label { font-size: 11px; padding: 2px 8px; border-radius: 9px; font-weight: 700; letter-spacing: 0.02em; }
+.speler.noord .speler-tekst { display: grid; grid-template-columns: auto auto; column-gap: 14px; align-items: center; }
+.speler.noord .naam { grid-column: 1; }
+.speler.noord .rol { grid-column: 1; }
+.speler.noord .ruggen { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
+.naam { font-weight: 600; font-size: 24px; display: flex; gap: 6px; align-items: center; }
+.rol { font-size: 17px; opacity: 0.75; }
+.label { font-size: 16px; padding: 3px 11px; border-radius: 12px; font-weight: 700; letter-spacing: 0.02em; }
 .label.speelt { background: var(--goud); color: var(--zwart); }
 .label.deelt { background: rgba(255, 255, 255, 0.16); }
 .label.past { background: rgba(0, 0, 0, 0.35); }
-.ruggen { display: flex; height: 30px; margin-top: 4px; justify-content: center; }
-.ruggen .kaart { --kh: 30px; margin-left: -14px; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.ruggen { display: flex; height: 36px; margin-top: 4px; justify-content: center; }
+.ruggen .kaart { --kh: 36px; margin-left: -17px; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
 .ruggen .kaart:first-child { margin-left: 0; }
 
 /* ---------- Slag en draaien ---------- */
-.midden { position: absolute; left: 50%; top: 45%; width: 0; height: 0; z-index: 2; }
+.midden { position: absolute; left: 50%; top: calc(var(--balk-h) + (100% - var(--balk-h) - var(--hand-ruimte) - 50px) * 0.58); width: 0; height: 0; z-index: 2; }
 .slagplek { position: absolute; left: 0; top: 0; transition: transform 0.25s; }
 .slagplek.noord { transform: translate(-50%, -100%) translateY(-6px) rotate(-4deg); }
 .slagplek.zuid { transform: translate(-50%, 0) translateY(10px) rotate(3deg); }
@@ -145,51 +152,72 @@ button { font: inherit; }
 .jouw-kaart {
   width: calc(var(--kh) * 0.694); height: var(--kh); border-radius: calc(var(--kh) * 0.07);
   border: 2px dashed rgba(255, 255, 255, 0.3);
-  display: grid; place-items: center; font-size: 13px; color: rgba(255, 255, 255, 0.65);
+  display: grid; place-items: center; font-size: 17px; text-align: center; color: rgba(255, 255, 255, 0.65);
 }
 .roem {
-  position: absolute; left: 0; top: calc(var(--kh) * -1.45); transform: translateX(-50%);
-  display: flex; align-items: center; gap: 8px;
+  position: absolute; top: 0; transform: translateY(-50%);
+  left: calc(var(--kh) * 0.32 + var(--kh) * 0.694 + 28px);
+  display: flex; align-items: center; gap: 12px;
   background: linear-gradient(180deg, #f2d98f, var(--goud)); color: var(--zwart);
-  padding: 9px 18px; border-radius: 22px; font-weight: 700; white-space: nowrap;
+  padding: 12px 22px 12px 16px; border-radius: 22px; font-size: 20px; font-weight: 700; white-space: nowrap;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   animation: verschijn 0.3s ease-out;
 }
-.roem .ster { font-size: 18px; }
-@keyframes verschijn { from { opacity: 0; transform: translateX(-50%) scale(0.85); } }
+.roem-regels { display: flex; flex-direction: column; gap: 2px; }
+.roem-regels .totaal { font-size: 16px; font-weight: 600; opacity: 0.75; }
+.roem .ster { font-size: 30px; }
+@keyframes verschijn { from { opacity: 0; transform: translateY(-50%) scale(0.85); } }
 
 .draaien { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .draaien .stapel { position: relative; }
 .draaien .stapel .kaart.rug { position: absolute; left: 5px; top: 5px; }
 .draaien .stapel .kaart.rug + .kaart.rug { left: 10px; top: 10px; }
 .draaien .stapel.nieuw .kaart:not(.rug) { animation: neerleggen 0.3s ease-out; }
-.draai-tekst { font-size: 17px; text-align: center; white-space: nowrap; }
+.draai-tekst { font-size: 24px; text-align: center; white-space: nowrap; }
 .draai-tekst strong { color: var(--goud); }
 .draai-knoppen { display: flex; gap: 12px; }
 
+/* ---------- Groot troefsymbool ---------- */
+.troef-groot {
+  position: absolute; right: 22px; top: calc(var(--balk-h) + 16px); z-index: 3;
+  width: 112px; height: 112px; border-radius: 50%;
+  background: var(--creme); color: var(--zwart);
+  border: 3px solid var(--goud);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  display: grid; place-items: center;
+}
+.troef-groot.rood { color: var(--rood); }
+.troef-groot .sym { width: 62px; height: 62px; fill: currentColor; }
+.troef-groot-tekst { position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 600; color: #fff; opacity: 0.85; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* ---------- Pijl naar de winnaar van de slag ---------- */
+.pijl { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 5; pointer-events: none; }
+.pijl svg {
+  position: absolute; width: 92px; height: 92px; left: -46px; top: -46px;
+  transform: rotate(var(--richting)) translateY(-8px);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+  animation: pijl-in 0.3s ease-out;
+}
+@keyframes pijl-in { from { opacity: 0; transform: rotate(var(--richting)) translateY(10px); } }
+
 /* ---------- Rechtsonder ---------- */
-.knoppen-rechts { position: absolute; right: 14px; bottom: calc(var(--kh) * 0.95 + 46px); display: flex; gap: 10px; z-index: 3; }
+.knoppen-rechts { position: absolute; right: 16px; bottom: calc(var(--hand-ruimte) + 14px); display: flex; gap: 10px; z-index: 3; }
 
 /* ---------- Hint en hand ---------- */
 .hint {
   position: absolute; left: 50%; transform: translateX(-50%);
-  bottom: calc(var(--kh) * 0.95 + 8px); z-index: 3;
-  background: rgba(8, 30, 19, 0.5); border-radius: 18px; padding: 7px 18px;
-  font-size: 15px; white-space: nowrap;
+  bottom: calc(var(--hand-ruimte) + 14px); z-index: 3;
+  background: rgba(8, 30, 19, 0.55); border-radius: 26px; padding: 10px 26px;
+  font-size: 22px; white-space: nowrap;
 }
 .hint:empty { display: none; }
 .hint strong { color: var(--goud); font-weight: 600; }
 .hand {
-  position: absolute; left: 0; right: 0; bottom: calc(var(--kh) * -0.12); z-index: 4;
-  display: flex; justify-content: center; align-items: flex-end; height: var(--kh);
+  position: absolute; left: 0; right: 0; bottom: 10px; z-index: 4;
+  display: flex; justify-content: center; align-items: flex-end; gap: 8px; height: var(--hk);
 }
-.handplek {
-  margin: 0 calc(var(--kh) * -0.06);
-  transform: translateY(var(--y)) rotate(var(--hoek));
-  transform-origin: 50% 140%;
-}
-.hand .kaart { cursor: pointer; transition: transform 0.16s ease-out, box-shadow 0.16s, opacity 0.2s; }
-.hand .kaart.opgetild { transform: translateY(calc(var(--kh) * -0.2)); box-shadow: 0 10px 22px rgba(0, 0, 0, 0.4); }
+.hand .kaart { --kh: var(--hk); cursor: pointer; transition: transform 0.16s ease-out, box-shadow 0.16s, opacity 0.2s; }
+.hand .kaart.opgetild { transform: translateY(calc(var(--hk) * -0.16)); box-shadow: 0 0 0 3px var(--goud), 0 10px 22px rgba(0, 0, 0, 0.4); }
 .hand .kaart.grijs { opacity: 0.45; }
 
 /* ---------- Vensters ---------- */
@@ -204,38 +232,55 @@ button { font: inherit; }
   border-radius: 20px; padding: 26px 34px 28px; min-width: 400px; max-width: 92vw; max-height: 90vh; overflow: auto;
   text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
-.venster h2 { margin: 0 0 6px; font-family: var(--cijfers); font-size: 28px; }
-.venster .sub { margin: 0 0 16px; opacity: 0.75; }
+.venster h2 { margin: 0 0 6px; font-family: var(--cijfers); font-size: 34px; }
+.venster .sub { margin: 0 0 16px; opacity: 0.75; font-size: 19px; }
 .venster .knop:not(.goud) { color: var(--zwart); border-color: rgba(0,0,0,.15); background: rgba(0,0,0,.05); }
 .venster-knoppen { display: flex; gap: 12px; justify-content: center; margin-top: 18px; }
 .uitslag { margin: 8px auto 4px; border-collapse: collapse; min-width: 300px; }
 .uitslag th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; padding: 4px 14px; text-align: right; }
-.uitslag td { padding: 6px 14px; text-align: right; font-family: var(--cijfers); font-weight: 700; font-size: 22px; border-top: 1px solid rgba(0,0,0,.08); }
-.uitslag td:first-child { text-align: left; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 16px; }
+.uitslag td { padding: 6px 16px; text-align: right; font-family: var(--cijfers); font-weight: 700; font-size: 27px; border-top: 1px solid rgba(0,0,0,.08); }
+.uitslag td:first-child { text-align: left; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 19px; }
 .uitslag tr.wij td { color: #8a6a14; }
 .melding-rood { color: var(--rood); font-weight: 600; }
-.stand { margin-top: 14px; font-size: 15px; }
-.stand b { font-family: var(--cijfers); font-size: 18px; }
+.stand { margin-top: 14px; font-size: 19px; }
+.stand b { font-family: var(--cijfers); font-size: 23px; }
 .eindstand { font-family: var(--cijfers); font-size: 24px; font-weight: 700; margin: 12px 0 0; }
 .rij-kaarten { display: flex; gap: 14px; justify-content: center; --kh: 150px; margin: 14px 0 8px; }
-.met-naam { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.met-naam { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 16px; font-weight: 600; }
 .met-naam.winnaar .kaart { box-shadow: 0 0 0 3px var(--goud), 0 4px 10px rgba(0,0,0,.25); }
 
+/* Slagen in de uitslag */
+.slagen-overzicht { margin-top: 14px; text-align: left; }
+.slagen-overzicht summary {
+  cursor: pointer; list-style: none; min-height: 48px; display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 18px; border-radius: 12px; background: rgba(0,0,0,.05);
+}
+.slagen-overzicht summary::-webkit-details-marker { display: none; }
+.slagen-overzicht summary::after { content: '▾'; margin-left: 8px; }
+.slagen-overzicht[open] summary::after { content: '▴'; }
+.slagen-lijst { max-height: 28vh; overflow: auto; margin-top: 10px; padding-right: 6px; }
+.slag-rij { display: flex; align-items: center; gap: 18px; padding: 10px 4px; border-top: 1px solid rgba(0,0,0,.08); }
+.slag-info { min-width: 190px; font-size: 16px; }
+.slag-info b { display: block; font-size: 18px; }
+.slag-info .wij { color: #8a6a14; }
+.slag-kaarten { display: flex; gap: 10px; --kh: 86px; }
+.slag-kaarten .met-naam { font-size: 13px; }
+
 /* Gespeeld-overzicht */
-.gespeeld { display: grid; grid-template-columns: auto repeat(8, 40px); gap: 6px 6px; align-items: center; margin-top: 10px; }
-.gespeeld .kleurkop { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; padding-right: 10px; }
+.gespeeld { display: grid; grid-template-columns: auto repeat(8, 48px); gap: 6px 6px; align-items: center; margin-top: 10px; }
+.gespeeld .kleurkop { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 18px; padding-right: 10px; }
 .gespeeld .kleurkop .sym { width: 18px; height: 18px; fill: currentColor; }
 .gespeeld .kleurkop.rood { color: var(--rood); }
 .gespeeld .kleurkop .troef { font-size: 10px; background: var(--goud); padding: 1px 6px; border-radius: 6px; color: var(--zwart); }
 .gespeeld .cel {
-  height: 40px; border-radius: 8px; display: grid; place-items: center;
-  font-family: var(--cijfers); font-weight: 700; font-size: 17px;
+  height: 48px; border-radius: 8px; display: grid; place-items: center;
+  font-family: var(--cijfers); font-weight: 700; font-size: 21px;
   background: rgba(0,0,0,.04); color: rgba(0,0,0,.22); border: 1px dashed rgba(0,0,0,.12);
 }
 .gespeeld .cel.weg { background: #fff; color: var(--zwart); border: 1px solid rgba(0,0,0,.15); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .gespeeld .cel.weg.rood { color: var(--rood); }
 .gespeeld .cel.mijn { background: rgba(232, 200, 115, 0.22); color: #7a5c12; border: 2px solid var(--goud); }
-.legenda { display: flex; gap: 16px; justify-content: center; font-size: 12px; opacity: 0.7; margin-top: 12px; }
+.legenda { display: flex; gap: 16px; justify-content: center; font-size: 15px; opacity: 0.7; margin-top: 12px; }
 
 /* Menu */
 .menu-lijst { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }

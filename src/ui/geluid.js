@@ -66,16 +66,34 @@ function plof(c, t, volume = 0.25) {
   osc.stop(t + 0.18);
 }
 
+// Een kaart die over het laken schuift en tot stilstand komt:
+// zachte, gefilterde ruis die langzaam aanzwelt en wegsterft, met een dalende toon.
 export function kaartNeer() {
   const c = context();
   if (!c) return;
   const t = c.currentTime + 0.01;
-  // Eerst het schuiven over het laken, dan het neerkomen.
-  tik(c, t, { freq: 1200, q: 0.5, duur: 0.16, volume: 0.12 });
-  const neer = t + 0.09;
-  tik(c, neer, { freq: 1500 + Math.random() * 400, q: 0.7, duur: 0.14, volume: 0.4 });
-  tik(c, neer + 0.006, { freq: 4200, q: 1.2, duur: 0.05, volume: 0.1 });
-  plof(c, neer);
+  const duur = 0.32 + Math.random() * 0.06;
+
+  const bron = ruis(c);
+  const laag = c.createBiquadFilter();
+  laag.type = 'lowpass';
+  laag.frequency.setValueAtTime(3800, t);
+  laag.frequency.exponentialRampToValueAtTime(900, t + duur);
+  const band = c.createBiquadFilter();
+  band.type = 'bandpass';
+  band.Q.value = 0.6;
+  band.frequency.setValueAtTime(2200 + Math.random() * 400, t);
+  band.frequency.exponentialRampToValueAtTime(700, t + duur);
+
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.32, t + 0.05); // aanzetten
+  g.gain.setValueAtTime(0.32, t + 0.09);
+  g.gain.exponentialRampToValueAtTime(0.12, t + duur * 0.7); // schuiven
+  g.gain.exponentialRampToValueAtTime(0.0001, t + duur); // stilstaan
+
+  bron.connect(laag).connect(band).connect(g).connect(c.destination);
+  bron.start(t, Math.random() * 0.5, duur + 0.05);
 }
 
 // Schudden: twee keer ritsen (veel snelle tikjes die vertragen) en daarna de stapel recht tikken.

@@ -115,10 +115,14 @@ function midden(spel) {
     if (i === 0) return '<div class="slagplek zuid"><div class="jouw-kaart">Jouw kaart</div></div>';
     return '';
   }).join('');
-  const roem = spel.roemMelding
-    ? `<div class="roem"><span class="ster">★</span>${spel.roemMelding.items.map((r) => `${ROEMNAAM[r.soort]} · ${r.punten}`).join(' + ')} roem</div>`
+  const RICHTING = { noord: '0deg', oost: '90deg', zuid: '180deg', west: '270deg' };
+  const pijl = winnaar !== null
+    ? `<div class="pijl" style="--richting:${RICHTING[PLEKKEN[winnaar].plek]}"><svg viewBox="0 0 64 64"><defs><linearGradient id="pijlgoud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e2a6"/><stop offset="1" stop-color="#d4ad4f"/></linearGradient></defs><path d="M32 4 58 34H42v26H22V34H6z" fill="url(#pijlgoud)" stroke="#7a5c12" stroke-width="2" stroke-linejoin="round"/></svg></div>`
     : '';
-  return `<div class="midden">${plekken}${roem}</div>`;
+  const roem = spel.roemMelding
+    ? `<div class="roem"><span class="ster">★</span><div class="roem-regels">${spel.roemMelding.items.map((r) => `<span>${ROEMNAAM[r.soort]} · ${r.punten} roem</span>`).join('')}${spel.roemMelding.items.length > 1 ? `<span class="totaal">Samen ${spel.roemMelding.totaal} roem</span>` : ''}</div></div>`
+    : '';
+  return `<div class="midden">${plekken}${pijl}${roem}</div>`;
 }
 
 // ---------- Hint ----------
@@ -134,7 +138,7 @@ function hint(spel) {
   const p = spel.potje;
   if (spel.getoondeSlag) {
     const w = p.slagen.at(-1).winnaar;
-    return w === 0 ? 'Jij hebt de slag' : `${naam(w)} heeft de slag`;
+    return w === 0 ? 'Deze slag is <strong>voor jou</strong>' : `Deze slag is voor <strong>${naam(w)}</strong>`;
   }
   if (p.beurt !== 0) return `${naam(p.beurt)} denkt na…`;
   if (spel.gekozen) return '<strong>Tik nog een keer</strong> om te spelen';
@@ -173,16 +177,20 @@ function hand(spel) {
   const p = spel.potje;
   const mijnBeurt = spel.fase === 'spelen' && !spel.getoondeSlag && p.beurt === 0;
   const geldig = mijnBeurt ? new Set(geldigMetReden(p.handen[0], p.slag, p.troef, p.systeem).kaarten.map(kaartId)) : null;
-  const n = gesorteerd.length;
   return `<div class="hand">${gesorteerd
     .map((k, i) => {
       const id = kaartId(k);
       const grijs = geldig && !geldig.has(id) ? 'grijs' : '';
       const op = spel.gekozen === id ? 'opgetild' : '';
-      const m = i - (n - 1) / 2;
-      return `<div class="handplek" style="--hoek:${(m * 2.6).toFixed(1)}deg;--y:${(m * m * 1.6).toFixed(1)}px">${kaartHtml(k, { klasse: `${grijs} ${op}`, id })}</div>`;
+      return kaartHtml(k, { klasse: `${grijs} ${op}`, id });
     })
     .join('')}</div>`;
+}
+
+function troefGroot(spel) {
+  if (!spel.potje) return '';
+  const t = spel.potje.troef;
+  return `<div class="troef-groot ${ROOD.has(t) ? 'rood' : ''}" aria-label="Troef ${KLEURNAAM[t]}">${symbool(t)}<span class="troef-groot-tekst">Troef</span></div>`;
 }
 
 function knoppenRechts(spel) {
@@ -251,6 +259,20 @@ function instellingenVenster(spel) {
     <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`);
 }
 
+function slagenOverzicht(spel) {
+  const slagen = spel.potje.slagen;
+  if (!slagen.length) return '';
+  const rijen = slagen.map((s, i) => {
+    const wij = team(s.winnaar) === 0;
+    const roem = s.roem.totaal ? ` + ${s.roem.totaal} roem` : '';
+    return `<div class="slag-rij">
+      <div class="slag-info"><b>Slag ${i + 1}</b><span class="${wij ? 'wij' : ''}">${wij ? 'Wij' : 'Zij'}</span> · ${s.punten} punten${roem}</div>
+      <div class="slag-kaarten">${s.kaarten.map((x) => `<div class="met-naam ${x.speler === s.winnaar ? 'winnaar' : ''}">${kaartHtml(x.kaart)}<div>${naam(x.speler)}</div></div>`).join('')}</div>
+    </div>`;
+  }).join('');
+  return `<details class="slagen-overzicht"><summary>Bekijk alle slagen</summary><div class="slagen-lijst">${rijen}</div></details>`;
+}
+
 function uitslagVenster(spel) {
   const u = spel.uitslag;
   const wijSpelen = spel.potje.spelendTeam === 0;
@@ -276,6 +298,7 @@ function uitslagVenster(spel) {
       <tr class="wij"><td>Wij</td><td>${u.punten[0]}</td><td>${u.roem[0]}</td><td>${u.totaal[0]}</td></tr>
       <tr><td>Zij</td><td>${u.punten[1]}</td><td>${u.roem[1]}</td><td>${u.totaal[1]}</td></tr>
     </table>
+    ${slagenOverzicht(spel)}
     <p class="stand">Stand na ${spel.partij.potjes.length} van ${AANTAL_POTJES}: Wij <b>${t[0]}</b> · Zij <b>${t[1]}</b></p>
     ${klaar ? `<p class="eindstand">${t[0] > t[1] ? 'Wij winnen de partij!' : t[0] < t[1] ? 'Zij winnen de partij.' : 'Gelijkspel.'}</p>` : ''}
     <div class="venster-knoppen">${klaar
@@ -304,6 +327,7 @@ export function render(el, spel, acties) {
     ${ditPotje(spel)}
     ${[2, 1, 3].map((i) => spelerHtml(spel, i)).join('')}
     ${midden(spel)}
+    ${troefGroot(spel)}
     ${knoppenRechts(spel)}
     <div class="hint">${hint(spel)}</div>
     ${hand(spel)}
