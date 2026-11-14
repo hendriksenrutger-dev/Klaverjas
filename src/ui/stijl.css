@@ -184,6 +184,27 @@ button { font: inherit; }
 .draai-tekst strong { color: var(--goud); }
 .draai-knoppen { display: flex; gap: 12px; }
 
+/* ---------- Troef draaien ---------- */
+.troef-tegel {
+  width: var(--kb-tafel); height: var(--kh); border-radius: calc(var(--kh) * 0.07);
+  background: var(--creme); color: var(--zwart);
+  box-shadow: 0 2px 4px rgba(0,0,0,.25), 0 8px 18px rgba(0,0,0,.25), inset 0 0 0 calc(var(--kh) * 0.035) var(--creme), inset 0 0 0 calc(var(--kh) * 0.035 + 2px) var(--goud);
+  display: grid; place-items: center;
+  transition: transform 0.3s, opacity 0.3s, box-shadow 0.3s;
+}
+.troef-tegel.rood { color: var(--rood); }
+.troef-tegel .sym { width: 62%; height: auto; aspect-ratio: 1; fill: currentColor; }
+.troef-tegel.nieuw { animation: neerleggen 0.25s ease-out; }
+.troef-tegel.gekozen { box-shadow: 0 0 0 5px var(--goud), 0 10px 24px rgba(0,0,0,.35); transform: scale(1.05); }
+.troef-tegel.gepast { opacity: 0.7; transform: scale(0.95); }
+.draai-groot { font-size: 25px; }
+.draai-groot strong { color: var(--goud); }
+.rol.denkt { color: var(--goud); opacity: 1; font-weight: 600; }
+.puntjes i { font-style: normal; animation: puntje 1.2s infinite; opacity: 0.2; }
+.puntjes i:nth-child(2) { animation-delay: 0.2s; }
+.puntjes i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes puntje { 30% { opacity: 1; } 60% { opacity: 0.2; } }
+
 /* ---------- Schudden en delen ---------- */
 .delen-midden { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
 .stapel-delen { position: relative; width: var(--kb-tafel); height: var(--kh); }

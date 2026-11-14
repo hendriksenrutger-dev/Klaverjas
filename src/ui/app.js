@@ -9,8 +9,12 @@ import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij } from '
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
 // Computerspelers "denken" zichtbaar 0,5 tot 1 seconde (ook als het rekenen sneller gaat).
 const denktijd = () => (snel ? 0 : 350 + Math.random() * 300);
+// Bij spelen of passen denken de computers iets langer, zodat je kunt volgen wie wat kiest.
+const denktijdDraai = () => (snel ? 0 : 1000 + Math.random() * 400);
+const AANKONDIGING = snel ? 0 : 1800; // "Oost speelt · troef Ruiten"
+const IEDEREEN_PAST = snel ? 0 : 1500;
 const SLAG_PAUZE = snel ? 0 : 1000;
-const MELDING_TIJD = snel ? 0 : 1500;
+const MELDING_TIJD = snel ? 0 : 2000;
 
 const JIJ = 0;
 
@@ -49,9 +53,9 @@ const PAUZE = new Set(['instellingen', 'menu', 'nieuwBevestig']);
 let uitgesteld = null;
 
 // Laat een computerspeler rekenen en wacht daarnaast minstens de denktijd.
-function computerZet(vraagFn, doeFn) {
+function computerZet(vraagFn, doeFn, tijd = denktijd()) {
   const token = ++beurtToken;
-  const minimaal = new Promise((ok) => setTimeout(ok, denktijd()));
+  const minimaal = new Promise((ok) => setTimeout(ok, tijd));
   Promise.all([vraagFn(), minimaal])
     .then(([antwoord]) => {
       if (token !== beurtToken) return;
@@ -99,6 +103,7 @@ function startRonde() {
   spel.uitslag = null;
   spel.gekozen = null;
   spel.laatsteSlag = null;
+  spel.draaiMelding = null;
   schudEnDeel(beurtToken);
 }
 
@@ -171,12 +176,13 @@ function vliegPakje(speler) {
 
 function volgende() {
   teken();
-  if (spel.fase === 'draaien' && spel.draaien.beurt !== JIJ) {
+  if (spel.fase === 'draaien' && !spel.draaien.uitkomst && !spel.draaiMelding && spel.draaien.beurt !== JIJ) {
     const s = spel.draaien.beurt;
     const d = spel.draaien;
     computerZet(
       () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, spel.instellingen.niveau),
       (keuze) => draai(s, keuze),
+      denktijdDraai(),
     );
   } else if (spel.fase === 'spelen' && !spel.getoondeSlag && spel.potje.beurt !== JIJ) {
     const s = spel.potje.beurt;
@@ -191,9 +197,13 @@ function draai(speler, keuze) {
   const u = spel.draaien.uitkomst;
 
   if (u?.soort === 'spelen') {
-    spel.potje = R.startPotje(spel.partij, spel.handen, u);
-    spel.fase = 'spelen';
-    volgende();
+    // Eerst duidelijk aankondigen wie speelt, dan pas het potje beginnen.
+    spel.draaiMelding = { soort: 'speelt', speler, kleur: u.troef };
+    teken();
+    later(() => {
+      spel.draaiMelding = null;
+      begin(u);
+    }, AANKONDIGING);
   } else if (u?.soort === 'opnieuwDelen') {
     spel.fase = 'opnieuwDelen';
     teken();
@@ -203,18 +213,26 @@ function draai(speler, keuze) {
     }, MELDING_TIJD);
   } else {
     if (spel.draaien.kaart !== vorigeKaart) {
-      // Iedereen paste: even laten zien, dan de nieuwe kaart.
+      // Iedereen paste: dat eerst laten zien (met de oude kleur), dan de nieuwe kleur.
+      spel.draaiMelding = { soort: 'iedereenPast', kleur: vorigeKaart.kleur };
       teken();
       later(() => {
+        spel.draaiMelding = null;
         spel.draaiKeuzes = {};
         spel.nieuweKaart = R.kaartId(spel.draaien.kaart);
         geluid.kaartNeer();
         volgende();
-      }, snel ? 0 : 600);
+      }, IEDEREEN_PAST);
       return;
     }
     volgende();
   }
+}
+
+function begin(uitkomst) {
+  spel.potje = R.startPotje(spel.partij, spel.handen, uitkomst);
+  spel.fase = 'spelen';
+  volgende();
 }
 
 function speel(speler, kaart) {
@@ -257,7 +275,7 @@ function eindPotje() {
 
 const acties = {
   draai(keuze) {
-    if (spel.fase === 'draaien' && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst) {
+    if (spel.fase === 'draaien' && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && !spel.draaiMelding) {
       draai(JIJ, keuze);
     }
   },
@@ -389,7 +407,12 @@ function hervat() {
       case 'draaien':
         spel.fase = 'draaien';
         spel.zichtbaar = null;
-        volgende();
+        spel.draaiMelding = null;
+        if (spel.draaien.uitkomst?.soort === 'spelen') begin(spel.draaien.uitkomst);
+        else if (spel.draaien.uitkomst?.soort === 'opnieuwDelen') {
+          spel.partij = R.naOpnieuwDelen(spel.partij);
+          startRonde();
+        } else volgende();
         break;
       case 'potjeKlaar':
       case 'partijKlaar':

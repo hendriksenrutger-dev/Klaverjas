@@ -120,6 +120,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Beginscherm:** bij het openen eerst een beginscherm met "Verder spelen" (met potje en stand), "Nieuwe partij" en "Instellingen". Het huisje in de bovenbalk gaat terug naar het beginscherm; het spel wacht dan.
 - **Indeling:** alle maten volgen de echte schermhoogte (ook in Chrome met adresbalk). Kaarten liggen nooit onder tekst door; niets overlapt.
 - **Hand:** acht kaarten plat naast elkaar onderaan, zonder grijze kaarten. **Spelen gaat met twee tikken:** de eerste tik tilt de kaart op, de tweede speelt hem.
+- **Troef draaien:** de gedraaide kaart is een crème tegel met alleen het kleursymbool, groot (geen hele speelkaart). Bij de computer die aan de beurt is staat "denkt na…". Computers denken bij spelen/passen ongeveer 1 tot 1,4 seconde. Kiest iemand spelen, dan eerst groot "Oost speelt · troef ruiten" (±1,8 s) voordat het potje begint; past iedereen, dan eerst "Iedereen past".
 - **Schudden en delen:** eerst het schudgeluid met de stapel in het midden, daarna vliegen de kaarten in pakjes van 3-2-3 naar de spelers, met bij elk pakje een tikje.
 - **Uitslag:** bij alle slagen voor de spelende partij gewoon "Pit!".
 - **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten).

@@ -60,15 +60,16 @@ function ditPotje(spel) {
 function spelerHtml(spel, i) {
   const s = PLEKKEN[i];
   const n = NAMEN[i];
-  const speelt = spel.potje && spel.draaien?.uitkomst?.speler === i;
+  const speelt = spel.draaien?.uitkomst?.soort === 'spelen' && spel.draaien.uitkomst.speler === i;
   const aanBeurt =
     (spel.fase === 'spelen' && !spel.getoondeSlag && spel.potje.beurt === i) ||
-    (spel.fase === 'draaien' && !spel.draaien.uitkomst && spel.draaien.beurt === i);
+    (spel.fase === 'draaien' && !spel.draaien.uitkomst && !spel.draaiMelding && spel.draaien.beurt === i);
   const labels = [];
   if (speelt) labels.push('<span class="label speelt">Speelt</span>');
+
   if (spel.fase === 'draaien' || spel.fase === 'opnieuwDelen' || spel.fase === 'delen') {
     if (spel.partij.deler === i) labels.push('<span class="label deelt">Deelt</span>');
-    if (spel.draaiKeuzes[i] === 'passen') labels.push('<span class="label past">Past</span>');
+    if (spel.draaiKeuzes[i] === 'passen' && !aanBeurt) labels.push('<span class="label past">Past</span>');
   }
   const aantal = spel.fase === 'delen' ? spel.zichtbaar?.[i] ?? 0
     : spel.potje ? spel.potje.handen[i].length : spel.handen?.[i]?.length ?? 0;
@@ -77,7 +78,9 @@ function spelerHtml(spel, i) {
     <div class="avatar">${n.charAt(0).toUpperCase()}</div>
     <div class="speler-tekst">
       <div class="naam">${n}${labels.join('')}</div>
-      ${s.rol ? `<div class="rol">${s.rol}</div>` : ''}
+      ${aanBeurt && i !== 0
+        ? '<div class="rol denkt">denkt na<span class="puntjes"><i>.</i><i>.</i><i>.</i></span></div>'
+        : s.rol ? `<div class="rol">${s.rol}</div>` : ''}
       ${ruggen}
     </div>
   </div>`;
@@ -90,12 +93,18 @@ function midden(spel) {
   }
   if (spel.fase === 'draaien' || spel.fase === 'opnieuwDelen') {
     const d = spel.draaien;
-    const jij = spel.fase === 'draaien' && d.beurt === 0 && !d.uitkomst;
-    const tekst = spel.fase === 'opnieuwDelen'
-      ? 'Iedereen past. <strong>Er wordt opnieuw gedeeld.</strong>'
-      : `Voorgestelde troef: <strong>${KLEURNAAM[d.kaart.kleur]}</strong>${d.rondes ? ` · ronde ${d.rondes + 1}` : ''}${spel.partij.deler === 0 ? ' · jij deelt' : ''}`;
+    const m = spel.draaiMelding;
+    const jij = spel.fase === 'draaien' && d.beurt === 0 && !d.uitkomst && !m;
+    const kleur = m?.kleur ?? d.kaart.kleur;
+    let tekst;
+    if (spel.fase === 'opnieuwDelen') tekst = 'Iedereen past. <strong>Er wordt opnieuw gedeeld.</strong>';
+    else if (m?.soort === 'speelt') tekst = `<span class="draai-groot"><strong>${naam(m.speler)}</strong> speelt · troef ${KLEURNAAM[kleur].toLowerCase()}</span>`;
+    else if (m?.soort === 'iedereenPast') tekst = '<span class="draai-groot">Iedereen past</span>';
+    else tekst = `Voorgestelde troef: <strong>${KLEURNAAM[kleur]}</strong>${d.rondes ? ` · ronde ${d.rondes + 1}` : ''}${spel.partij.deler === 0 ? ' · jij deelt' : ''}`;
+    // Alleen de kleur, groot: geen hele speelkaart (die verwart met de slag).
+    const tegel = `<div class="troef-tegel ${ROOD.has(kleur) ? 'rood' : ''} ${spel.nieuweKaart === kaartId(d.kaart) ? 'nieuw' : ''} ${m?.soort === 'speelt' ? 'gekozen' : ''} ${m?.soort === 'iedereenPast' ? 'gepast' : ''}">${symbool(kleur)}</div>`;
     return `<div class="midden"><div class="draaien">
-      <div class="stapel ${spel.nieuweKaart === kaartId(d.kaart) ? 'nieuw' : ''}">${rugHtml()}${kaartHtml(d.kaart)}</div>
+      ${tegel}
       <div class="draai-tekst">${tekst}</div>
       ${jij ? `<div class="draai-knoppen">
         <button class="knop goud" data-actie="draai" data-keuze="spelen">Spelen</button>
@@ -127,7 +136,7 @@ function midden(spel) {
 // ---------- Hint ----------
 function hint(spel) {
   if (spel.fase === 'draaien') {
-    if (spel.draaien.uitkomst) return '';
+    if (spel.draaien.uitkomst || spel.draaiMelding) return '';
     return spel.draaien.beurt === 0
       ? '<strong>Jouw beurt</strong>'
       : `${naam(spel.draaien.beurt)} denkt na…`;
