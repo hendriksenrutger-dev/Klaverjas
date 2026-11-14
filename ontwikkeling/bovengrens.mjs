@@ -14,6 +14,9 @@ const A = {
   sterk: { ...basis, sims: 300 },
   eindspel4: { ...basis, eindspel: 4 },
   eindspel5: { ...basis, eindspel: 5 },
+  gedekt: { ...basis, slim: { gedekt: true, maatNeemt: false } },
+  maatNeemt: { ...basis, slim: { gedekt: false, maatNeemt: true } },
+  beide: { ...basis, slim: { gedekt: true, maatNeemt: true } },
 }[welke];
 if (!A) throw new Error('onbekende vergelijking');
 const start = Date.now();
