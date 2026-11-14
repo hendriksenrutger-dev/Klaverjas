@@ -31,6 +31,6 @@ export function telOp(totaal, b) {
   }
   t.kaarten++;
   t[b.oordeel]++;
-  t.punten += b.verschil;
+  if (b.oordeel === 'beter' || b.oordeel === 'minder') t.punten += b.verschil; // "even goed" telt als 0
   return t;
 }

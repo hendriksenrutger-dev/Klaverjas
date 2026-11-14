@@ -289,6 +289,42 @@ function isBaas(k, handen, speler, troef) {
 
 const heeftKleur = (hand, kleur) => hand.some((c) => c.kleur === kleur);
 
+// Verbeteringen van de speelstrategie, los aan/uit te zetten om ze met duels te meten.
+// gedekt: een kaart die gedekt is door eigen hogere kaarten (heer naast aas) niet weggooien.
+// maatNeemt: niet zelf overnemen als de maat na jou de slag zeker wint (duiken).
+export const SLIM_OPTIES = { gedekt: false, maatNeemt: false };
+
+// Kan deze kaart nog een slag worden: niet meer hogere kaarten bij anderen dan bij mezelf?
+function kanSlagWorden(k, handen, speler, troef) {
+  const st = sterkte(k, troef);
+  let elders = 0, zelf = 0;
+  for (let p = 0; p < 4; p++) {
+    for (const c of handen[p]) if (c.kleur === k.kleur && sterkte(c, troef) > st) p === speler ? zelf++ : elders++;
+  }
+  return elders <= zelf;
+}
+
+// Wint de maat (die na mij nog moet) deze slag zeker, wat ik ook laag bijspeel?
+function maatWintZeker(handen, slag, speler, troef, systeem) {
+  const maat = (speler + 2) % 4;
+  if (slag.some((x) => x.speler === maat)) return false;
+  const gevraagd = slag[0].kaart.kleur;
+  // De maat moet na mij en voor de laatste tegenstander, of als laatste spelen.
+  const g = geldigeKaarten(handen[maat], slag, troef, systeem);
+  return g.some((m) => {
+    const proef = [...slag, { speler: maat, kaart: m }];
+    if (huidigeWinnaar(proef, troef).speler !== maat) return false;
+    // Tegenstanders die na de maat nog moeten, mogen hem niet kunnen slaan.
+    let b = (maat + 1) % 4;
+    for (let i = 0; i < 4; i++, b = (b + 1) % 4) {
+      if (b === speler || slag.some((x) => x.speler === b) || b === maat) continue;
+      if (team(b) === team(speler)) continue;
+      if (geldigeKaarten(handen[b], proef, troef, systeem).some((c) => slaatOver(c, m, gevraagd, troef))) return false;
+    }
+    return true;
+  });
+}
+
 // Kan een van de spelers die nog moeten de huidige winnende kaart nog slaan?
 function zekerBinnen(handen, slag, troef, systeem) {
   const gevraagd = slag[0].kaart.kleur;
@@ -303,9 +339,10 @@ function zekerBinnen(handen, slag, troef, systeem) {
 }
 
 // Waarde van een kaart om weg te gooien: liever geen punten, geen troef, geen baas.
-function afgooiWaarde(k, handen, speler, troef) {
+function afgooiWaarde(k, handen, speler, troef, opties = SLIM_OPTIES) {
   let w = punten(k, troef) * 1.0 + (k.kleur === troef ? 25 + sterkte(k, troef) : 0);
   if (k.kleur !== troef && isBaas(k, handen, speler, troef)) w += 8;
+  else if (opties.gedekt && k.kleur !== troef && punten(k, troef) > 0 && kanSlagWorden(k, handen, speler, troef)) w += 6;
   // Een tien zonder aas erbij is kwetsbaar: liever bewaren dan weggooien is niet altijd beter,
   // maar een kale tien weggooien kost 10 punten.
   return w + sterkte(k, troef) * 0.05;
@@ -317,6 +354,7 @@ function roemMet(slag, k, troef) {
 
 export function kiesSlim(handen, slag, ctx, speler, rng) {
   const { troef, systeem, spelendTeam } = ctx;
+  const opties = ctx.opties ?? SLIM_OPTIES;
   const hand = handen[speler];
   const g = geldigeKaarten(hand, slag, troef, systeem);
   if (g.length === 1) return g[0];
@@ -345,9 +383,9 @@ export function kiesSlim(handen, slag, ctx, speler, rng) {
     // Laag naar een kleur waarin de maat de baas heeft.
     const naarMaat = g.filter((k) => k.kleur !== troef && veiligeKleur(k.kleur) &&
       handen[maat].some((c) => c.kleur === k.kleur && isBaas(c, handen, maat, troef)));
-    if (naarMaat.length) return naarMaat.reduce((a, b) => (afgooiWaarde(a, handen, speler, troef) <= afgooiWaarde(b, handen, speler, troef) ? a : b));
+    if (naarMaat.length) return naarMaat.reduce((a, b) => (afgooiWaarde(a, handen, speler, troef, opties) <= afgooiWaarde(b, handen, speler, troef, opties) ? a : b));
     // Anders de goedkoopste kaart.
-    return g.reduce((a, b) => (afgooiWaarde(a, handen, speler, troef) <= afgooiWaarde(b, handen, speler, troef) ? a : b));
+    return g.reduce((a, b) => (afgooiWaarde(a, handen, speler, troef, opties) <= afgooiWaarde(b, handen, speler, troef, opties) ? a : b));
   }
 
   // ----- Bijspelen -----
@@ -376,6 +414,16 @@ export function kiesSlim(handen, slag, ctx, speler, rng) {
   }
 
   const winnend = g.filter((k) => slaatOver(k, w.kaart, gevraagd, troef));
+  if (opties.maatNeemt && winnend.length && team(w.speler) !== mijnTeam && maatWintZeker(handen, slag, speler, troef, systeem)) {
+    // Duiken: de maat neemt hem zeker, dus zelf niet overnemen maar punten bijgeven die toch binnenkomen.
+    let best = null, bestS = -Infinity;
+    for (const k of g) {
+      const verspilling = k.kleur === troef ? 15 + sterkte(k, troef) * 2 : 0;
+      const sc = punten(k, troef) - verspilling - afgooiWaarde(k, handen, speler, troef, opties) * 0.01;
+      if (sc > bestS) { bestS = sc; best = k; }
+    }
+    return best;
+  }
   if (winnend.length) {
     const zeker = winnend.filter((k) => zekerBinnen(handen, [...slag, { speler, kaart: k }], troef, systeem));
     if (zeker.length && team(w.speler) !== mijnTeam) {
@@ -397,7 +445,7 @@ export function kiesSlim(handen, slag, ctx, speler, rng) {
   // Niet winnen: zo weinig mogelijk weggeven (ook geen roem voor de tegenpartij).
   let best = null, bestS = Infinity;
   for (const k of g) {
-    const sc = afgooiWaarde(k, handen, speler, troef) + roemMet(slag, k, troef);
+    const sc = afgooiWaarde(k, handen, speler, troef, opties) + roemMet(slag, k, troef);
     if (sc < bestS) { bestS = sc; best = k; }
   }
   return best;
@@ -543,11 +591,11 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, slimOpties = SLIM_OPTIES, gedektRegel = true,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
-  const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie, trekken };
+  const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie, trekken, opties: slimOpties };
   const exact = 8 - w.slagen.length <= eindspel;
   const onbekend = onbekendeKaarten(w);
   const uit = uitsluitingen(w, onbekend);
@@ -627,7 +675,7 @@ export function kiesKaart(w, {
   for (let i = 1; i < geldig.length; i++) {
     if (totaal(i) > totaal(best)) best = i;
   }
-  const regel = geldig.map((k) => (vuistregels ? vuistregelStraf(w, k, onbekend) : 0));
+  const regel = geldig.map((k) => (vuistregels ? vuistregelStraf(w, k, onbekend, gedektRegel) : 0));
   if (vuistregels && regel[best] > 0) {
     // Binnen de marge de kaart die geen vuistregel breekt (bij gelijke straf: hoogste score).
     for (let i = 0; i < geldig.length; i++) {
@@ -645,13 +693,17 @@ export function kiesKaart(w, {
 // - Als tegenpartij kom je niet met troef uit.
 // - Een vrije kaart (de hoogste die nog in zijn kleur zit, geen troef) gooi je niet weg
 //   op een slag die je er niet mee wint.
-export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w)) {
+export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRegel = false) {
   if (w.slag.length === 0) {
     return team(w.speler) !== w.spelendTeam && k.kleur === w.troef ? 1 : 0;
   }
   if (k.kleur === w.troef) return 0;
-  const vrij = !onbekend.some((c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef));
-  if (!vrij || punten(k, w.troef) === 0) return 0;
+  const hoger = (c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef);
+  const elders = onbekend.filter(hoger).length;
+  // Gedekte kaart (zoals een heer naast je eigen aas), alleen bij afgooien. Gemeten: kost niets.
+  const gedekt = gedektRegel && elders > 0 && elders <= w.hand.filter(hoger).length && k.kleur !== w.slag[0].kaart.kleur;
+  const vrij = elders === 0;
+  if ((!vrij && !gedekt) || punten(k, w.troef) === 0) return 0;
   const wint = huidigeWinnaar([...w.slag, { speler: w.speler, kaart: k }], w.troef).speler === w.speler;
   return wint ? 0 : 1;
 }
