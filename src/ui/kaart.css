@@ -61,8 +61,8 @@
 .kaart .plaatje { position: absolute; left: 17.5cqw; right: 17.5cqw; top: 50%; transform: translateY(-50%); }
 .kaart .plaatje img { display: block; width: 100%; height: auto; border-radius: 1.5cqw; pointer-events: none; }
 
-/* Achterkant: eigen ontwerp in groen en goud */
-.kaart.rug { background: #1a5c3b; }
+/* Achterkant: eigen ontwerp in donkerrood en goud */
+.kaart.rug { background: #5a1418; }
 .kaart.rug::after { display: none; }
 .rug-vlak {
   position: absolute; inset: 5cqw;
@@ -71,12 +71,12 @@
   background:
     repeating-linear-gradient(45deg, transparent 0 6cqw, rgba(232, 200, 115, 0.35) 6cqw calc(6cqw + 1px)),
     repeating-linear-gradient(-45deg, transparent 0 6cqw, rgba(232, 200, 115, 0.35) 6cqw calc(6cqw + 1px)),
-    radial-gradient(ellipse at center, #2e8a5c, #1f6743 70%);
+    radial-gradient(ellipse at center, #8e2a30, #6a181d 70%);
   display: grid; place-items: center;
 }
 .rug-embleem {
   width: 42cqw; height: 42cqw; border-radius: 50%;
-  background: #1a5c3b; border: max(1px, 1.2cqw) solid var(--goud);
+  background: #5a1418; border: max(1px, 1.2cqw) solid var(--goud);
   display: grid; place-items: center; color: var(--goud);
 }
 .rug-embleem .sym { width: 22cqw; height: 22cqw; fill: var(--goud); }

@@ -2,7 +2,7 @@
 <script type="module">
   // Neemt de geluiden op in een OfflineAudioContext (alleen voor ontwikkeling).
   window.AudioContext = class extends OfflineAudioContext {
-    constructor() { super(1, 44100 * 4, 44100); window.__opname = this; }
+    constructor() { super(1, 44100 * 8, 44100); window.__opname = this; }
     get state() { return 'running'; }
     resume() {}
   };

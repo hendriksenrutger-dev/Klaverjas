@@ -45,7 +45,7 @@ function tik(c, t, { freq = 2500, q = 0.9, duur = 0.06, volume = 0.5 } = {}) {
   filter.Q.value = q;
   const g = c.createGain();
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(volume, t + 0.003);
+  g.gain.exponentialRampToValueAtTime(volume, t + Math.min(0.012, duur / 4));
   g.gain.exponentialRampToValueAtTime(0.0001, t + duur);
   bron.connect(filter).connect(g).connect(c.destination);
   bron.start(t, Math.random() * 0.5, duur + 0.02);
@@ -60,19 +60,22 @@ function plof(c, t, volume = 0.25) {
   const g = c.createGain();
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(volume, t + 0.004);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
   osc.connect(g).connect(c.destination);
   osc.start(t);
-  osc.stop(t + 0.1);
+  osc.stop(t + 0.18);
 }
 
 export function kaartNeer() {
   const c = context();
   if (!c) return;
   const t = c.currentTime + 0.01;
-  tik(c, t, { freq: 1800 + Math.random() * 600, q: 0.7, duur: 0.07, volume: 0.45 });
-  tik(c, t + 0.004, { freq: 5200, q: 1.2, duur: 0.03, volume: 0.15 });
-  plof(c, t);
+  // Eerst het schuiven over het laken, dan het neerkomen.
+  tik(c, t, { freq: 1200, q: 0.5, duur: 0.16, volume: 0.12 });
+  const neer = t + 0.09;
+  tik(c, neer, { freq: 1500 + Math.random() * 400, q: 0.7, duur: 0.14, volume: 0.4 });
+  tik(c, neer + 0.006, { freq: 4200, q: 1.2, duur: 0.05, volume: 0.1 });
+  plof(c, neer);
 }
 
 // Schudden: twee keer ritsen (veel snelle tikjes die vertragen) en daarna de stapel recht tikken.
@@ -81,21 +84,21 @@ export function schudden() {
   if (!c) return;
   let t = c.currentTime + 0.02;
   for (let ronde = 0; ronde < 2; ronde++) {
-    const aantal = 26;
+    const aantal = 22;
     for (let i = 0; i < aantal; i++) {
       const voortgang = i / aantal;
       tik(c, t, {
         freq: 3200 + Math.random() * 1800,
         q: 1.4,
-        duur: 0.018 + Math.random() * 0.01,
+        duur: 0.03 + Math.random() * 0.015,
         volume: 0.12 + 0.18 * Math.sin(Math.PI * voortgang),
       });
-      t += 0.012 + voortgang * 0.018; // eerst snel, dan langzamer
+      t += 0.03 + voortgang * 0.035; // eerst sneller, dan langzamer
     }
-    t += 0.12;
+    t += 0.25;
     // stapel samenschuiven
-    tik(c, t, { freq: 900, q: 0.6, duur: 0.12, volume: 0.25 });
-    t += 0.22;
+    tik(c, t, { freq: 900, q: 0.6, duur: 0.25, volume: 0.25 });
+    t += 0.35;
   }
   // recht tikken op tafel
   plof(c, t, 0.3);

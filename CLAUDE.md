@@ -139,7 +139,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
   - **Gebruik geen schoppenaas uit een set.** Er is twijfel of de versierde schoppenaas vrij is, en Rutger koos toch voor eigen azen.
   - Sluiten de plaatjes van Knoll qua stijl niet goed aan bij de eigen cijferkaarten? Pas dan de eigen kaarten aan op Knoll, niet andersom, en laat het Rutger zien.
 - **Gebruik nooit** kaartontwerpen van Klaverjas HD, Carta Mundi of het Nederlandse patroon van Brepols. Die zijn beschermd.
-- **Achterkant:** eigen eenvoudig ontwerp in het groen en goud van de tafel. Laat Rutger een voorstel zien.
+- **Achterkant:** eigen eenvoudig ontwerp in **donkerrood en goud** (gekozen door Rutger): gouden rand, fijn ruitpatroon en een gouden klaver in een rondje.
 
 ## Bouwvolgorde
 
@@ -162,7 +162,6 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 ## Nog open (vragen aan Rutger op het moment dat het speelt)
 
 - Hoe worden de moeilijkheidsniveaus ingevuld?
-- Het ontwerp van de achterkant van de kaarten.
 
 ## Later (na de solo-app, nu NIET bouwen)
 
