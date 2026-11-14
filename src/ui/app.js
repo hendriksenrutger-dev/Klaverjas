@@ -85,7 +85,7 @@ function volgende() {
     const s = spel.draaien.beurt;
     const d = spel.draaien;
     computerZet(
-      () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }),
+      () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, NIVEAU),
       (keuze) => draai(s, keuze),
     );
   } else if (spel.fase === 'spelen' && !spel.getoondeSlag && spel.potje.beurt !== JIJ) {

@@ -42,10 +42,11 @@ function vraag(soort, data, reserve) {
 // Geeft de kaart die de computerspeler speelt. Alleen de waarneming gaat naar de worker,
 // dus de AI kan niet bij de kaarten van anderen.
 export function vraagKaart(potje, speler, niveau = 'normaal') {
-  const data = { waarneming: waarneming(potje, speler), simulaties: NIVEAUS[niveau] ?? NIVEAUS.normaal };
-  return vraag('kaart', data, () => kiesKaart(data.waarneming, { simulaties: data.simulaties })).then((r) => r.kaart);
+  const data = { waarneming: waarneming(potje, speler), niveau: NIVEAUS[niveau] ?? NIVEAUS.normaal };
+  return vraag('kaart', data, () => kiesKaart(data.waarneming, data.niveau)).then((r) => r.kaart);
 }
 
-export function vraagDraai(hand, kleur, opties) {
+export function vraagDraai(hand, kleur, opties, niveau = 'normaal') {
+  opties = { ...opties, strategie: (NIVEAUS[niveau] ?? NIVEAUS.normaal).strategie };
   return vraag('draai', { hand, kleur, opties }, () => kiesDraai(hand, kleur, opties)).then((r) => r.keuze);
 }

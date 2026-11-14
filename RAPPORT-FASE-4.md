@@ -53,3 +53,39 @@ kaart (computerspelers verzaken nooit), de AI kiest de kaart met de beste score,
 troeven als laatste, en spelen/passen bij een sterke en een zwakke hand.
 
 `ontwikkeling/duel.mjs` laat computerteams tegen elkaar spelen om instellingen te vergelijken.
+
+
+---
+
+# Aanvulling: slimmere AI (op verzoek van Rutger)
+
+## Wat er bij kwam
+1. **Slimme speelstrategie in de simulaties.** Binnen een simulatie liggen alle kaarten open, dus de
+   strategie kan zien welke kaart de baas is, of een slag zeker binnen is, of de tegenpartij kan
+   introeven en of een kaart roem maakt. Regels o.a.: spelende partij trekt troef met een baastroef;
+   baaskaarten uitkomen als niemand kan introeven; laag naar de kleur waarin de maat de baas heeft;
+   punten en roem bijgooien als de maat de slag zeker heeft (zonder goede troef te verspillen);
+   zeker winnen met punten uit een bijkleur of met de laagste troef; geen roem weggeven.
+2. **Eindspel exact:** de laatste 3 slagen worden per verdeling volledig doorgerekend (alfa-bèta).
+
+## Metingen (duplicaat-duels, telkens 300–650 potjes)
+| Vergelijking | Gemiddeld verschil per potje |
+|---|---|
+| Nieuw kaartspel tegen oud | **+8** (twee runs: +10,1 en +5,8) |
+| Nieuwe beoordeling spelen/passen tegen oud | +3 (binnen het toeval, niet slechter) |
+| 300 tegen 100 simulaties (nieuw) | −1 (geen verschil) |
+| 4 tegen 3 slagen exact | +2 (geen meetbaar verschil, wel trager) |
+| AI die alle kaarten ziet tegen normaal | +17 (bovengrens van wat met deze aanpak te halen is) |
+| Makkelijk tegen normaal | **−28** |
+
+## Niveaus (voorstel)
+| Niveau | Instelling | Gemiddeld / langste zet (server) |
+|---|---|---|
+| Makkelijk | 5 simulaties, eenvoudige strategie | 0,5 / 11 ms |
+| Normaal | 100 simulaties, slimme strategie, laatste 3 slagen exact | 9 / 70 ms |
+| Sterk | 300 simulaties, slimme strategie, laatste 3 slagen exact | 24 / 147 ms |
+
+Sterk is in de metingen niet beter dan normaal. Verder sterker maken vraagt een andere aanpak
+(bijvoorbeeld zoeken over wat spelers wel en niet weten) en de seinen uit fase 5 helpen ook.
+
+`ontwikkeling/verloop.mjs` toont een potje zet voor zet met de scores per kaart, om de keuzes te beoordelen.

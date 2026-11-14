@@ -8,8 +8,8 @@ const W = await import('../src/ai/willekeurig.js');
 
 function speler(cfg, rng) {
   return {
-    draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES }).keuze,
-    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng }).kaart,
+    draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim' }).keuze,
+    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
   };
 }
 
@@ -55,4 +55,33 @@ if (mode === 'drempel') {
 if (mode === 'makkelijk') {
   console.log('5 vs 60', duel({ sims: 5 }, { sims: 60 }, 200, 3));
   console.log('2 vs 60', duel({ sims: 2 }, { sims: 60 }, 200, 3));
+}
+if (mode === 'slim') {
+  console.log('slim vs simpel', duel({ sims: 100 }, { sims: 100, strategie: 'simpel', eindspel: 0 }, +(process.argv[3] || 150), 5));
+}
+if (mode === 'eindspel') {
+  console.log('slim+eindspel vs slim zonder', duel({ sims: 100 }, { sims: 100, eindspel: 0 }, +(process.argv[3] || 150), 6));
+}
+if (mode === 'drempel2') {
+  for (const dr of [0, 20]) console.log('drempel', dr, 'vs 10', duel({ sims: 60, drempel: dr }, { sims: 60, drempel: 10 }, 200, 8));
+}
+if (mode === 'kaartspel') {
+  // Alleen het kaartspel vergelijken: beide teams draaien met dezelfde (simpele) beoordeling.
+  console.log('kaartspel slim vs simpel', duel({ sims: 100, draaiStrategie: 'simpel', eindspel: 0 }, { sims: 100, strategie: 'simpel', eindspel: 0 }, +(process.argv[3] || 150), 9));
+  console.log('eindspel aan vs uit (simpel)', duel({ sims: 100, strategie: 'simpel', eindspel: 3 }, { sims: 100, strategie: 'simpel', eindspel: 0 }, +(process.argv[3] || 150), 10));
+}
+if (mode === 'vals') {
+  console.log('valsspeler vs normaal', duel({ sims: 20, vals: true, draaiStrategie: 'simpel' }, { sims: 100, draaiStrategie: 'simpel' }, +(process.argv[3] || 100), 12));
+}
+if (mode === 'groot') {
+  // node duel.mjs groot <vergelijking> <delingen> <zaad>
+  const [, , , welke, n, z] = process.argv;
+  const V = {
+    kaart: [{ sims: 100, draaiStrategie: 'simpel' }, { sims: 100, strategie: 'simpel', eindspel: 0 }],
+    draai: [{ sims: 100, strategie: 'simpel', eindspel: 0, draaiStrategie: 'slim' }, { sims: 100, strategie: 'simpel', eindspel: 0, draaiStrategie: 'simpel' }],
+    sims: [{ sims: 300 }, { sims: 100 }],
+    makkelijk: [{ sims: 5, strategie: 'simpel', eindspel: 0 }, { sims: 100 }],
+    eind4: [{ sims: 100, eindspel: 4 }, { sims: 100, eindspel: 3 }],
+  }[welke];
+  console.log(JSON.stringify({ welke, zaad: +z, ...duel(V[0], V[1], +n, +z) }));
 }

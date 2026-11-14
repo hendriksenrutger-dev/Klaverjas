@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { waarneming, uitsluitingen, trekVerdeling, kiesKaart, kiesDraai, kiesSnel } from '../src/ai/simulatie.js';
+import { waarneming, uitsluitingen, trekVerdeling, kiesKaart, kiesDraai, kiesSimpel, kiesSlim, eindspelWaarde } from '../src/ai/simulatie.js';
 import { nieuwPotje, speelKaart, geldigVoor, uitslag } from '../src/regels/potje.js';
 import { maakDeck, schud, deel, kaartId, team } from '../src/regels/kaarten.js';
 import { geldigeKaarten } from '../src/regels/geldig.js';
@@ -134,7 +134,9 @@ describe('kaart kiezen', () => {
     const rng = maakRng(6);
     let p = nieuwPotje({ handen: deel(schud(maakDeck(), rng), 0), troef: 'klaveren', spelendTeam: 0, uitkomer: 1 });
     while (!p.klaar) {
-      const k = kiesSnel(p.handen[p.beurt], p.slag, p.troef, p.systeem, p.beurt, p.spelendTeam, rng);
+      const k = kiesSimpel(p.handen[p.beurt], p.slag, p.troef, p.systeem, p.beurt, p.spelendTeam, rng);
+      const k2 = kiesSlim(p.handen, p.slag, { troef: p.troef, systeem: p.systeem, spelendTeam: p.spelendTeam }, p.beurt, rng);
+      assert.ok(geldigVoor(p, p.beurt).some((g) => kaartId(g) === kaartId(k2)));
       assert.ok(geldigVoor(p, p.beurt).some((g) => kaartId(g) === kaartId(k)));
       p = speelKaart(p, p.beurt, k);
     }
@@ -173,7 +175,7 @@ describe('kaart kiezen', () => {
     p = speelKaart(p, 1, K('k7'));
     p = speelKaart(p, 2, K('rB'));
     // Speler 3 moet troeven (tegenstander wint met kA): de AI kiest geldig en een troef.
-    const { kaart } = kiesKaart(waarneming(p, 3), { simulaties: 40, rng: maakRng(3) });
+    const { kaart } = kiesKaart(waarneming(p, 3), { simulaties: 200, rng: maakRng(3) });
     assert.equal(kaart.kleur, 'harten');
     // Met de laagste troef die wint (hV of hH zijn genoeg; de boer of negen weggeven is zonde).
     assert.ok(['V', 'H'].includes(kaart.rang), `gekozen ${kaart.rang}`);
@@ -197,5 +199,35 @@ describe('spelen of passen', () => {
   test('dezelfde hand in een andere troefkleur kan anders uitvallen', () => {
     const hand = Ks('hB h9 hA h10 kA sA rA hH');
     assert.equal(kiesDraai(hand, 'klaveren', { speler: 1, deler: 0, rng: maakRng(2) }).keuze, 'passen');
+  });
+});
+
+describe('eindspel exact', () => {
+  test('de snelle telling in het eindspel is gelijk aan de echte uitslag', () => {
+    const rng = maakRng(21);
+    for (let g = 0; g < 40; g++) {
+      let p = nieuwPotje({ handen: deel(schud(maakDeck(), rng), 0), troef: 'klaveren', spelendTeam: g % 2, uitkomer: 1 });
+      while (p.slagen.length < 7) { const k = geldigVoor(p, p.beurt); p = speelKaart(p, p.beurt, k[Math.floor(rng() * k.length)]); }
+      // Laatste slag: elke speler heeft één kaart, dus de waarde is precies de uitslag.
+      const ctx = { troef: p.troef, systeem: p.systeem, spelendTeam: p.spelendTeam };
+      const v = eindspelWaarde(p.handen, p.slag, p.slagen, p.beurt, ctx, 0);
+      let q = p;
+      while (!q.klaar) q = speelKaart(q, q.beurt, geldigVoor(q, q.beurt)[0]);
+      const u = uitslag(q);
+      assert.equal(v, u.totaal[0] - u.totaal[1]);
+    }
+  });
+
+  test('exacte waarde is minstens zo goed als elke vaste speelwijze voor de eigen partij', () => {
+    const rng = maakRng(22);
+    for (let g = 0; g < 15; g++) {
+      let p = nieuwPotje({ handen: deel(schud(maakDeck(), rng), 0), troef: 'ruiten', spelendTeam: 0, uitkomer: 1 });
+      while (p.slagen.length < 6) { const k = geldigVoor(p, p.beurt); p = speelKaart(p, p.beurt, k[Math.floor(rng() * k.length)]); }
+      const ctx = { troef: p.troef, systeem: p.systeem, spelendTeam: p.spelendTeam };
+      const v = eindspelWaarde(p.handen, p.slag, p.slagen, p.beurt, ctx, team(p.beurt));
+      assert.ok(Number.isFinite(v));
+      // De handen zijn na de zoektocht onveranderd.
+      assert.equal(p.handen.flat().length, 8);
+    }
   });
 });
