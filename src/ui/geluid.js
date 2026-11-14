@@ -3,6 +3,7 @@
 // Browsers staan geluid pas toe na een eerste tik; ontgrendel() wordt dan aangeroepen.
 
 let ctx = null;
+const VOLUME = 2.2; // algemene sterkte
 let aan = true;
 
 export function zetGeluid(waarde) {
@@ -45,7 +46,7 @@ function tik(c, t, { freq = 2500, q = 0.9, duur = 0.06, volume = 0.5 } = {}) {
   filter.Q.value = q;
   const g = c.createGain();
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(volume, t + Math.min(0.012, duur / 4));
+  g.gain.exponentialRampToValueAtTime(volume * VOLUME, t + Math.min(0.012, duur / 4));
   g.gain.exponentialRampToValueAtTime(0.0001, t + duur);
   bron.connect(filter).connect(g).connect(c.destination);
   bron.start(t, Math.random() * 0.5, duur + 0.02);
@@ -59,7 +60,7 @@ function plof(c, t, volume = 0.25) {
   osc.frequency.exponentialRampToValueAtTime(70, t + 0.06);
   const g = c.createGain();
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(volume, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(volume * VOLUME, t + 0.004);
   g.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
   osc.connect(g).connect(c.destination);
   osc.start(t);
@@ -72,7 +73,7 @@ export function kaartNeer() {
   const c = context();
   if (!c) return;
   const t = c.currentTime + 0.01;
-  const duur = 0.32 + Math.random() * 0.06;
+  const duur = 0.24 + Math.random() * 0.04;
 
   const bron = ruis(c);
   const laag = c.createBiquadFilter();
@@ -87,9 +88,9 @@ export function kaartNeer() {
 
   const g = c.createGain();
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.32, t + 0.05); // aanzetten
-  g.gain.setValueAtTime(0.32, t + 0.09);
-  g.gain.exponentialRampToValueAtTime(0.12, t + duur * 0.7); // schuiven
+  g.gain.exponentialRampToValueAtTime(0.32 * VOLUME, t + 0.035); // aanzetten
+  g.gain.setValueAtTime(0.32 * VOLUME, t + 0.065);
+  g.gain.exponentialRampToValueAtTime(0.12 * VOLUME, t + duur * 0.7); // schuiven
   g.gain.exponentialRampToValueAtTime(0.0001, t + duur); // stilstaan
 
   bron.connect(laag).connect(band).connect(g).connect(c.destination);
@@ -111,12 +112,12 @@ export function schudden() {
         duur: 0.03 + Math.random() * 0.015,
         volume: 0.12 + 0.18 * Math.sin(Math.PI * voortgang),
       });
-      t += 0.03 + voortgang * 0.035; // eerst sneller, dan langzamer
+      t += 0.024 + voortgang * 0.028; // eerst sneller, dan langzamer
     }
-    t += 0.25;
+    t += 0.2;
     // stapel samenschuiven
     tik(c, t, { freq: 900, q: 0.6, duur: 0.25, volume: 0.25 });
-    t += 0.35;
+    t += 0.28;
   }
   // recht tikken op tafel
   plof(c, t, 0.3);

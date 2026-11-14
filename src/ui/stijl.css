@@ -7,9 +7,9 @@
 @font-face { font-family: 'Playfair Display'; font-weight: 700; font-display: swap; src: url('../../assets/lettertypen/playfair-display-latin-700-normal.woff2') format('woff2'); }
 
 :root {
-  --kh: min(13vw, 18.6vh); /* kaarthoogte op tafel: ~160px op 1280 × 860 */
+  --kh: min(14.5vw, 21.5vh); /* kaarthoogte op tafel: ~185px op 1280 × 860 */
   /* hand: 8 kaarten plat naast elkaar, zo groot als past */
-  --hk: min(25vh, calc((100vw - 48px - 7 * 8px) / 8 / 0.694));
+  --hk: min(23vh, calc((100vw - 48px - 7 * 8px) / 8 / 0.694)); /* ~198px op 1280 × 860 */
   --goud: #e8c873;
   --creme: #fbf8f1;
   --rood: #b3262d;
@@ -156,16 +156,18 @@ button { font: inherit; }
 }
 .roem {
   position: absolute; top: 0; transform: translateY(-50%);
-  left: calc(var(--kh) * 0.32 + var(--kh) * 0.694 + 28px);
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(180deg, #f2d98f, var(--goud)); color: var(--zwart);
-  padding: 12px 22px 12px 16px; border-radius: 22px; font-size: 20px; font-weight: 700; white-space: nowrap;
+  left: calc(var(--kh) * 0.32 + var(--kh) * 0.694 + 26px);
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(8, 30, 19, 0.6); color: var(--goud);
+  border: 1.5px solid rgba(232, 200, 115, 0.7);
+  padding: 8px 18px 8px 14px; border-radius: 24px;
+  font-family: var(--cijfers); font-size: 26px; font-weight: 700; white-space: nowrap;
+  font-variant-numeric: lining-nums;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   animation: verschijn 0.3s ease-out;
 }
-.roem-regels { display: flex; flex-direction: column; gap: 2px; }
-.roem-regels .totaal { font-size: 16px; font-weight: 600; opacity: 0.75; }
-.roem .ster { font-size: 30px; }
+.roem .ster { font-size: 22px; }
+.roem .woord { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 600; }
 @keyframes verschijn { from { opacity: 0; transform: translateY(-50%) scale(0.85); } }
 
 .draaien { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 14px; }

@@ -16,10 +16,6 @@ const PLEKKEN = [
 // Naam zoals hij in zinnen verschijnt: speler 0 is altijd "Jij".
 let NAMEN = ['Zuid', 'West', 'Noord', 'Oost'];
 const naam = (i) => (i === 0 ? 'Jij' : NAMEN[i]);
-const ROEMNAAM = {
-  driekaart: 'Driekaart', vierkaart: 'Vierkaart', stuk: 'Stuk',
-  vierBoeren: 'Vier boeren', vierGelijk: 'Vier gelijke', pit: 'Pit',
-};
 const IKOON = {
   huis: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>',
   tandwiel: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.9 1.9M17.5 17.5l1.9 1.9M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.9-1.9M17.5 6.5l1.9-1.9"/><circle cx="12" cy="12" r="6.6"/></svg>',
@@ -120,7 +116,7 @@ function midden(spel) {
     ? `<div class="pijl" style="--richting:${RICHTING[PLEKKEN[winnaar].plek]}"><svg viewBox="0 0 64 64"><defs><linearGradient id="pijlgoud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6e2a6"/><stop offset="1" stop-color="#d4ad4f"/></linearGradient></defs><path d="M32 4 58 34H42v26H22V34H6z" fill="url(#pijlgoud)" stroke="#7a5c12" stroke-width="2" stroke-linejoin="round"/></svg></div>`
     : '';
   const roem = spel.roemMelding
-    ? `<div class="roem"><span class="ster">★</span><div class="roem-regels">${spel.roemMelding.items.map((r) => `<span>${ROEMNAAM[r.soort]} · ${r.punten} roem</span>`).join('')}${spel.roemMelding.items.length > 1 ? `<span class="totaal">Samen ${spel.roemMelding.totaal} roem</span>` : ''}</div></div>`
+    ? `<div class="roem"><span class="ster">★</span>${spel.roemMelding.totaal}<span class="woord">roem</span></div>`
     : '';
   return `<div class="midden">${plekken}${pijl}${roem}</div>`;
 }
