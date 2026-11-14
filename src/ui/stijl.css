@@ -190,6 +190,43 @@ button { font: inherit; }
 .draai-tekst strong { color: var(--goud); }
 .draai-knoppen { display: flex; gap: 12px; }
 
+/* ---------- Troef draaien: schijf in het midden, keuzes als tekstballonnen op de plek van elke speler ---------- */
+.troef-schijf {
+  position: absolute; left: 0; top: 0; transform: translate(-50%, -50%);
+  width: calc(var(--kh) * 0.62); height: calc(var(--kh) * 0.62); border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, var(--creme) 70%);
+  border: 3px solid var(--goud); color: var(--zwart);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+  display: grid; place-items: center;
+  animation: schijf-in 0.45s cubic-bezier(.2,1.4,.4,1);
+  transition: transform 0.35s, opacity 0.35s, box-shadow 0.35s;
+}
+.troef-schijf.rood { color: var(--rood); }
+.troef-schijf .sym { width: 56%; height: 56%; fill: currentColor; }
+.troef-schijf.gekozen { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 0 6px rgba(232,200,115,.45), 0 8px 24px rgba(0,0,0,.4); }
+.troef-schijf.gepast { opacity: 0.55; transform: translate(-50%, -50%) scale(0.9); }
+@keyframes schijf-in { from { transform: translate(-50%, -50%) scale(0.3) rotate(-90deg); opacity: 0; } }
+
+.bubbel-plek { position: absolute; left: 0; top: 0; }
+.bubbel-plek.noord { transform: translate(-50%, calc(-50% - var(--kh) * 0.62)); }
+.bubbel-plek.zuid { transform: translate(-50%, calc(-50% + var(--kh) * 0.62)); }
+.bubbel-plek.west { transform: translate(calc(-50% - var(--kb-tafel) - 30px), -50%); }
+.bubbel-plek.oost { transform: translate(calc(-50% + var(--kb-tafel) + 30px), -50%); }
+.bubbel {
+  white-space: nowrap; padding: 10px 22px; border-radius: 22px;
+  font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.3);
+  animation: plof 0.38s cubic-bezier(.2,1.5,.4,1);
+}
+.bubbel.past { background: rgba(8, 30, 19, 0.72); color: var(--creme); border: 1.5px solid rgba(232, 200, 115, 0.55); }
+.bubbel.speelt { background: linear-gradient(180deg, #f6e2a6, var(--goud)); color: var(--zwart); border: 1.5px solid #b8933a; font-size: 22px; }
+.bubbel.denkt { background: rgba(8, 30, 19, 0.45); color: var(--goud); border: 1.5px dashed rgba(232, 200, 115, 0.45); padding: 8px 18px; }
+.bubbel-sym { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #fff; color: var(--zwart); }
+.bubbel-sym.rood { color: var(--rood); }
+.bubbel-sym .sym { width: 18px; height: 18px; fill: currentColor; }
+.bubbel-plek .draai-knoppen { animation: plof 0.38s cubic-bezier(.2,1.5,.4,1); }
+@keyframes plof { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
 /* ---------- Troef draaien ---------- */
 .troef-tegel {
   width: var(--kb-tafel); height: var(--kh); border-radius: calc(var(--kh) * 0.07);
