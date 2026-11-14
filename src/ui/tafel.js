@@ -263,6 +263,7 @@ function instellingenVenster(spel) {
       ${keuzeRij('Opnieuw delen na', 'rondes', i.rondesVoorOpnieuwDelen, [[2, '2 rondes passen'], [3, '3 rondes passen']], 'Vanaf het volgende potje')}
       ${keuzeRij('Verzaakbescherming', 'verzaakbescherming', i.verzaakbescherming ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Aan: alleen kaarten die mogen zijn speelbaar')}
       ${keuzeRij('Computerspelers', 'niveau', i.niveau, [['makkelijk', 'Makkelijk'], ['normaal', 'Normaal'], ['sterk', 'Sterk']])}
+      ${keuzeRij('Geluid', 'geluid', i.geluid ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Schudden en kaarten leggen')}
       <div class="instelling">
         <div class="instelling-label">Namen</div>
         <div class="namen">${namen}</div>

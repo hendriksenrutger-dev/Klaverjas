@@ -232,15 +232,17 @@ if ('serviceWorker' in navigator && !snel) {
     }
   },
   // Een instelling wijzigen. Systeem en aantal rondes gelden vanaf het volgende potje,
-  // verzaakbescherming, niveau en namen meteen.
+  // verzaakbescherming, niveau, geluid en namen meteen.
   instelling(sleutel, waarde) {
     const i = { ...spel.instellingen };
     if (sleutel === 'systeem' && ['amsterdams', 'rotterdams'].includes(waarde)) i.systeem = waarde;
     else if (sleutel === 'rondes' && ['2', '3'].includes(String(waarde))) i.rondesVoorOpnieuwDelen = Number(waarde);
     else if (sleutel === 'verzaakbescherming') i.verzaakbescherming = waarde === true || waarde === 'aan';
     else if (sleutel === 'niveau' && ['makkelijk', 'normaal', 'sterk'].includes(waarde)) i.niveau = waarde;
+    else if (sleutel === 'geluid') i.geluid = waarde === true || waarde === 'aan';
     else return;
     spel.instellingen = i;
+    geluid.zetGeluid(i.geluid);
     bewaarInstellingen(i);
     if (spel.partij) spel.partij = { ...spel.partij, instellingen: { ...spel.partij.instellingen, ...regelInstellingen() } };
     if (spel.potje && sleutel === 'verzaakbescherming') spel.potje = { ...spel.potje, verzaakbescherming: i.verzaakbescherming };
@@ -294,6 +296,8 @@ function hervat() {
     return false;
   }
 }
+
+geluid.zetGeluid(spel.instellingen.geluid);
 
 // Geluid mag pas na een eerste aanraking.
 window.addEventListener('pointerdown', geluid.ontgrendel, { once: false, passive: true });

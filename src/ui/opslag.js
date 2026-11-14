@@ -10,6 +10,7 @@ export const STANDAARD = Object.freeze({
   rondesVoorOpnieuwDelen: 2,
   verzaakbescherming: true,
   niveau: 'normaal',
+  geluid: true,
   namen: ['Zuid', 'West', 'Noord', 'Oost'],
 });
 
@@ -40,6 +41,7 @@ export function laadInstellingen() {
   if (![2, 3].includes(i.rondesVoorOpnieuwDelen)) i.rondesVoorOpnieuwDelen = STANDAARD.rondesVoorOpnieuwDelen;
   if (typeof i.verzaakbescherming !== 'boolean') i.verzaakbescherming = STANDAARD.verzaakbescherming;
   if (!['makkelijk', 'normaal', 'sterk'].includes(i.niveau)) i.niveau = STANDAARD.niveau;
+  if (typeof i.geluid !== 'boolean') i.geluid = STANDAARD.geluid;
   if (!Array.isArray(i.namen) || i.namen.length !== 4) i.namen = [...STANDAARD.namen];
   i.namen = i.namen.map((n, k) => (typeof n === 'string' && n.trim() ? n.trim().slice(0, 16) : STANDAARD.namen[k]));
   return i;
