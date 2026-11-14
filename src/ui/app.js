@@ -4,6 +4,7 @@ import * as R from '../regels/index.js';
 import { vraagKaart, vraagDraai } from '../ai/client.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
+import { laadPlaatjes } from './plaatjes.js';
 import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij } from './opslag.js';
 
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
@@ -441,17 +442,8 @@ function hervat() {
 
 geluid.zetGeluid(spel.instellingen.geluid);
 
-// Plaatjes van heer, vrouw en boer vooraf laden en decoderen, zodat een gespeelde kaart
-// meteen met tekening verschijnt (niet eerst even wit).
-const plaatjes = [];
-for (const kleur of R.KLEUREN) {
-  for (const rang of ['H', 'V', 'B']) {
-    const img = new Image();
-    img.src = new URL(`../../assets/kaarten/${kleur}-${rang}.webp`, import.meta.url).href;
-    img.decode?.().catch(() => {});
-    plaatjes.push(img);
-  }
-}
+// Plaatjes van heer, vrouw en boer vooraf laden en decoderen; ze worden op canvas getekend.
+laadPlaatjes(new URL('../../assets/kaarten/', import.meta.url));
 
 // Geluid mag pas na een eerste aanraking.
 window.addEventListener('pointerdown', geluid.ontgrendel, { once: false, passive: true });

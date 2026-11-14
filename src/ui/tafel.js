@@ -6,6 +6,7 @@ import { redenTekst } from '../regels/geldig.js';
 import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
 import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD } from './kaart.js';
 import { patchHtml } from './patch.js';
+import { vulPlaatjes } from './plaatjes.js';
 
 const KLEURNAAM = { klaveren: 'Klaveren', ruiten: 'Ruiten', harten: 'Harten', schoppen: 'Schoppen' };
 const PLEKKEN = [
@@ -432,6 +433,7 @@ export function render(el, spel, acties) {
   if (spel.scherm === 'start') {
     zorgVoorSprite();
     patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`);
+    vulPlaatjes(el);
     koppel(el, acties);
     return;
   }
@@ -450,6 +452,7 @@ export function render(el, spel, acties) {
     <div class="hint">${hint(spel)}</div>
     ${hand(spel)}
     ${vensters(spel)}`);
+  vulPlaatjes(el);
   koppel(el, acties);
   if (spel.nieuweKaart) vliegNaarSlag(el, spel.nieuweKaart, voor);
   schuifHand(el, voor);

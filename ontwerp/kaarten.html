@@ -15,6 +15,7 @@
   <div id="kaarten"></div>
   <script type="module">
     import { kaartHtml, rugHtml, symboolSprite } from './src/ui/kaart.js';
+    import { laadPlaatjes, vulPlaatjes } from './src/ui/plaatjes.js';
     const rangen = ['7', '8', '9', '10', 'B', 'V', 'H', 'A'];
     let html = symboolSprite();
     for (const kleur of ['schoppen', 'harten', 'klaveren', 'ruiten']) {
@@ -22,6 +23,8 @@
     }
     html += `<div class="rij">${rugHtml()}</div>`;
     document.getElementById('kaarten').innerHTML = html;
+    laadPlaatjes(new URL('assets/kaarten/', document.baseURI));
+    vulPlaatjes(document.getElementById('kaarten'));
   </script>
 </body>
 </html>
