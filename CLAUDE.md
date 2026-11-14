@@ -81,6 +81,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - **Tien, boer, vrouw of heer bijspelen:** geen sein. Een tien is gewoon punten geven aan je maat.
 - Een kleintje kan ook gespeeld zijn omdat iemand niets anders had. **Een sein is een sterke aanwijzing, geen zekerheid.**
 - Kleintje boer en andere seinsystemen: niet gebruiken.
+- **Uitwerking in de AI (na Rutgers voorbeeld ♠H i.p.v. ♠8):** bij **afgooien** vermijden de computers een vals sein sterk (betrouwbaar sein). Bij **bekennen** maar licht: daar is een kleintje vaak gewoon de verstandige kaart, dus een kleintje bij bekennen is hooguit een zwakke aanwijzing. Zo lezen de computers het ook.
 
 ## Computerspelers (AI)
 

@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { waarneming, uitsluitingen, trekVerdeling, kiesKaart, kiesDraai, kiesSimpel, kiesSlim, eindspelWaarde, seinVan, seinenVanAnderen, seinGewicht, SEIN_FACTOR, SEIN_BONUS, SEIN_STRAF } from '../src/ai/simulatie.js';
+import { waarneming, uitsluitingen, trekVerdeling, kiesKaart, kiesDraai, kiesSimpel, kiesSlim, eindspelWaarde, seinVan, seinenVanAnderen, seinGewicht, SEIN_FACTOR, SEIN_BONUS, SEIN_STRAF, SEIN_STRAF_BEKENNEN } from '../src/ai/simulatie.js';
 import { slag } from './hulp.js';
 import { nieuwPotje, speelKaart, geldigVoor, uitslag } from '../src/regels/potje.js';
 import { maakDeck, schud, deel, kaartId, team } from '../src/regels/kaarten.js';
@@ -309,6 +309,22 @@ describe('zelf seinen', () => {
     assert.notEqual(kaartId(r.kaart), 'schoppen-7');
   });
 
+  test('bekennen met een kleintje: lagere afkeer van een vals sein dan afgooien', () => {
+    assert.ok(SEIN_STRAF_BEKENNEN < SEIN_STRAF);
+    // Zuid komt uit met kH, West bekent, Noord heeft kV en k8 maar geen kA (die zit bij Oost).
+    const handen = [
+      Ks('kH h7 h8 h9 r8 r9 s7 s8'),
+      Ks('k9 h10 hV hA sA s9 sB sV'),
+      Ks('kV k8 rA r7 r10 hB hH s10'),
+      Ks('kA k10 kB k7 rB rV rH sH'),
+    ];
+    let p = nieuwPotje({ handen, troef: 'harten', spelendTeam: 0, uitkomer: 0 });
+    for (const [sp, c] of [[0, 'kH'], [1, 'k9']]) p = speelKaart(p, sp, K(c));
+    const r = kiesKaart(waarneming(p, 2), { simulaties: 200, rng: maakRng(8) });
+    const acht = r.scores.find((x) => kaartId(x.kaart) === 'klaveren-8');
+    assert.equal(acht.sein, -SEIN_STRAF_BEKENNEN);
+  });
+
   test('seinen lezen: een sein van de maat maakt de kaart in de verdelingen waarschijnlijker', () => {
     // Noord gooit r7 af op de slag van Zuid: "ik heb de ruiten aas".
     let p = nieuwPotje({ handen: seinHanden(), troef: 'harten', spelendTeam: 0, uitkomer: 0 });
@@ -331,7 +347,7 @@ test('sein lezen: gedwongen kleintje zegt niets, vrijwillig kleintje wel', () =>
   assert.equal(seinGewicht(met, seinen, 4, w), 1);
 });
 
-test('sein lezen: bekennen met alleen kleintjes zegt niets', () => {
+test('sein lezen: bekennen met alleen kleintjes zegt niets, met keus een zwakke aanwijzing', () => {
   // Zuid komt uit met kH, West bekent laag, Noord bekent met k7. Had Noord alleen kleine klaveren,
   // dan was dat gedwongen; had hij ook de klaveren tien, dan was het een keus (en dus een sein).
   const handen = [
@@ -348,9 +364,8 @@ test('sein lezen: bekennen met alleen kleintjes zegt niets', () => {
   const rest = (noord, oost) => [w.hand, Ks('h10 hV hA sA s9 sB sV'), Ks(noord), Ks(oost)];
   // Noord heeft k8 (ook klein) en geen kA: gedwongen, gewicht 1.
   assert.equal(seinGewicht(rest('k8 rA r7 r10 hB hH s10', 'kA k10 kB kV rB rV rH sH'), seinen, 4, w), 1);
-  // Noord had ook kV (geen sein, goedkoop) maar speelde k7 zonder kA: sterke aanwijzing, gewicht 1/4.
-  assert.equal(seinGewicht(rest('kV rA r7 r10 hB hH s10', 'kA k10 kB k8 rB rV rH sH'), seinen, 4, w), 1 / 4);
-  // Noord had alleen k10 als eerlijk alternatief (een tien): zwakke aanwijzing, gewicht 1/2.
+  // Noord had ook kV maar bekende met k7 zonder kA: bij bekennen hooguit een zwakke aanwijzing (1/2).
+  assert.equal(seinGewicht(rest('kV rA r7 r10 hB hH s10', 'kA k10 kB k8 rB rV rH sH'), seinen, 4, w, 2), 1 / 2);
   assert.equal(seinGewicht(rest('k10 rA r7 r10 hB hH s10', 'kA kV kB k8 rB rV rH sH'), seinen, 4, w, 2), 1 / 2);
 });
 

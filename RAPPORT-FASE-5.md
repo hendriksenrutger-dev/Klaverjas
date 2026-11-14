@@ -42,3 +42,19 @@ de computer eerlijk seint, zodat hij de seinen kan lezen.
 `tests/ai.test.js`: herkennen van seinen (bekennen, afgooien, aas, geen sein bij 10/B/V/H, niet bij
 troef gevraagd, wel bij ingetroefde maat, niet als uitkomer), eigen seinen tellen niet mee, gewicht bij
 gedwongen en vrijwillige seinen, en de computer kiest een waar sein boven een vals sein.
+
+---
+
+## Aanvulling: afgooien en bekennen apart (na Rutgers voorbeeld)
+
+Noord speelde ♠H op Rutgers ♠V in plaats van ♠8: ♠8 zou een vals sein ("ik heb ♠A") zijn geweest en
+de straf daarvoor (40) woog zwaarder dan het verlies (de heer en 20 roem voor V-H-A).
+
+Nu: straf voor een vals sein bij **afgooien 40**, bij **bekennen 15** (`SEIN_STRAF`, `SEIN_STRAF_BEKENNEN`).
+Lezen: een kleintje/aas bij bekennen is hooguit een zwakke aanwijzing (gewicht 1/2 als het niet klopt).
+
+Gemeten:
+- Speelsterkte gelijk (alles 15 tegen alles 40: +0,1; gesplitst tegen alles 40: +0,1 punt per potje).
+- Betrouwbaarheid: kleintje afgooien met keus 91% (grootste meting); bekennen met keus ±⅓ (een kleintje
+  bij bekennen is vaak gewoon de juiste kaart).
+- Lezen (factor 10) tegen niet lezen: −1,1 punt per potje, binnen het toeval.
