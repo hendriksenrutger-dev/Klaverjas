@@ -54,7 +54,7 @@ function midden(k) {
 
 // Volledige kaart. opties: { klasse, id, data }
 export function kaartHtml(k, { klasse = '', id = null } = {}) {
-  return `<div class="kaart ${ROOD.has(k.kleur) ? 'rood' : 'zwart'} ${klasse}" ${id ? `data-kaart="${id}"` : ''} aria-label="${kaartNaam(k)}">
+  return `<div class="kaart ${ROOD.has(k.kleur) ? 'rood' : 'zwart'} ${klasse}" data-sleutel="${k.kleur}-${k.rang}" ${id ? `data-kaart="${id}"` : ''} aria-label="${kaartNaam(k)}">
     ${hoek(k)}${midden(k)}${hoek(k, true)}
   </div>`;
 }

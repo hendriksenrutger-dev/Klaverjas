@@ -37,7 +37,11 @@ export const NIVEAUS = {
 export const SEIN_FACTOR = 10; // verdeling waarin een sein klopt telt zoveel keer zwaarder
 export const SEIN_FACTOR_ZWAK = 2; // idem, als de seiner geen goedkoop eerlijk alternatief had
 export const SEIN_BONUS = 3; // voorkeur (in punten) voor een kaart die een waar sein geeft
-export const SEIN_STRAF = 40; // afkeer (in punten) van een kaart die een vals sein zou geven
+// Afkeer (in punten) van een kaart die een vals sein zou geven. Bij afgooien kies je vrij welke kleur,
+// dus daar hoog (betrouwbare seinen). Bij bekennen is een kleintje vaak gewoon de verstandige kaart
+// (Rutgers voorbeeld: ♠H gespeeld om geen vals sein met ♠8 te geven), dus daar laag.
+export const SEIN_STRAF = 40; // afgooien
+export const SEIN_STRAF_BEKENNEN = 15;
 
 // Troef trekken. In de simulaties kennen alle spelers elkaars kaarten; daardoor lijkt troef trekken
 // "altijd later nog kan" en wordt het te weinig gekozen (bekende zwakte van deze methode).
@@ -97,6 +101,7 @@ function laterGespeeld(w, speler, voor) {
 // - had hij alleen dure eerlijke alternatieven (troef, tien, aas, of iets dat een tien/aas kaal
 //   achterlaat): een zwakke aanwijzing, gewicht 1/factorZwak;
 // - had hij een goedkoop eerlijk alternatief: een sterke aanwijzing, gewicht 1/factor.
+// - bij bekennen (in plaats van afgooien) altijd hooguit een zwakke aanwijzing.
 export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, factorZwak = SEIN_FACTOR_ZWAK) {
   let g = 1;
   const heeft = (hand, k) => hand.some((c) => c.kleur === k.kleur && c.rang === k.rang);
@@ -112,6 +117,8 @@ export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, fact
       return !ander || heeft(toen, ander.kaart);
     });
     if (eerlijk.length === 0) continue; // gedwongen: de kaart zegt niets
+    // Bij bekennen is een kleintje vaak gewoon de verstandige kaart: hooguit een zwakke aanwijzing.
+    if (gespeeld.kleur === s.context.voor[0].kaart.kleur) { g /= factorZwak; continue; }
     const goedkoop = eerlijk.some((k) => {
       if (k.kleur === w.troef || k.rang === '10' || k.rang === 'A') return false;
       const rest = toen.filter((c) => c.kleur === k.kleur && c !== k);
@@ -139,6 +146,8 @@ export function waarneming(potje, speler) {
     slagen: potje.slagen,
     slag: potje.slag.slice(),
     aantallen: potje.handen.map((h) => h.length),
+    uitkomer: potje.uitkomer ?? null,
+    kiezer: potje.kiezer ?? null,
   };
 }
 
@@ -484,12 +493,54 @@ function verschil(u, speler) {
   return u.totaal[t] - u.totaal[1 - t];
 }
 
+// ---------- Wat het draaien verraadt ----------
+// Wie troef kiest, heeft meestal een sterke troefhand; wie op die kleur past, meestal niet.
+// Kenmerk van een hand voor een troefkleur: aantal troeven (0-5+), boer, negen.
+export function kenmerk(hand, troef) {
+  const t = hand.filter((k) => k.kleur === troef);
+  const n = Math.min(t.length, 5);
+  return `${n}${t.some((k) => k.rang === 'B') ? 'B' : '-'}${t.some((k) => k.rang === '9') ? '9' : '-'}`;
+}
+
+// Kans dat de AI "spelen" kiest, per kenmerk. Gemeten met ontwikkeling/draaitabel.mjs (6000 handen),
+// afgerond en begrensd tussen 0,02 en 0,98 (een mens kan altijd anders kiezen).
+export const SPEELKANS = {
+  '0--': 0.02, '1--': 0.02, '1-9': 0.02, '1B-': 0.04,
+  '2--': 0.02, '2-9': 0.04, '2B-': 0.19, '2B9': 0.69,
+  '3--': 0.03, '3-9': 0.18, '3B-': 0.56, '3B9': 0.92,
+  '4--': 0.17, '4-9': 0.38, '4B-': 0.84, '4B9': 0.98,
+  '5--': 0.69, '5-9': 0.79, '5B-': 0.98, '5B9': 0.98,
+};
+
+// Begin-hand van speler q in een getrokken verdeling: zijn huidige kaarten plus wat hij al speelde.
+function beginHand(handen, w, q) {
+  const gespeeld = [...w.slagen.flatMap((s) => s.kaarten), ...w.slag].filter((x) => x.speler === q).map((x) => x.kaart);
+  return [...handen[q], ...gespeeld];
+}
+
+// Gewicht van een verdeling op grond van het draaien: de kiezer had waarschijnlijk sterke troef,
+// wie vóór hem op deze kleur paste waarschijnlijk niet.
+export function draaiGewicht(handen, w) {
+  if (w.kiezer === null || w.kiezer === undefined || w.uitkomer === null || w.uitkomer === undefined) return 1;
+  let g = 1;
+  for (let q = w.uitkomer; ; q = (q + 1) % 4) {
+    const kans = SPEELKANS[kenmerk(beginHand(handen, w, q), w.troef)] ?? 0.5;
+    if (q === w.kiezer) {
+      if (q !== w.speler) g *= kans;
+      break;
+    }
+    if (q !== w.speler) g *= 1 - kans;
+  }
+  return g;
+}
+
 // ---------- Kaart kiezen ----------
 // bekendeHanden: alleen voor metingen (een AI die alle kaarten ziet), nooit in het spel.
 export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
-  trekBonus = TREK_BONUS,
+  trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
+  draaiInfo = true,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -503,7 +554,8 @@ export function kiesKaart(w, {
   const beurtNa = (w.speler + 1) % 4;
   for (let n = 0; n < simulaties; n++) {
     const handen = bekendeHanden ? bekendeHanden.map((h) => h.slice()) : trekVerdeling(w, uit, onbekend, rng);
-    const gewicht = seinen.length ? seinGewicht(handen, seinen, seinFactor, w) : 1;
+    const gewicht = (seinen.length ? seinGewicht(handen, seinen, seinFactor, w) : 1)
+      * (draaiInfo && !bekendeHanden ? draaiGewicht(handen, w) : 1);
     gewichtSom += gewicht;
     for (let i = 0; i < geldig.length; i++) {
       const kopie = handen.map((h) => h.slice());
@@ -549,7 +601,9 @@ export function kiesKaart(w, {
     const sein = seinVan(w.slag, w.speler, k, w.troef);
     if (!sein || gespeeld.has(kaartId(sein.kaart))) return 0;
     const waar = w.hand.some((c) => c.kleur === sein.kaart.kleur && c.rang === sein.kaart.rang);
-    return waar ? SEIN_BONUS : -SEIN_STRAF;
+    if (waar) return SEIN_BONUS;
+    const bekent = w.slag.length > 0 && k.kleur === w.slag[0].kaart.kleur;
+    return -(bekent ? seinStrafBekennen : seinStraf);
   });
   // Troef trekken: voorkeur als de spelende partij uitkomt en er nog troef bij anderen kan zitten.
   const trekCorrectie = geldig.map(() => 0);

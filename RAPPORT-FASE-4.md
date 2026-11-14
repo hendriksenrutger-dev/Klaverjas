@@ -115,3 +115,21 @@ troef trekt de spelende partij nu troef zolang de tegenpartij nog troef kan hebb
 (bijv. ♣A ♣10 tegen ♣B bij de tegenpartij) blijft het een rekenkundige afweging.
 
 `ontwikkeling/troefstatistiek.mjs` toont hoe vaak er getrokken wordt, met voorbeelden.
+
+---
+
+# Aanvulling: wat het draaien verraadt (na Rutgers voorbeeld)
+
+Oost kwam als tegenpartij uit met troef (♥8), terwijl Noord harten had gekozen. De AI vond ♥8 en ♠A
+even goed (beide ±+13), want hij nam niet mee dat **wie troef kiest meestal sterke troef heeft**.
+Bij echt uitspelen was ♠A ±27 punten beter.
+
+Nu: het potje onthoudt wie troef koos (`kiezer`). Bij het trekken van kaartverdelingen weegt de AI
+mee hoe waarschijnlijk die verdeling is gezien het draaien: de kiezer had waarschijnlijk sterke troef,
+wie vóór hem op die kleur paste waarschijnlijk niet. De kansen (`SPEELKANS`) zijn gemeten met
+`ontwikkeling/draaitabel.mjs` over 6000 handen, bijvoorbeeld: 3 troeven met boer → 56% spelen,
+met boer en negen → 92%, zonder boer of negen → 3%.
+
+Resultaat in het voorbeeld: Oosts schatting ±−60 (echt uitgespeeld −85 tot −112), troef uitkomen niet
+meer de voorkeur. In duels (±1900 potjes): +0,4 punt per potje, geen meetbaar verschil in sterkte.
+Snelheid gelijk (normaal gemiddeld 9 ms per zet op de bouwserver).

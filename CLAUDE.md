@@ -81,6 +81,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - **Tien, boer, vrouw of heer bijspelen:** geen sein. Een tien is gewoon punten geven aan je maat.
 - Een kleintje kan ook gespeeld zijn omdat iemand niets anders had. **Een sein is een sterke aanwijzing, geen zekerheid.**
 - Kleintje boer en andere seinsystemen: niet gebruiken.
+- **Uitwerking in de AI (na Rutgers voorbeeld ♠H i.p.v. ♠8):** bij **afgooien** vermijden de computers een vals sein sterk (betrouwbaar sein). Bij **bekennen** maar licht: daar is een kleintje vaak gewoon de verstandige kaart, dus een kleintje bij bekennen is hooguit een zwakke aanwijzing. Zo lezen de computers het ook.
 
 ## Computerspelers (AI)
 
@@ -120,11 +121,11 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Beginscherm:** bij het openen eerst een beginscherm met "Verder spelen" (met potje en stand), "Nieuwe partij" en "Instellingen". Het huisje in de bovenbalk gaat terug naar het beginscherm; het spel wacht dan.
 - **Indeling:** alle maten volgen de echte schermhoogte (ook in Chrome met adresbalk). Kaarten liggen nooit onder tekst door; niets overlapt.
 - **Hand:** acht kaarten plat naast elkaar onderaan, zonder grijze kaarten. **Spelen gaat met twee tikken:** de eerste tik tilt de kaart op, de tweede speelt hem.
-- **Troef draaien:** de gedraaide kaart is een crème tegel met alleen het kleursymbool, groot (geen hele speelkaart). Bij de computer die aan de beurt is staat "denkt na…". Computers denken bij spelen/passen ongeveer 1 tot 1,4 seconde. Kiest iemand spelen, dan eerst groot "Oost speelt · troef ruiten" (±1,8 s) voordat het potje begint; past iedereen, dan eerst "Iedereen past".
+- **Troef draaien:** in het midden een rond crème schijfje met de voorgestelde troefkleur, groot. Op de plek van elke speler verschijnt zijn keuze als tekstballon die even ploft, rustig na elkaar: "…" (denkt na), "Ik pas" (donker met gouden rand) of "Ik speel ♥" (goud). Jouw knoppen Spelen/Passen staan op jouw plek. Onder de tafel: "Noord speelt · troef harten" of "Iedereen past". Computers denken bij spelen/passen ongeveer 1 tot 1,4 seconde; na een keuze ±1,8 s (spelen) of ±1,5 s (iedereen past) voordat het verdergaat.
 - **Schudden en delen:** eerst het schudgeluid met de stapel in het midden, daarna vliegen de kaarten in pakjes van 3-2-3 naar de spelers, met bij elk pakje een tikje.
 - **Uitslag:** bij alle slagen voor de spelende partij gewoon "Pit!".
 - **Na een potje:** "Bekijk alle slagen" (per slag de kaarten, winnaar, punten en roem) en de knop "Alle handen": de vier handen zoals ze gedeeld waren, rond de tafel.
-- **Gespeelde kaart:** schuift volledig zichtbaar vanaf de kant van de speler op zijn plek (geen infade).
+- **Gespeelde kaart:** schuift volledig zichtbaar vanaf de kant van de speler op zijn plek (geen infade). Het scherm wordt niet steeds helemaal opnieuw getekend: bestaande kaarten blijven staan (`src/ui/patch.js`), zodat niets opnieuw wordt opgebouwd.
 - **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten).
 - **Lettertypen:** Playfair Display voor cijfers en kaartindexen, Inter voor de interface. Bundel ze lokaal, want de app moet offline werken.
 - Knoppen en aanraakvlakken zijn minimaal 44 px.

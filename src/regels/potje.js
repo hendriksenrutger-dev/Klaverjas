@@ -17,6 +17,7 @@ export function nieuwPotje({
   uitkomer,
   systeem = AMSTERDAMS,
   verzaakbescherming = true,
+  kiezer = null, // wie koos voor deze troef (null = onbekend)
 }) {
   if (handen.length !== 4 || handen.some((h) => h.length !== 8)) {
     throw new Error('Een potje begint met 4 handen van 8 kaarten');
@@ -30,6 +31,8 @@ export function nieuwPotje({
     slag: [],
     slagen: [],
     beurt: uitkomer,
+    uitkomer,
+    kiezer,
     klaar: false,
     verzaking: null,
   };

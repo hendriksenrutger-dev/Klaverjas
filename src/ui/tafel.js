@@ -5,6 +5,7 @@ import { stand } from '../regels/potje.js';
 import { redenTekst } from '../regels/geldig.js';
 import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
 import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD } from './kaart.js';
+import { patchHtml } from './patch.js';
 
 const KLEURNAAM = { klaveren: 'Klaveren', ruiten: 'Ruiten', harten: 'Harten', schoppen: 'Schoppen' };
 const PLEKKEN = [
@@ -69,7 +70,6 @@ function spelerHtml(spel, i) {
 
   if (spel.fase === 'draaien' || spel.fase === 'opnieuwDelen' || spel.fase === 'delen') {
     if (spel.partij.deler === i) labels.push('<span class="label deelt">Deelt</span>');
-    if (spel.draaiKeuzes[i] === 'passen' && !aanBeurt) labels.push('<span class="label past">Past</span>');
   }
   const aantal = spel.fase === 'delen' ? spel.zichtbaar?.[i] ?? 0
     : spel.potje ? spel.potje.handen[i].length : spel.handen?.[i]?.length ?? 0;
@@ -78,7 +78,7 @@ function spelerHtml(spel, i) {
     <div class="avatar">${n.charAt(0).toUpperCase()}</div>
     <div class="speler-tekst">
       <div class="naam">${n}${labels.join('')}</div>
-      ${aanBeurt && i !== 0
+      ${aanBeurt && i !== 0 && spel.fase === 'spelen'
         ? '<div class="rol denkt">denkt na<span class="puntjes"><i>.</i><i>.</i><i>.</i></span></div>'
         : s.rol ? `<div class="rol">${s.rol}</div>` : ''}
       ${ruggen}
@@ -96,20 +96,27 @@ function midden(spel) {
     const m = spel.draaiMelding;
     const jij = spel.fase === 'draaien' && d.beurt === 0 && !d.uitkomst && !m;
     const kleur = m?.kleur ?? d.kaart.kleur;
-    let tekst;
-    if (spel.fase === 'opnieuwDelen') tekst = 'Iedereen past. <strong>Er wordt opnieuw gedeeld.</strong>';
-    else if (m?.soort === 'speelt') tekst = `<span class="draai-groot"><strong>${naam(m.speler)}</strong> speelt · troef ${KLEURNAAM[kleur].toLowerCase()}</span>`;
-    else if (m?.soort === 'iedereenPast') tekst = '<span class="draai-groot">Iedereen past</span>';
-    else tekst = `Voorgestelde troef: <strong>${KLEURNAAM[kleur]}</strong>${d.rondes ? ` · ronde ${d.rondes + 1}` : ''}${spel.partij.deler === 0 ? ' · jij deelt' : ''}`;
-    // Alleen de kleur, groot: geen hele speelkaart (die verwart met de slag).
-    const tegel = `<div class="troef-tegel ${ROOD.has(kleur) ? 'rood' : ''} ${spel.nieuweKaart === kaartId(d.kaart) ? 'nieuw' : ''} ${m?.soort === 'speelt' ? 'gekozen' : ''} ${m?.soort === 'iedereenPast' ? 'gepast' : ''}">${symbool(kleur)}</div>`;
-    return `<div class="midden"><div class="draaien">
-      ${tegel}
-      <div class="draai-tekst">${tekst}</div>
-      ${jij ? `<div class="draai-knoppen">
-        <button class="knop goud" data-actie="draai" data-keuze="spelen">Spelen</button>
-        <button class="knop licht" data-actie="draai" data-keuze="passen">Passen</button></div>` : ''}
-    </div></div>`;
+    const sym = (k) => `<span class="bubbel-sym ${ROOD.has(k) ? 'rood' : ''}">${symbool(k)}</span>`;
+    // Midden: alleen de voorgestelde kleur, groot, in een rond schijfje.
+    const schijf = `<div class="troef-schijf ${ROOD.has(kleur) ? 'rood' : ''} ${m?.soort === 'speelt' ? 'gekozen' : ''} ${m?.soort === 'iedereenPast' || spel.fase === 'opnieuwDelen' ? 'gepast' : ''}" data-sleutel="schijf-${kleur}">${symbool(kleur)}</div>`;
+    // Op de plek van elke speler zijn keuze, als tekstballon die even ploft.
+    const bubbels = PLEKKEN.map((pl, i) => {
+      let inhoud = null;
+      let soort = '';
+      if (m?.soort === 'speelt' && m.speler === i) { soort = 'speelt'; inhoud = `Ik speel ${sym(kleur)}`; }
+      else if (spel.draaiKeuzes[i] === 'passen') { soort = 'past'; inhoud = 'Ik pas'; }
+      else if (i !== 0 && spel.fase === 'draaien' && !d.uitkomst && !m && d.beurt === i) {
+        soort = 'denkt'; inhoud = '<span class="puntjes"><i>•</i><i>•</i><i>•</i></span>';
+      }
+      if (i === 0 && jij) {
+        return `<div class="bubbel-plek zuid" data-sleutel="bubbel-zuid-knoppen"><div class="draai-knoppen">
+          <button class="knop goud" data-actie="draai" data-keuze="spelen">Spelen</button>
+          <button class="knop licht" data-actie="draai" data-keuze="passen">Passen</button></div></div>`;
+      }
+      if (!inhoud) return '';
+      return `<div class="bubbel-plek ${pl.plek}" data-sleutel="bubbel-${pl.plek}-${soort}"><div class="bubbel ${soort}">${inhoud}</div></div>`;
+    }).join('');
+    return `<div class="midden">${schijf}${bubbels}</div>`;
   }
   if (!spel.potje) return '';
   const opTafel = spel.getoondeSlag ?? spel.potje.slag;
@@ -118,9 +125,9 @@ function midden(spel) {
     const gespeeld = opTafel.find((x) => x.speler === i);
     if (gespeeld) {
       const nieuw = spel.nieuweKaart === kaartId(gespeeld.kaart) ? 'nieuw' : '';
-      return `<div class="slagplek ${s.plek} ${nieuw} ${winnaar === i ? 'winnaar' : ''}">${kaartHtml(gespeeld.kaart)}</div>`;
+      return `<div class="slagplek ${s.plek} ${nieuw} ${winnaar === i ? 'winnaar' : ''}" data-sleutel="plek-${s.plek}">${kaartHtml(gespeeld.kaart)}</div>`;
     }
-    if (i === 0) return '<div class="slagplek zuid"><div class="jouw-kaart">Jouw kaart</div></div>';
+    if (i === 0) return '<div class="slagplek zuid" data-sleutel="plek-zuid"><div class="jouw-kaart">Jouw kaart</div></div>';
     return '';
   }).join('');
   const RICHTING = { noord: '0deg', oost: '90deg', zuid: '180deg', west: '270deg' };
@@ -136,12 +143,17 @@ function midden(spel) {
 // ---------- Hint ----------
 function hint(spel) {
   if (spel.fase === 'draaien') {
-    if (spel.draaien.uitkomst || spel.draaiMelding) return '';
+    const m = spel.draaiMelding;
+    const kleurNaam = (k) => KLEURNAAM[k].toLowerCase();
+    if (m?.soort === 'speelt') return `<strong>${naam(m.speler)}</strong> speelt · troef ${kleurNaam(m.kleur)}`;
+    if (m?.soort === 'iedereenPast') return 'Iedereen past';
+    if (spel.draaien.uitkomst) return '';
+    const vraag = `troef ${kleurNaam(spel.draaien.kaart.kleur)}?`;
     return spel.draaien.beurt === 0
-      ? '<strong>Jouw beurt</strong>'
-      : `${naam(spel.draaien.beurt)} denkt na…`;
+      ? `<strong>Jouw beurt</strong> · ${vraag}`
+      : `${naam(spel.draaien.beurt)} denkt na · ${vraag}`;
   }
-  if (spel.fase === 'opnieuwDelen') return 'Opnieuw delen…';
+  if (spel.fase === 'opnieuwDelen') return 'Iedereen past · <strong>opnieuw delen</strong>';
   if (spel.fase !== 'spelen') return '';
   const p = spel.potje;
   if (spel.getoondeSlag) {
@@ -419,12 +431,12 @@ export function render(el, spel, acties) {
   NAMEN = spel.namen;
   if (spel.scherm === 'start') {
     zorgVoorSprite();
-    el.innerHTML = `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`;
+    patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`);
     koppel(el, acties);
     return;
   }
   zorgVoorSprite();
-  el.innerHTML = `
+  patchHtml(el, `
     <div class="laken"></div>
     ${balk(spel)}
     ${ditPotje(spel)}
@@ -434,7 +446,7 @@ export function render(el, spel, acties) {
     ${knoppenRechts(spel)}
     <div class="hint">${hint(spel)}</div>
     ${hand(spel)}
-    ${vensters(spel)}`;
+    ${vensters(spel)}`);
   koppel(el, acties);
 }
 
