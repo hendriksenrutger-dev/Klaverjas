@@ -245,14 +245,30 @@ function nieuwBevestigVenster() {
     <button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button></div>`);
 }
 
+function keuzeRij(label, sleutel, huidig, opties, uitleg = '') {
+  return `<div class="instelling">
+    <div class="instelling-label">${label}${uitleg ? `<span class="instelling-uitleg">${uitleg}</span>` : ''}</div>
+    <div class="segment">${opties.map(([waarde, tekst]) =>
+      `<button class="segment-knop ${String(huidig) === String(waarde) ? 'aan' : ''}" data-actie="instelling" data-sleutel="${sleutel}" data-waarde="${waarde}">${tekst}</button>`).join('')}</div>
+  </div>`;
+}
+
 function instellingenVenster(spel) {
-  const i = spel.partij.instellingen;
+  const i = spel.instellingen;
+  const namen = [1, 2, 3].map((k) => `<label class="naam-veld"><span>${['', 'Links', 'Maat (boven)', 'Rechts'][k]}</span>
+    <input type="text" maxlength="16" data-naam="${k}" value="${i.namen[k].replace(/"/g, '&quot;')}" autocomplete="off" enterkeyhint="done"></label>`).join('');
   return venster(`<h2>Instellingen</h2>
-    <p class="sub">Aanpassen komt in fase 6. Dit zijn de huidige waarden:</p>
-    <table class="uitslag"><tr><td>Systeem</td><td>${i.systeem === 'amsterdams' ? 'Amsterdams' : 'Rotterdams'}</td></tr>
-    <tr><td>Opnieuw delen na</td><td>${i.rondesVoorOpnieuwDelen} rondes</td></tr>
-    <tr><td>Verzaakbescherming</td><td>${i.verzaakbescherming ? 'Aan' : 'Uit'}</td></tr></table>
-    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`);
+    <div class="instellingen">
+      ${keuzeRij('Spelregels', 'systeem', i.systeem, [['amsterdams', 'Amsterdams'], ['rotterdams', 'Rotterdams']], 'Vanaf het volgende potje')}
+      ${keuzeRij('Opnieuw delen na', 'rondes', i.rondesVoorOpnieuwDelen, [[2, '2 rondes passen'], [3, '3 rondes passen']], 'Vanaf het volgende potje')}
+      ${keuzeRij('Verzaakbescherming', 'verzaakbescherming', i.verzaakbescherming ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Aan: alleen kaarten die mogen zijn speelbaar')}
+      ${keuzeRij('Computerspelers', 'niveau', i.niveau, [['makkelijk', 'Makkelijk'], ['normaal', 'Normaal'], ['sterk', 'Sterk']])}
+      <div class="instelling">
+        <div class="instelling-label">Namen</div>
+        <div class="namen">${namen}</div>
+      </div>
+    </div>
+    <div class="venster-knoppen"><button class="knop goud" data-actie="sluit">Klaar</button></div>`);
 }
 
 function slagenOverzicht(spel) {
@@ -340,7 +356,16 @@ export function render(el, spel, acties) {
       const { actie } = knop.dataset;
       if (actie === 'draai') acties.draai(knop.dataset.keuze);
       else if (actie === 'open') acties.open(knop.dataset.venster);
+      else if (actie === 'instelling') acties.instelling(knop.dataset.sleutel, knop.dataset.waarde);
       else acties[actie]?.();
+    });
+    // Namen: opslaan bij verlaten van het veld of op Enter.
+    el.addEventListener('change', (e) => {
+      const veld = e.target.closest('[data-naam]');
+      if (veld) acties.naam(Number(veld.dataset.naam), veld.value);
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.matches('[data-naam]')) e.target.blur();
     });
   }
 }

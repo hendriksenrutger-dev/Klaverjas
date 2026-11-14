@@ -1,0 +1,19 @@
+{
+  "name": "Klaverjas",
+  "short_name": "Klaverjas",
+  "description": "Reclamevrij klaverjassen tegen drie computerspelers, ook offline.",
+  "lang": "nl",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#164F33",
+  "theme_color": "#164F33",
+  "icons": [
+    { "src": "assets/iconen/icoon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/iconen/icoon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/iconen/icoon-maskeerbaar-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

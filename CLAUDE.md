@@ -24,7 +24,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Gewone HTML, CSS en JavaScript (ES-modules). Geen framework, geen bouwstap, zodat GitHub Pages het direct kan serveren.
 - Rutger gebruikt bij andere apps één `index.html`. Dit project is groter: werk met losse modules. Dat is een bewuste afwijking.
 - Voorgestelde mappen (mag je verbeteren, meld het dan):
-  - `index.html`, `manifest.json`, `sw.js`
+  - `index.html`, `manifest.json`, `klaverjas-sw.js` (service worker, naam met klaverjas)
   - `src/regels/`: spelregels, puur en zonder DOM, volledig getest
   - `src/ai/`: computerspelers, draait in een Web Worker
   - `src/ui/`: speeltafel en schermen

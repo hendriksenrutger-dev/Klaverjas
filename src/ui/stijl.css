@@ -284,6 +284,25 @@ button { font: inherit; }
 .gespeeld .cel.mijn { background: rgba(232, 200, 115, 0.22); color: #7a5c12; border: 2px solid var(--goud); }
 .legenda { display: flex; gap: 16px; justify-content: center; font-size: 15px; opacity: 0.7; margin-top: 12px; }
 
+/* Instellingen */
+.instellingen { display: flex; flex-direction: column; gap: 14px; text-align: left; margin-top: 10px; min-width: min(640px, 86vw); }
+.instelling { display: grid; grid-template-columns: 230px 1fr; align-items: center; gap: 16px; }
+.instelling-label { font-weight: 600; font-size: 19px; display: flex; flex-direction: column; gap: 2px; }
+.instelling-uitleg { font-weight: 400; font-size: 14px; opacity: 0.6; }
+.segment { display: flex; background: rgba(0,0,0,.06); border-radius: 14px; padding: 4px; gap: 4px; }
+.segment-knop {
+  flex: 1; min-height: 50px; border: none; border-radius: 11px; background: transparent;
+  font-size: 18px; font-weight: 600; color: rgba(27,27,27,.7); cursor: pointer;
+}
+.segment-knop.aan { background: #fff; color: var(--zwart); box-shadow: 0 1px 4px rgba(0,0,0,.15), inset 0 0 0 2px var(--goud); }
+.namen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.naam-veld { display: flex; flex-direction: column; gap: 4px; font-size: 14px; opacity: 0.9; }
+.naam-veld input {
+  min-height: 50px; border-radius: 11px; border: 1px solid rgba(0,0,0,.18); padding: 0 12px;
+  font: inherit; font-size: 18px; font-weight: 600; background: #fff; color: var(--zwart); user-select: text; -webkit-user-select: text;
+}
+.naam-veld input:focus { outline: 2px solid var(--goud); }
+
 /* Menu */
 .menu-lijst { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
 .menu-lijst .knop { min-height: 50px; }
