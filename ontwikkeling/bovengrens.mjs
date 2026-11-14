@@ -5,19 +5,22 @@
 // - sterk: 300 simulaties tegen 100 (normaal).
 // - eindspel4/5: de laatste 4 of 5 slagen exact doorrekenen in plaats van 3.
 // Beide teams draaien (spelen/passen) op dezelfde manier, zodat alleen het kaartspel verschilt.
-import { duel } from './duel.mjs';
+import { duelKaart } from './duel.mjs';
 
 const [, , welke, n = '150', z = '41'] = process.argv;
 const basis = { sims: 100, draaiStrategie: 'simpel' };
 const A = {
+  gelijk: { ...basis },
   vals: { ...basis, vals: true, sims: 20 },
   sterk: { ...basis, sims: 300 },
   eindspel4: { ...basis, eindspel: 4 },
   eindspel5: { ...basis, eindspel: 5 },
   gedekt: { ...basis, slim: { gedekt: true, maatNeemt: false } },
   maatNeemt: { ...basis, slim: { gedekt: false, maatNeemt: true } },
+  regelGedekt: { ...basis, gedektRegel: true },
+  geenVuistregels: { ...basis, vuist: false },
   beide: { ...basis, slim: { gedekt: true, maatNeemt: true } },
 }[welke];
 if (!A) throw new Error('onbekende vergelijking');
 const start = Date.now();
-console.log(welke, 'vs normaal', duel(A, basis, +n, +z), `${Math.round((Date.now() - start) / 1000)} s`);
+console.log(welke, 'vs normaal', duelKaart(A, basis, +n, +z), `${Math.round((Date.now() - start) / 1000)} s`);

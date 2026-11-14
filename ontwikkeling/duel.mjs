@@ -9,7 +9,7 @@ const W = await import('../src/ai/willekeurig.js');
 function speler(cfg, rng) {
   return {
     draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim', trekken: cfg.draaiTrekken ?? cfg.trekken }).keuze,
-    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, draaiInfo: cfg.draaiInfo ?? true, vuistregels: cfg.vuist ?? true, slimOpties: cfg.slim ?? A.SLIM_OPTIES, marge: cfg.marge ?? A.VUISTREGEL_MARGE, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
+    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, draaiInfo: cfg.draaiInfo ?? true, vuistregels: cfg.vuist ?? true, slimOpties: cfg.slim ?? A.SLIM_OPTIES, gedektRegel: cfg.gedektRegel ?? false, marge: cfg.marge ?? A.VUISTREGEL_MARGE, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
   };
 }
 
@@ -42,7 +42,42 @@ export function duel(cfgA, cfgB, delingen, zaad = 1) {
   return { gemVerschilPerPotje: +(verschil / gespeeld).toFixed(1), gespeeld, speeltA, natA, speeltB, natB };
 }
 
-const [, , mode] = process.argv;
+// Duel met minder toeval: per deling wordt het contract (troef en spelende partij) één keer
+// neutraal bepaald en daarna twee keer gespeeld met de teams omgewisseld. Elke helft krijgt
+// dezelfde toevalsreeks, dus twee gelijke instellingen geven precies 0 verschil.
+export function duelKaart(cfgA, cfgB, delingen, zaad = 1) {
+  const rng = R.maakRng(zaad);
+  let verschil = 0, gespeeld = 0;
+  const perDeling = [];
+  for (let n = 0; n < delingen; n++) {
+    const handen = R.deel(R.schud(R.maakDeck(), rng), n % 4);
+    const stapel = R.schud(R.maakDeck(), rng);
+    const drng = R.maakRng(zaad * 7919 + n);
+    const neutraal = { draai: (hand, kleur, speler, deler) => A.kiesDraai(hand, kleur, { speler, deler, rng: drng, strategie: 'simpel' }).keuze };
+    let d = R.nieuwDraaien({ stapel, deler: n % 4, maxRondes: 2 });
+    while (!d.uitkomst) d = R.beslis(d, d.beurt, neutraal.draai(handen[d.beurt], d.kaart.kleur, d.beurt, n % 4));
+    if (d.uitkomst.soort !== 'spelen') continue;
+    let som = 0;
+    for (const omgekeerd of [false, true]) {
+      const krng = R.maakRng(zaad * 104729 + n);
+      const a = speler(cfgA, krng), b = speler(cfgB, krng);
+      const spelers = omgekeerd ? [b, a, b, a] : [a, b, a, b];
+      let p = R.nieuwPotje({ handen: handen.map((h) => h.slice()), troef: d.uitkomst.troef, spelendTeam: d.uitkomst.team, uitkomer: (n % 4 + 1) % 4, kiezer: d.uitkomst.speler });
+      while (!p.klaar) p = R.speelKaart(p, p.beurt, spelers[p.beurt].kaart(p, p.beurt));
+      const u = R.uitslag(p);
+      const tA = omgekeerd ? 1 : 0;
+      som += u.totaal[tA] - u.totaal[1 - tA];
+    }
+    gespeeld += 2;
+    verschil += som;
+    perDeling.push(som / 2);
+  }
+  const gem = verschil / gespeeld;
+  const sd = Math.sqrt(perDeling.reduce((t, x) => t + (x - gem) ** 2, 0) / (perDeling.length - 1));
+  return { gemVerschilPerPotje: +gem.toFixed(1), foutmarge: +(2 * sd / Math.sqrt(perDeling.length)).toFixed(1), gespeeld };
+}
+
+const mode = process.argv[1]?.endsWith('duel.mjs') ? process.argv[2] : null; // niet bij importeren
 if (mode === 'sims') {
   console.log('60 vs willekeurig', duel({ sims: 60 }, { random: true }, 100));
   console.log('15 vs 60', duel({ sims: 15 }, { sims: 60 }, 150));

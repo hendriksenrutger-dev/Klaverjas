@@ -438,3 +438,20 @@ describe('vuistregels bij bijna gelijke kaarten', async () => {
     assert.equal(vuistregelStraf(w, K('hA')), 0);
   });
 });
+
+describe('vuistregel: gedekte kaart bij afgooien', async () => {
+  const { vuistregelStraf } = await import('../src/ai/simulatie.js');
+  const basis = (o) => ({ troef: 'harten', spelendTeam: 0, systeem: 'amsterdams', slagen: [], aantallen: [8, 8, 8, 8], uitkomer: 1, kiezer: 0, ...o });
+  const slag = [{ speler: 1, kaart: K('h9') }, { speler: 2, kaart: K('hA') }, { speler: 3, kaart: K('kV') }];
+
+  test('heer naast eigen aas niet weggooien als de tien nog in het spel is (voorbeeld Rutger)', () => {
+    const w = basis({ speler: 0, hand: Ks('sA sH k8 k7'), slag });
+    assert.equal(vuistregelStraf(w, K('sH'), undefined, true), 1);
+    assert.equal(vuistregelStraf(w, K('k8'), undefined, true), 0);
+  });
+
+  test('een kale heer zonder hogere eigen kaart mag wel weg', () => {
+    const w = basis({ speler: 0, hand: Ks('sH k8 k7'), slag });
+    assert.equal(vuistregelStraf(w, K('sH'), undefined, true), 0);
+  });
+});

@@ -591,7 +591,7 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, slimOpties = SLIM_OPTIES,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, slimOpties = SLIM_OPTIES, gedektRegel = true,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -675,7 +675,7 @@ export function kiesKaart(w, {
   for (let i = 1; i < geldig.length; i++) {
     if (totaal(i) > totaal(best)) best = i;
   }
-  const regel = geldig.map((k) => (vuistregels ? vuistregelStraf(w, k, onbekend) : 0));
+  const regel = geldig.map((k) => (vuistregels ? vuistregelStraf(w, k, onbekend, gedektRegel) : 0));
   if (vuistregels && regel[best] > 0) {
     // Binnen de marge de kaart die geen vuistregel breekt (bij gelijke straf: hoogste score).
     for (let i = 0; i < geldig.length; i++) {
@@ -693,13 +693,17 @@ export function kiesKaart(w, {
 // - Als tegenpartij kom je niet met troef uit.
 // - Een vrije kaart (de hoogste die nog in zijn kleur zit, geen troef) gooi je niet weg
 //   op een slag die je er niet mee wint.
-export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w)) {
+export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRegel = false) {
   if (w.slag.length === 0) {
     return team(w.speler) !== w.spelendTeam && k.kleur === w.troef ? 1 : 0;
   }
   if (k.kleur === w.troef) return 0;
-  const vrij = !onbekend.some((c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef));
-  if (!vrij || punten(k, w.troef) === 0) return 0;
+  const hoger = (c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef);
+  const elders = onbekend.filter(hoger).length;
+  // Gedekte kaart (zoals een heer naast je eigen aas), alleen bij afgooien. Gemeten: kost niets.
+  const gedekt = gedektRegel && elders > 0 && elders <= w.hand.filter(hoger).length && k.kleur !== w.slag[0].kaart.kleur;
+  const vrij = elders === 0;
+  if ((!vrij && !gedekt) || punten(k, w.troef) === 0) return 0;
   const wint = huidigeWinnaar([...w.slag, { speler: w.speler, kaart: k }], w.troef).speler === w.speler;
   return wint ? 0 : 1;
 }
