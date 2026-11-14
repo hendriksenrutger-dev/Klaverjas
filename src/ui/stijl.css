@@ -208,8 +208,9 @@ button { font: inherit; }
 .bubbel-plek { position: absolute; left: 0; top: 0; }
 .bubbel-plek.noord { transform: translate(-50%, calc(-50% - var(--kh) * 0.62)); }
 .bubbel-plek.zuid { transform: translate(-50%, calc(-50% + var(--kh) * 0.62)); }
-.bubbel-plek.west { transform: translate(calc(-50% - var(--kb-tafel) - 30px), -50%); }
-.bubbel-plek.oost { transform: translate(calc(-50% + var(--kb-tafel) + 30px), -50%); }
+/* West en Oost: halverwege de schijf in het midden en de speler (na Rutgers test). */
+.bubbel-plek.west { transform: translate(calc(-50% - (50vw - 70px) / 2), -50%); }
+.bubbel-plek.oost { transform: translate(calc(-50% + (50vw - 70px) / 2), -50%); }
 .bubbel {
   white-space: nowrap; padding: 10px 22px; border-radius: 22px;
   font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px;
