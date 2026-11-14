@@ -1,7 +1,7 @@
 // Service worker van Klaverjas: netwerk eerst, cache als terugval (Rutgers vaste patroon).
 // Alle apps van Rutger delen hetzelfde origin: deze worker raakt alleen caches die met 'klaverjas-' beginnen.
 
-const CACHE = 'klaverjas-v2';
+const CACHE = 'klaverjas-v3';
 
 // Alles wat nodig is om offline te spelen, al bij de eerste keer openen opgeslagen.
 const BESTANDEN = [
@@ -60,7 +60,8 @@ const BESTANDEN = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE)
-      .then((c) => c.addAll(BESTANDEN))
+      // 'reload': de bestanden echt van de server halen, niet uit de browsercache.
+      .then((c) => c.addAll(BESTANDEN.map((b) => new Request(b, { cache: 'reload' }))))
       .then(() => self.skipWaiting()),
   );
 });
@@ -74,11 +75,13 @@ self.addEventListener('activate', (e) => {
 });
 
 // Netwerk eerst: altijd de nieuwste versie als er internet is, anders de opgeslagen versie.
+// 'no-cache' laat de browser bij de server controleren of er iets nieuws is, in plaats van
+// tot 10 minuten een oude kopie te gebruiken (GitHub Pages staat dat toe).
 self.addEventListener('fetch', (e) => {
   const verzoek = e.request;
   if (verzoek.method !== 'GET' || new URL(verzoek.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(verzoek)
+    fetch(new Request(verzoek.url, { cache: 'no-cache', credentials: 'same-origin' }))
       .then((antwoord) => {
         if (antwoord.ok) {
           const kopie = antwoord.clone();
