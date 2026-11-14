@@ -12,9 +12,9 @@ const snel = new URLSearchParams(location.search).has('snel'); // voor automatis
 // Computerspelers "denken" zichtbaar 0,5 tot 1 seconde (ook als het rekenen sneller gaat).
 const denktijd = () => (snel ? 0 : 350 + Math.random() * 300);
 // Bij spelen of passen denken de computers iets langer, zodat je kunt volgen wie wat kiest.
-const denktijdDraai = () => (snel ? 0 : 1000 + Math.random() * 400);
+const denktijdDraai = () => (snel ? 0 : 600 + Math.random() * 300);
 const AANKONDIGING = snel ? 0 : 1800; // "Oost speelt · troef Ruiten"
-const IEDEREEN_PAST = snel ? 0 : 1500;
+const IEDEREEN_PAST = snel ? 0 : 1100;
 const SLAG_PAUZE = snel ? 0 : 1000;
 const MELDING_TIJD = snel ? 0 : 2000;
 
