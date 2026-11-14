@@ -35,7 +35,7 @@
       const s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(ctx.currentTime + wanneer);
       return b.duration;
     }
-    for (const k of ['A', 'B', 'C', 'D', 'E', 'F']) {
+    for (const k of ['D']) {
       const knop = document.createElement('button'); knop.textContent = k; knop.dataset.naam = `kaart-${k}`;
       document.getElementById('kaart').appendChild(knop);
     }

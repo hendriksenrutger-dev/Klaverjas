@@ -6,8 +6,8 @@ let ctx = null;
 let aan = true;
 
 // Welke opnames de app gebruikt voor het spelen van een kaart (afgewisseld).
-// Varianten A t/m F staan in assets/geluid; Rutger kiest via de testpagina.
-export const KAART_KEUZE = ['A', 'B', 'D'];
+// Rutger koos variant D (uit A t/m F).
+export const KAART_KEUZE = ['D'];
 
 export function zetGeluid(waarde) {
   aan = waarde;
