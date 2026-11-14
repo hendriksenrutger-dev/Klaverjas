@@ -24,7 +24,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Gewone HTML, CSS en JavaScript (ES-modules). Geen framework, geen bouwstap, zodat GitHub Pages het direct kan serveren.
 - Rutger gebruikt bij andere apps één `index.html`. Dit project is groter: werk met losse modules. Dat is een bewuste afwijking.
 - Voorgestelde mappen (mag je verbeteren, meld het dan):
-  - `index.html`, `manifest.json`, `sw.js`
+  - `index.html`, `manifest.json`, `klaverjas-sw.js` (service worker, naam met klaverjas)
   - `src/regels/`: spelregels, puur en zonder DOM, volledig getest
   - `src/ai/`: computerspelers, draait in een Web Worker
   - `src/ui/`: speeltafel en schermen
@@ -56,7 +56,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 2. Om de beurt, te beginnen bij de speler links van de deler, kiest iedereen **spelen** of **passen**. Wie speelt, maakt die kleur troef. Zijn team is de spelende partij.
 3. **Past iedereen,** dan wordt de volgende kaart gedraaid. **Een kleur waarop al gepast is, telt niet en wordt overgeslagen.** Er wordt doorgedraaid tot er een nieuwe kleur verschijnt. Twee keer klaveren is dus één ronde.
 4. Na **2 rondes** waarin iedereen past, wordt opnieuw gedeeld. Dit is een instelling: **2 (standaard) of 3**.
-5. **Nog te vragen aan Rutger:** wie deelt er opnieuw, dezelfde deler of de volgende?
+5. Na rondpassen deelt **dezelfde deler** opnieuw. Het potje telt niet mee.
 
 ### Uitkomen
 
@@ -74,6 +74,8 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 ### Seinen (Rutgers afspraken, niet uit het reglement)
 
 - Seinen gebeurt alleen door **bij te spelen op een slag die je maat al heeft**, en **nooit met of bij troef**.
+  - Afgestemd met Rutger: het geldt **ook bij bekennen** (bijv. maat speelt ♣H en heeft de slag, jij legt ♣7 bij = "ik heb ♣A").
+  - "Bij troef" betekent: als **troef gevraagd** is. Heeft je maat een andere kleur **ingetroefd** en daarmee de slag, dan mag je wel seinen.
 - **Kleintje (7, 8 of 9) bijspelen:** "ik heb de aas van deze kleur".
 - **Aas bijspelen:** "ik heb ook de tien van deze kleur".
 - **Tien, boer, vrouw of heer bijspelen:** geen sein. Een tien is gewoon punten geven aan je maat.
@@ -89,7 +91,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - **Seinen in de simulatie:** verdelingen waarin een sein klopt krijgen een hoger gewicht, maar niet 100%. Dit is een eigen ontwerpkeuze, niet beproefd. Maak de factor instelbaar in de code, zodat hij na testen bij te stellen is.
 - **Zelf seinen:** de computerspelers seinen volgens de afspraken hierboven, zodat Rutger als maat de seinen kan lezen.
 - **Spelen of passen bij het draaien:** ook via simulatie. Speel de hand met deze troef vaak uit en speel als de verwachte uitkomst boven een drempel ligt.
-- **Moeilijkheidsniveau** (instelling): bepaalt het aantal simulaties per zet. Dit is een eigen voorstel en moet nog met Rutger worden afgestemd.
+- **Moeilijkheidsniveau** (instelling): makkelijk (5 simulaties, eenvoudige strategie), normaal (100, slimme strategie, laatste 3 slagen exact) en sterk (300). Akkoord van Rutger.
 - Draai de AI in een **Web Worker** zodat het scherm niet hapert. Doel: minder dan ongeveer 1 seconde per zet op de tablet.
 - Laat de computerspelers kort "nadenken" (ongeveer 0,5 tot 1 seconde) zodat je kunt volgen wat er gebeurt.
 
@@ -98,7 +100,9 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Amsterdams (standaard) of Rotterdams
 - Opnieuw delen na 2 (standaard) of 3 rondes passen
 - Verzaakbescherming aan (standaard) of uit
-- Moeilijkheid van de computerspelers (nog af te stemmen)
+- Moeilijkheid van de computerspelers: makkelijk, normaal (standaard), sterk (afgestemd met Rutger, zie RAPPORT-FASE-4.md)
+- Geluid aan (standaard) of uit
+- Namen van de spelers (standaard Zuid, West, Noord, Oost)
 
 ## Uiterlijk
 
@@ -107,7 +111,9 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Tafel:** groen laken met een zachte radiale verlichting in het midden (#2E8A5C naar #227049 naar #164F33) en een dunne lichte ovale lijn op de tafel.
 - **Bovenbalk** (half doorzichtig donker): menuknop met een huisje links. In het midden de score van Wij (in goud #E8C873) en Zij (wit), en het potje "9 / 16". Rechts een crèmekleurig troeflabel met een rond symbool van de troefkleur en de tekst "Troef · Schoppen · wij spelen", en een knop voor instellingen.
 - **Linksboven, onder de balk:** een paneel "Dit potje" met de punten en roem van Wij en Zij in het lopende potje.
-- **Spelers:** de maat boven, de tegenstanders links en rechts, jij linksonder. Elke speler heeft een rond avatar met een initiaal (geen foto's) en een naam, met als rol "Jouw maat · computer" of "Tegenstander". Een gouden label "Speelt" bij de spelende speler.
+- **Spelers:** de maat boven (Noord), de tegenstanders links (West) en rechts (Oost). Zuid ben jij en wordt **niet** op de tafel getoond. Elke computerspeler heeft een rond avatar met een initiaal (geen foto's) en een naam, met als rol "Jouw maat · computer" of "Tegenstander". Een gouden label "Speelt" bij de spelende speler.
+- **Namen:** standaard de windrichtingen Zuid, West, Noord en Oost. Echte namen kunnen geven is een instelling.
+- **Geluid:** schudden en kaarten die neergelegd worden.
 - **Slag op tafel:** de kaarten liggen licht gedraaid op hun plek. Op jouw plek staat een gestippeld vak met "Jouw kaart".
 - **Roemmelding:** een goudkleurig label met een ster, bijvoorbeeld "Driekaart · 20 roem".
 - **Hint onder de tafel:** "Jouw beurt · je moet harten bekennen", "Tik nog een keer om te spelen", enzovoort.
@@ -119,7 +125,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 ### Kaarten
 
 - **Formaat:** ongeveer 118 × 170 px op het ontwerpformaat van 1280 × 860. Schaal mee met het scherm.
-- **Stijl:** crème (#FBF8F1), afgeronde hoeken van 12 px, een zachte schaduw en een dun binnenkader. Rood #B3262D, zwart #1B1B1B.
+- **Stijl:** crème (#FBF8F1), afgeronde hoeken van 12 px, een zachte schaduw en een dun binnenkader. Rood #B3262D, zwart #1B1B1B. Rutger heeft gekozen voor dit rood, ook al gebruikt Knoll feller rood (#DF0000).
 - **Hoekindexen:** in Nederlandse letters **A, H, V, B**, 10, 9, 8 en 7, met het kleursymbool eronder. Rechtsonder hetzelfde, 180° gedraaid.
 - **7 tot en met 10:** symbolen in het standaardpatroon van speelkaarten (twee kolommen plus het midden). De onderste helft staat ondersteboven. Als richtlijn, in procenten van het binnenvlak (x, y):
   - 7: (22,12) (78,12) (50,31) (22,50) (78,50) (22,88) (78,88)
@@ -136,7 +142,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
   - **Gebruik geen schoppenaas uit een set.** Er is twijfel of de versierde schoppenaas vrij is, en Rutger koos toch voor eigen azen.
   - Sluiten de plaatjes van Knoll qua stijl niet goed aan bij de eigen cijferkaarten? Pas dan de eigen kaarten aan op Knoll, niet andersom, en laat het Rutger zien.
 - **Gebruik nooit** kaartontwerpen van Klaverjas HD, Carta Mundi of het Nederlandse patroon van Brepols. Die zijn beschermd.
-- **Achterkant:** eigen eenvoudig ontwerp in het groen en goud van de tafel. Laat Rutger een voorstel zien.
+- **Achterkant:** eigen eenvoudig ontwerp in **donkerrood en goud** (gekozen door Rutger): gouden rand, fijn ruitpatroon en een gouden klaver in een rondje.
 
 ## Bouwvolgorde
 
@@ -148,9 +154,35 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 6. **Instellingen,** opslaan van de partij, PWA en offline.
 7. **Publiceren** op GitHub Pages en testen op de tablet.
 
+## Besluiten na fase 1 (met Rutger afgestemd)
+
+- **Verzaken:** volgens het reglement. Verzakers 0, tegenpartij 162 + 100 strafpunten + alle roem die al gemaakt is.
+- **Vier boeren:** 200 roem. Vier azen, tienen, heren of vrouwen: 100. Vier zevens, achten of negens: geen roem.
+- **Pit:** 100 roem, alleen voor de spelende partij. Haalt de tegenpartij alle slagen, dan is de spelende partij gewoon nat (geen tegenpit).
+- **Ondertroeven:** in Amsterdams én Rotterdams alleen als je niets anders hebt.
+- **Opnieuw delen:** dezelfde deler.
+
 ## Nog open (vragen aan Rutger op het moment dat het speelt)
 
-- Wie deelt er opnieuw nadat iedereen past?
-- Hoe worden de moeilijkheidsniveaus ingevuld?
-- De afwijkingen tussen het reglement en dit bestand voor nat, pit en verzaken.
-- Het ontwerp van de achterkant van de kaarten.
+- Op dit moment niets.
+
+## Later (na de solo-app, nu NIET bouwen)
+
+### Online spelen met familie en vrienden
+- Speltafel met code of link. Lege plekken worden opgevuld door computerspelers.
+- Supabase Realtime voor live zetten. Delen en controle van zetten op de server (Edge Function), zodat niemand andermans kaarten kan zien.
+- Opvangen als iemand wegvalt: wachten of tijdelijk een computerspeler laten invallen.
+- Solo spelen blijft volledig offline.
+- Houd hier nu al rekening mee: spelregels los van het scherm, spelstand serialiseerbaar, elke zet een losse actie.
+
+### Leerstand voor volwassenen die willen leren klaverjassen
+Drie onderdelen:
+1. Lessen: korte stappen met vooraf bedachte handen, uitleg en een opdracht per les.
+   Volgorde: kaartwaarden en troefvolgorde → bekennen → troeven (Amsterdams/Rotterdams) → roem → nat en pit → seinen (volgens onze afspraken).
+2. Hulp tijdens het spelen (aan/uit te zetten):
+   - uitleg waarom een kaart niet mag;
+   - melding bij roem en bij een sein van je maat, met uitleg wat het sein betekent;
+   - hint-knop: de simulatie-AI kiest de kaart, en uitleg in mensentaal komt uit vaste regels. Waar geen regel past, toon dan alleen "deze kaart levert gemiddeld de meeste punten op". Verzin geen uitleg.
+3. Oefenen met open kaarten tegen makkelijke tegenstanders.
+- Toon: volwassen, kort en helder, niet kinderachtig.
+- Hergebruik de uitlegteksten uit de spelregels (waarom een zet niet mag) in de hele app.

@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>Geluid opnemen</title>
+<script type="module">
+  // Neemt de geluiden op in een OfflineAudioContext (alleen voor ontwikkeling).
+  window.AudioContext = class extends OfflineAudioContext {
+    constructor() { super(1, 44100 * 8, 44100); window.__opname = this; }
+    get state() { return 'running'; }
+    resume() {}
+  };
+  const g = await import('../src/ui/geluid.js');
+  window.neemOp = async (welke) => {
+    if (welke === 'schudden') g.schudden();
+    else { for (let i = 0; i < 4; i++) setTimeout(() => {}, 0); g.kaartNeer(); }
+    const buf = await window.__opname.startRendering();
+    return Array.from(buf.getChannelData(0));
+  };
+</script>

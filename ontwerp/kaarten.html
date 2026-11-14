@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>Kaarten · overzicht</title>
+  <link rel="stylesheet" href="../src/ui/stijl.css">
+  <base href="../">
+  <style>
+    html, body { overflow: auto; height: auto; }
+    body { padding: 20px; background: radial-gradient(ellipse at center, #2e8a5c, #164f33); min-height: 100vh; }
+    .rij { display: flex; gap: 14px; margin-bottom: 18px; --kh: 170px; }
+  </style>
+</head>
+<body>
+  <div id="kaarten"></div>
+  <script type="module">
+    import { kaartHtml, rugHtml, symboolSprite } from './src/ui/kaart.js';
+    const rangen = ['7', '8', '9', '10', 'B', 'V', 'H', 'A'];
+    let html = symboolSprite();
+    for (const kleur of ['schoppen', 'harten', 'klaveren', 'ruiten']) {
+      html += `<div class="rij">${rangen.map((rang) => kaartHtml({ kleur, rang })).join('')}</div>`;
+    }
+    html += `<div class="rij">${rugHtml()}</div>`;
+    document.getElementById('kaarten').innerHTML = html;
+  </script>
+</body>
+</html>
