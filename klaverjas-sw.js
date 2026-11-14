@@ -6,10 +6,12 @@ const CACHE = 'klaverjas-v2';
 // Alles wat nodig is om offline te spelen, al bij de eerste keer openen opgeslagen.
 const BESTANDEN = [
   './',
+  'assets/geluid/delen.ogg',
   'assets/geluid/kaart-1.ogg',
   'assets/geluid/kaart-2.ogg',
   'assets/geluid/kaart-3.ogg',
   'assets/geluid/kaart-4.ogg',
+  'assets/geluid/schudden.ogg',
   'assets/iconen/apple-touch-icon.png',
   'assets/iconen/icoon-192.png',
   'assets/iconen/icoon-512.png',
