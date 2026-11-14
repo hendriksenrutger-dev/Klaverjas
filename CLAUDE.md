@@ -161,10 +161,23 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - Hoe worden de moeilijkheidsniveaus ingevuld?
 - Het ontwerp van de achterkant van de kaarten.
 
-## Later
+## Later (na de solo-app, nu NIET bouwen)
 
-**Toekomstige uitbreiding, nu NIET bouwen:** online spelen met familie via Supabase, waarbij de server deelt en de zetten controleert. Houd daar nu al rekening mee:
+### Online spelen met familie en vrienden
+- Speltafel met code of link. Lege plekken worden opgevuld door computerspelers.
+- Supabase Realtime voor live zetten. Delen en controle van zetten op de server (Edge Function), zodat niemand andermans kaarten kan zien.
+- Opvangen als iemand wegvalt: wachten of tijdelijk een computerspeler laten invallen.
+- Solo spelen blijft volledig offline.
+- Houd hier nu al rekening mee: spelregels los van het scherm, spelstand serialiseerbaar, elke zet een losse actie.
 
-- Houd de spelregels los van het scherm (`src/regels/` blijft puur, zonder DOM).
-- Maak de spelstand serialiseerbaar: alleen gewone objecten, arrays, strings en getallen, zodat hij als JSON kan worden opgeslagen en verstuurd.
-- Verwerk elke zet als een losse actie: (stand, speler, actie) → nieuwe stand, zodat een server dezelfde regels kan gebruiken om zetten te controleren.
+### Leerstand voor volwassenen die willen leren klaverjassen
+Drie onderdelen:
+1. Lessen: korte stappen met vooraf bedachte handen, uitleg en een opdracht per les.
+   Volgorde: kaartwaarden en troefvolgorde → bekennen → troeven (Amsterdams/Rotterdams) → roem → nat en pit → seinen (volgens onze afspraken).
+2. Hulp tijdens het spelen (aan/uit te zetten):
+   - uitleg waarom een kaart niet mag;
+   - melding bij roem en bij een sein van je maat, met uitleg wat het sein betekent;
+   - hint-knop: de simulatie-AI kiest de kaart, en uitleg in mensentaal komt uit vaste regels. Waar geen regel past, toon dan alleen "deze kaart levert gemiddeld de meeste punten op". Verzin geen uitleg.
+3. Oefenen met open kaarten tegen makkelijke tegenstanders.
+- Toon: volwassen, kort en helder, niet kinderachtig.
+- Hergebruik de uitlegteksten uit de spelregels (waarom een zet niet mag) in de hele app.
