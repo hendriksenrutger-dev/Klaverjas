@@ -302,6 +302,27 @@ function slagenOverzicht(spel) {
   return `<details class="slagen-overzicht"><summary>Bekijk alle slagen</summary><div class="slagen-lijst">${rijen}</div></details>`;
 }
 
+// Alle handen zoals ze bij het begin van het potje gedeeld waren, rond de tafel.
+function handenVenster(spel) {
+  const troef = spel.potje.troef;
+  const speler = spel.draaien?.uitkomst?.speler;
+  const blok = (i) => {
+    const kaarten = sorteerHand(spel.handen[i], troef);
+    return `<div class="handen-blok ${PLEKKEN[i].plek}">
+      <div class="handen-naam"><b>${naam(i)}</b>${i === speler ? '<span class="label speelt">Speelde</span>' : ''}</div>
+      <div class="hand-kaarten">${kaarten.map((k) => kaartHtml(k)).join('')}</div>
+    </div>`;
+  };
+  return venster(`<h2>Alle handen</h2>
+    <p class="sub">Zoals ze gedeeld waren · troef ${KLEURNAAM[troef].toLowerCase()}</p>
+    <div class="handen-tafel">
+      ${blok(2)}${blok(1)}
+      <div class="handen-midden ${ROOD.has(troef) ? 'rood' : ''}">${symbool(troef)}</div>
+      ${blok(3)}${blok(0)}
+    </div>
+    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Terug</button></div>`, true, 'handen');
+}
+
 function uitslagVenster(spel) {
   const u = spel.uitslag;
   const wijSpelen = spel.potje.spelendTeam === 0;
@@ -330,7 +351,7 @@ function uitslagVenster(spel) {
     ${slagenOverzicht(spel)}
     <p class="stand">Stand na ${spel.partij.potjes.length} van ${AANTAL_POTJES}: Wij <b>${t[0]}</b> · Zij <b>${t[1]}</b></p>
     ${klaar ? `<p class="eindstand">${t[0] > t[1] ? 'Wij winnen de partij!' : t[0] < t[1] ? 'Zij winnen de partij.' : 'Gelijkspel.'}</p>` : ''}
-    <div class="venster-knoppen">${klaar
+    <div class="venster-knoppen">${spel.handen ? '<button class="knop" data-actie="open" data-venster="handen">Alle handen</button>' : ''}${klaar
       ? '<button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button>'
       : '<button class="knop goud" data-actie="volgendPotje">Volgend potje</button>'}</div>`, false, `uitslag-${spel.partij.potjes.length}`);
 }
@@ -343,7 +364,9 @@ function vensters(spel) {
 }
 
 function vensterHtml(spel) {
-  if (spel.fase === 'potjeKlaar' || spel.fase === 'partijKlaar') return uitslagVenster(spel);
+  if (spel.fase === 'potjeKlaar' || spel.fase === 'partijKlaar') {
+    return spel.venster === 'handen' && spel.handen ? handenVenster(spel) : uitslagVenster(spel);
+  }
   switch (spel.venster) {
     case 'laatsteSlag': return spel.laatsteSlag ? laatsteSlagVenster(spel) : '';
     case 'gespeeld': return spel.potje ? gespeeldVenster(spel) : '';
@@ -381,15 +404,27 @@ function beginscherm(spel) {
     </main>`;
 }
 
+// De kleursymbolen staan één keer buiten het steeds opnieuw getekende deel,
+// zodat kaarten nooit even zonder symbolen in beeld komen.
+function zorgVoorSprite() {
+  if (document.getElementById('kleursymbolen')) return;
+  const div = document.createElement('div');
+  div.id = 'kleursymbolen';
+  div.innerHTML = symboolSprite();
+  document.body.prepend(div);
+}
+
 // ---------- Alles samen ----------
 export function render(el, spel, acties) {
   NAMEN = spel.namen;
   if (spel.scherm === 'start') {
-    el.innerHTML = `${symboolSprite()}${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`;
+    zorgVoorSprite();
+    el.innerHTML = `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : ''}`;
     koppel(el, acties);
     return;
   }
-  el.innerHTML = `${symboolSprite()}
+  zorgVoorSprite();
+  el.innerHTML = `
     <div class="laken"></div>
     ${balk(spel)}
     ${ditPotje(spel)}

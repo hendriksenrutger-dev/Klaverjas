@@ -113,7 +113,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Linksboven, onder de balk:** een paneel "Dit potje" met de punten en roem van Wij en Zij in het lopende potje.
 - **Spelers:** de maat boven (Noord), de tegenstanders links (West) en rechts (Oost). Zuid ben jij en wordt **niet** op de tafel getoond. Elke computerspeler heeft een rond avatar met een initiaal (geen foto's) en een naam, met als rol "Jouw maat · computer" of "Tegenstander". Een gouden label "Speelt" bij de spelende speler.
 - **Namen:** standaard de windrichtingen Zuid, West, Noord en Oost. Echte namen kunnen geven is een instelling.
-- **Geluid:** kaart spelen (variant D, gekozen door Rutger), schudden en delen: echte opnames uit Kenney Casino Audio (CC0), bewerkt zonder lage tonen; zie `assets/geluid/LICENSE.md`.
+- **Geluid:** kaart spelen (variant F, gekozen door Rutger), schudden en delen: echte opnames uit Kenney Casino Audio (CC0), bewerkt zonder lage tonen; zie `assets/geluid/LICENSE.md`.
 - **Slag op tafel:** de kaarten liggen licht gedraaid op hun plek, in een kruis, **zonder over elkaar te liggen**. Op jouw plek staat een gestippeld vak met "Jouw kaart".
 - **Roemmelding:** een goudkleurig label met een ster, bijvoorbeeld "Driekaart · 20 roem".
 - **Hint onder de tafel:** kort, zonder uitleg van de regels (Rutger kent ze): "Jouw beurt", "Tik nog een keer om te spelen", "Deze slag is voor West".
@@ -123,6 +123,8 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Troef draaien:** de gedraaide kaart is een crème tegel met alleen het kleursymbool, groot (geen hele speelkaart). Bij de computer die aan de beurt is staat "denkt na…". Computers denken bij spelen/passen ongeveer 1 tot 1,4 seconde. Kiest iemand spelen, dan eerst groot "Oost speelt · troef ruiten" (±1,8 s) voordat het potje begint; past iedereen, dan eerst "Iedereen past".
 - **Schudden en delen:** eerst het schudgeluid met de stapel in het midden, daarna vliegen de kaarten in pakjes van 3-2-3 naar de spelers, met bij elk pakje een tikje.
 - **Uitslag:** bij alle slagen voor de spelende partij gewoon "Pit!".
+- **Na een potje:** "Bekijk alle slagen" (per slag de kaarten, winnaar, punten en roem) en de knop "Alle handen": de vier handen zoals ze gedeeld waren, rond de tafel.
+- **Gespeelde kaart:** schuift volledig zichtbaar vanaf de kant van de speler op zijn plek (geen infade).
 - **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten).
 - **Lettertypen:** Playfair Display voor cijfers en kaartindexen, Inter voor de interface. Bundel ze lokaal, want de app moet offline werken.
 - Knoppen en aanraakvlakken zijn minimaal 44 px.

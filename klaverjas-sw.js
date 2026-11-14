@@ -7,7 +7,7 @@ const CACHE = 'klaverjas-v4';
 const BESTANDEN = [
   './',
   'assets/geluid/deel.ogg',
-  'assets/geluid/kaart-D.ogg',
+  'assets/geluid/kaart-F.ogg',
   'assets/geluid/schudden.ogg',
   'assets/iconen/apple-touch-icon.png',
   'assets/iconen/icoon-192.png',
