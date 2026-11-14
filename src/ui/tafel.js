@@ -335,7 +335,8 @@ function vergelijkBlok(spel) {
   if (kaarten.length) {
     const tel = (o) => kaarten.filter((a) => a.oordeel === o).length;
     const anders = tel('beter') + tel('minder');
-    const som = kaarten.reduce((n, a) => n + a.verschil, 0);
+    // Alleen duidelijke verschillen tellen mee; "even goed" telt als 0.
+    const som = kaarten.filter((a) => a.oordeel === 'beter' || a.oordeel === 'minder').reduce((n, a) => n + a.verschil, 0);
     regels.push(`<b>Dit potje:</b> ${tel('zelfde')}× dezelfde kaart, ${tel('gelijkwaardig')}× even goed, ${anders}× anders · ${puntenZin(som)}`);
   }
   for (const d of lijst.filter((a) => a.soort === 'draai')) {
@@ -421,7 +422,7 @@ function uitslagVenster(spel) {
     <p class="stand">Stand na ${spel.partij.potjes.length} van ${AANTAL_POTJES}: Wij <b>${t[0]}</b> · Zij <b>${t[1]}</b></p>
     ${klaar ? `<p class="eindstand">${t[0] > t[1] ? 'Wij winnen de partij!' : t[0] < t[1] ? 'Zij winnen de partij.' : 'Gelijkspel.'}</p>` : ''}
     <div class="venster-knoppen">${spel.handen ? '<button class="knop" data-actie="open" data-venster="handen">Alle handen</button>' : ''}${klaar
-      ? '<button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button>'
+      ? '<button class="knop" data-actie="naarStart">Beginscherm</button><button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button>'
       : '<button class="knop goud" data-actie="volgendPotje">Volgend potje</button>'}</div>`, false, `uitslag-${spel.partij.potjes.length}`);
 }
 

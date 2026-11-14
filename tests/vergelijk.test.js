@@ -36,7 +36,7 @@ describe('vergelijk met de computer', () => {
     t = telOp(t, { soort: 'kaart', oordeel: 'gelijkwaardig', verschil: 1 });
     t = telOp(t, { soort: 'draai', jij: 'spelen', computer: 'passen' });
     t = telOp(t, { soort: 'draai', jij: 'passen', computer: 'passen' });
-    assert.deepEqual(t, { kaarten: 3, zelfde: 1, gelijkwaardig: 1, beter: 0, minder: 1, punten: -14, draaien: 2, draaiAnders: 1 });
+    assert.deepEqual(t, { kaarten: 3, zelfde: 1, gelijkwaardig: 1, beter: 0, minder: 1, punten: -15, draaien: 2, draaiAnders: 1 });
   });
 });
 
