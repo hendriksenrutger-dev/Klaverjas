@@ -654,7 +654,10 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w)) {
   const hoger = (c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef);
   const hogerElders = onbekend.filter(hoger).length;
   const hogerZelf = w.hand.filter(hoger).length;
-  if (hogerElders > hogerZelf) return 0; // geen kans op een slag
+  if (hogerElders > 0) {
+    // Gedekte kaart (zoals een heer naast je aas): alleen bij afgooien, niet bij bekennen.
+    if (hogerElders > hogerZelf || k.kleur === w.slag[0].kaart.kleur) return 0;
+  }
   const wint = huidigeWinnaar([...w.slag, { speler: w.speler, kaart: k }], w.troef).speler === w.speler;
   return wint ? 0 : 1;
 }
