@@ -4,7 +4,7 @@ import { kaartId, team } from '../regels/kaarten.js';
 import { stand } from '../regels/potje.js';
 import { redenTekst } from '../regels/geldig.js';
 import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
-import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD } from './kaart.js';
+import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD, SYMBOOL } from './kaart.js';
 import { patchHtml } from './patch.js';
 import { vulPlaatjes } from './plaatjes.js';
 
@@ -293,12 +293,64 @@ function instellingenVenster(spel) {
       ${keuzeRij('Verzaakbescherming', 'verzaakbescherming', i.verzaakbescherming ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Aan: alleen kaarten die mogen zijn speelbaar')}
       ${keuzeRij('Computerspelers', 'niveau', i.niveau, [['makkelijk', 'Makkelijk'], ['normaal', 'Normaal'], ['sterk', 'Sterk']])}
       ${keuzeRij('Geluid', 'geluid', i.geluid ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Schudden en kaarten leggen')}
+      ${keuzeRij('Vergelijk met de computer', 'vergelijk', i.vergelijk ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Na elk potje: wat de computer met jouw kaarten had gedaan')}
       <div class="instelling">
         <div class="instelling-label">Namen</div>
         <div class="namen">${namen}</div>
       </div>
     </div>
     <div class="venster-knoppen"><button class="knop goud" data-actie="sluit">Klaar</button></div>`, true, 'instellingen');
+}
+
+// ---------- Vergelijk met de computer ----------
+const kort = (k) => `<span class="${ROOD.has(k.kleur) ? 'rood' : ''}">${SYMBOOL[k.kleur]}${k.rang}</span>`;
+const metTeken = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
+
+// Analyses van het potje dat in de uitslag staat.
+function analysesUitslag(spel) {
+  const nr = spel.partij.potjes.length - 1;
+  return (spel.analyses ?? []).filter((a) => a.potje === nr);
+}
+
+// Klein label onder jouw kaart in "Bekijk alle slagen".
+function vergelijkLabel(spel, slagIndex) {
+  if (!spel.instellingen.vergelijk) return '';
+  const a = analysesUitslag(spel).find((x) => x.soort === 'kaart' && x.slag === slagIndex);
+  if (!a) return spel.analyseBezig ? '<div class="vgl">…</div>' : '';
+  if (a.oordeel === 'zelfde') return '<div class="vgl zelfde" title="De computer speelde dezelfde kaart">✓</div>';
+  if (a.oordeel === 'gelijkwaardig') return `<div class="vgl" title="Computer: andere kaart, even goed">≈ ${kort(a.computer)}</div>`;
+  return `<div class="vgl ${a.oordeel}" title="Kaart van de computer en het verschil in punten">${kort(a.computer)} ${metTeken(a.verschil)}</div>`;
+}
+
+function puntenZin(n) {
+  if (n === 0) return 'even goed als de computer';
+  return `naar schatting ${Math.abs(n)} ${Math.abs(n) === 1 ? 'punt' : 'punten'} ${n > 0 ? 'beter' : 'minder'} dan de computer`;
+}
+
+function vergelijkBlok(spel) {
+  if (!spel.instellingen.vergelijk) return '';
+  const lijst = analysesUitslag(spel);
+  const kaarten = lijst.filter((a) => a.soort === 'kaart');
+  const regels = [];
+  if (kaarten.length) {
+    const tel = (o) => kaarten.filter((a) => a.oordeel === o).length;
+    const anders = tel('beter') + tel('minder');
+    const som = kaarten.reduce((n, a) => n + a.verschil, 0);
+    regels.push(`<b>Dit potje:</b> ${tel('zelfde')}× dezelfde kaart, ${tel('gelijkwaardig')}× even goed, ${anders}× anders · ${puntenZin(som)}`);
+  }
+  for (const d of lijst.filter((a) => a.soort === 'draai')) {
+    const woord = (k) => (k === 'spelen' ? 'gespeeld' : 'gepast');
+    regels.push(`<b>Spelen of passen op ${SYMBOOL[d.kleur]}:</b> jij hebt ${woord(d.jij)}, ${d.jij === d.computer ? 'de computer ook' : `de computer had ${woord(d.computer)}`}`);
+  }
+  const v = spel.vergelijking;
+  if (v?.kaarten > kaarten.length) {
+    regels.push(`<b>Deze partij:</b> ${v.zelfde + v.gelijkwaardig} van ${v.kaarten} kaarten zoals de computer of even goed · ${puntenZin(v.punten)}${v.draaien ? ` · spelen of passen ${v.draaiAnders} van ${v.draaien} keer anders` : ''}`);
+  }
+  if (spel.analyseBezig) regels.push('<span class="licht">De computer rekent nog…</span>');
+  if (!regels.length) return '';
+  return `<div class="vergelijk-blok"><div class="vergelijk-kop">Vergeleken met de computer</div>
+    ${regels.map((r) => `<p>${r}</p>`).join('')}
+    <p class="vergelijk-uitleg">Volgens de computer; die kan zich ook vergissen.</p></div>`;
 }
 
 function slagenOverzicht(spel) {
@@ -309,10 +361,13 @@ function slagenOverzicht(spel) {
     const roem = s.roem.totaal ? ` + ${s.roem.totaal} roem` : '';
     return `<div class="slag-rij">
       <div class="slag-info"><b>Slag ${i + 1}</b><span class="${wij ? 'wij' : ''}">${wij ? 'Wij' : 'Zij'}</span> · ${s.punten} punten${roem}</div>
-      <div class="slag-kaarten">${s.kaarten.map((x) => `<div class="met-naam ${x.speler === s.winnaar ? 'winnaar' : ''}">${kaartHtml(x.kaart)}<div>${naam(x.speler)}</div></div>`).join('')}</div>
+      <div class="slag-kaarten">${s.kaarten.map((x) => `<div class="met-naam ${x.speler === s.winnaar ? 'winnaar' : ''}">${kaartHtml(x.kaart)}<div>${naam(x.speler)}</div>${x.speler === 0 ? vergelijkLabel(spel, i) : ''}</div>`).join('')}</div>
     </div>`;
   }).join('');
-  return `<details class="slagen-overzicht"><summary>Bekijk alle slagen</summary><div class="slagen-lijst">${rijen}</div></details>`;
+  const uitleg = spel.instellingen.vergelijk
+    ? '<p class="vergelijk-uitleg">Onder jouw kaart: ✓ dezelfde kaart als de computer, ≈ een andere maar even goede kaart, of de kaart van de computer met het verschil in punten.</p>'
+    : '';
+  return `<details class="slagen-overzicht"><summary>Bekijk alle slagen</summary><div class="slagen-lijst">${uitleg}${rijen}</div></details>`;
 }
 
 // Alle handen zoals ze bij het begin van het potje gedeeld waren, rond de tafel.
@@ -361,6 +416,7 @@ function uitslagVenster(spel) {
       <tr class="wij"><td>Wij</td><td>${u.punten[0]}</td><td>${u.roem[0]}</td><td>${u.totaal[0]}</td></tr>
       <tr><td>Zij</td><td>${u.punten[1]}</td><td>${u.roem[1]}</td><td>${u.totaal[1]}</td></tr>
     </table>
+    ${vergelijkBlok(spel)}
     ${slagenOverzicht(spel)}
     <p class="stand">Stand na ${spel.partij.potjes.length} van ${AANTAL_POTJES}: Wij <b>${t[0]}</b> · Zij <b>${t[1]}</b></p>
     ${klaar ? `<p class="eindstand">${t[0] > t[1] ? 'Wij winnen de partij!' : t[0] < t[1] ? 'Zij winnen de partij.' : 'Gelijkspel.'}</p>` : ''}

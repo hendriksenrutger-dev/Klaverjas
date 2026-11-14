@@ -104,6 +104,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Verzaakbescherming aan (standaard) of uit
 - Moeilijkheid van de computerspelers: makkelijk, normaal (standaard), sterk (afgestemd met Rutger, zie RAPPORT-FASE-4.md)
 - Geluid aan (standaard) of uit
+- Vergelijk met de computer aan of uit (standaard uit, op Rutgers verzoek): na elk potje per kaart van jou wat de computer (niveau sterk, met alleen jouw kennis) had gespeeld en het verschil in punten, plus spelen/passen en een totaal over de partij. Bij een verschil kleiner dan 4 punten: "even goed". Altijd met "volgens de computer".
 - Namen van de spelers (standaard Zuid, West, Noord, Oost)
 
 ## Uiterlijk

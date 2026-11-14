@@ -343,6 +343,17 @@ button { font: inherit; }
 .slag-info .wij { color: #8a6a14; }
 .slag-kaarten { display: flex; gap: 10px; --kh: 86px; }
 .slag-kaarten .met-naam { font-size: 13px; }
+/* Vergelijk met de computer */
+.vgl { margin-top: 2px; font-size: 13px; font-weight: 600; white-space: nowrap; color: #555; }
+.vgl .rood { color: var(--rood); }
+.vgl.zelfde { color: #2e7d4f; font-size: 15px; }
+.vgl.minder { color: #9a3b1c; }
+.vgl.beter { color: #2e7d4f; }
+.vergelijk-blok { margin: 12px auto 0; max-width: 640px; text-align: left; font-size: 15px; line-height: 1.45; background: rgba(0,0,0,.04); border-radius: 12px; padding: 10px 14px; }
+.vergelijk-blok p { margin: 3px 0; }
+.vergelijk-kop { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; opacity: .6; margin-bottom: 4px; }
+.vergelijk-uitleg { font-size: 13px; opacity: .65; }
+.vergelijk-blok .licht { opacity: .6; }
 
 /* Alle handen (na een potje) */
 .handen-tafel {
