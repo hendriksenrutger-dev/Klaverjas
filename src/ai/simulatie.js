@@ -35,6 +35,7 @@ export const NIVEAUS = {
 
 // Eigen ontwerpkeuzes, niet beproefd; bij te stellen na testen:
 export const SEIN_FACTOR = 10; // verdeling waarin een sein klopt telt zoveel keer zwaarder
+export const SEIN_FACTOR_ZWAK = 2; // idem, als de seiner geen goedkoop eerlijk alternatief had
 export const SEIN_BONUS = 3; // voorkeur (in punten) voor een kaart die een waar sein geeft
 export const SEIN_STRAF = 40; // afkeer (in punten) van een kaart die een vals sein zou geven
 
@@ -85,24 +86,32 @@ function laterGespeeld(w, speler, voor) {
   return res;
 }
 
-// Gewicht van een getrokken verdeling. Klopt een sein niet, dan telt de verdeling minder mee,
-// maar alleen als de seiner in die verdeling ook een kaart had kunnen spelen die geen vals sein gaf.
-export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null) {
+// Gewicht van een getrokken verdeling. Klopt een sein niet, dan telt de verdeling minder mee:
+// - had de seiner (in deze verdeling) geen andere kaart zonder vals sein: gewicht blijft 1 (gedwongen);
+// - had hij alleen dure eerlijke alternatieven (troef, tien, aas, of iets dat een tien/aas kaal
+//   achterlaat): een zwakke aanwijzing, gewicht 1/factorZwak;
+// - had hij een goedkoop eerlijk alternatief: een sterke aanwijzing, gewicht 1/factor.
+export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, factorZwak = SEIN_FACTOR_ZWAK) {
   let g = 1;
+  const heeft = (hand, k) => hand.some((c) => c.kleur === k.kleur && c.rang === k.rang);
   for (const s of seinen) {
-    const heeft = (hand, k) => hand.some((c) => c.kleur === k.kleur && c.rang === k.rang);
     if (heeft(handen[s.speler], s.kaart)) continue;
-    if (s.context && w) {
-      const toen = [...handen[s.speler], ...laterGespeeld(w, s.speler, s.context.voor)];
-      const opties = geldigeKaarten(toen, s.context.voor, w.troef, w.systeem);
-      const eerlijkKon = opties.some((k) => {
-        if (k.kleur === s.context.kaart.kleur && k.rang === s.context.kaart.rang) return false;
-        const ander = seinVan(s.context.voor, s.speler, k, w.troef);
-        return !ander || heeft(toen, ander.kaart);
-      });
-      if (!eerlijkKon) continue; // gedwongen: de kaart zegt niets
-    }
-    g /= factor;
+    if (!s.context || !w) { g /= factor; continue; }
+    const toen = [...handen[s.speler], ...laterGespeeld(w, s.speler, s.context.voor)];
+    const opties = geldigeKaarten(toen, s.context.voor, w.troef, w.systeem);
+    const gespeeld = s.context.kaart;
+    const eerlijk = opties.filter((k) => {
+      if (k.kleur === gespeeld.kleur && k.rang === gespeeld.rang) return false;
+      const ander = seinVan(s.context.voor, s.speler, k, w.troef);
+      return !ander || heeft(toen, ander.kaart);
+    });
+    if (eerlijk.length === 0) continue; // gedwongen: de kaart zegt niets
+    const goedkoop = eerlijk.some((k) => {
+      if (k.kleur === w.troef || k.rang === '10' || k.rang === 'A') return false;
+      const rest = toen.filter((c) => c.kleur === k.kleur && c !== k);
+      return !(rest.length === 1 && (rest[0].rang === '10' || rest[0].rang === 'A'));
+    });
+    g /= goedkoop ? factor : factorZwak;
   }
   return g;
 }

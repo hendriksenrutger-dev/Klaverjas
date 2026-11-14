@@ -326,7 +326,7 @@ test('sein lezen: gedwongen kleintje zegt niets, vrijwillig kleintje wel', () =>
   const seinen = seinenVanAnderen(w);
   // Verdeling waarin Noord de ruiten aas niet heeft, maar wel andere kaarten had kunnen afgooien: lager gewicht.
   const zonder = [w.hand, Ks('k8 kV kH h10 hV sA hA'), Ks('r10 s8 s9 sB hB hH s7'), Ks('rA rB rV rH s10 sV sH')];
-  assert.equal(seinGewicht(zonder, seinen, 4, w), 1 / 4);
+  assert.equal(seinGewicht(zonder, seinen, 4, w), 1 / 4); // ♠B was een goedkoop eerlijk alternatief
   const met = [w.hand, Ks('k8 kV kH h10 hV sA hA'), Ks('rA s8 s9 sB hB hH s7'), Ks('r10 rB rV rH s10 sV sH')];
   assert.equal(seinGewicht(met, seinen, 4, w), 1);
 });
@@ -348,8 +348,25 @@ test('sein lezen: bekennen met alleen kleintjes zegt niets', () => {
   const rest = (noord, oost) => [w.hand, Ks('h10 hV hA sA s9 sB sV'), Ks(noord), Ks(oost)];
   // Noord heeft k8 (ook klein) en geen kA: gedwongen, gewicht 1.
   assert.equal(seinGewicht(rest('k8 rA r7 r10 hB hH s10', 'kA k10 kB kV rB rV rH sH'), seinen, 4, w), 1);
-  // Noord had ook kV (geen sein) maar speelde k7 zonder kA: vals sein met keus, gewicht 1/4.
+  // Noord had ook kV (geen sein, goedkoop) maar speelde k7 zonder kA: sterke aanwijzing, gewicht 1/4.
   assert.equal(seinGewicht(rest('kV rA r7 r10 hB hH s10', 'kA k10 kB k8 rB rV rH sH'), seinen, 4, w), 1 / 4);
+  // Noord had alleen k10 als eerlijk alternatief (een tien): zwakke aanwijzing, gewicht 1/2.
+  assert.equal(seinGewicht(rest('k10 rA r7 r10 hB hH s10', 'kA kV kB k8 rB rV rH sH'), seinen, 4, w, 2), 1 / 2);
+});
+
+test('sein lezen: kleintje dat een tien beschermt is een zwakke aanwijzing', () => {
+  // Noord gooit r7 af. In deze verdeling had hij alleen nog s10 met s7: s7 afgooien laat de tien kaal,
+  // s10 afgooien kost een tien. Geen goedkoop eerlijk alternatief.
+  let p = nieuwPotje({ handen: seinHanden(), troef: 'harten', spelendTeam: 0, uitkomer: 0 });
+  for (const [sp, c] of [[0, 'kA'], [1, 'k7'], [2, 'r7'], [3, 'kB']]) p = speelKaart(p, sp, K(c));
+  const w = waarneming(p, 0);
+  const seinen = seinenVanAnderen(w);
+  const h = [w.hand, Ks('k8 kV kH h10 hV sA hA'), Ks('s10 s7 hB hH rB rV rH'), Ks('rA r10 s8 s9 sB sV sH')];
+  // Alternatieven: s10 (tien), s7 (vals sein en laat s10 kaal), troef, of rB/rV/rH (goedkoop, eerlijk).
+  assert.equal(seinGewicht(h, seinen, 10, w, 2), 1 / 10);
+  // Nu zonder goedkope ruitenkaarten: alleen s10, s7 (vals sein, laat s10 kaal) en troeven.
+  const zwak = [w.hand, Ks('k8 kV kH sA s8 s9 sB'), Ks('s10 s7 hB hH h10 hV hA'), Ks('rA r10 rB rV rH sV sH')];
+  assert.equal(seinGewicht(zwak, seinen, 10, w, 2), 1 / 2);
 });
 
 test('verdeling waarin het sein niet klopt telt minder zwaar (niet 0)', () => {
