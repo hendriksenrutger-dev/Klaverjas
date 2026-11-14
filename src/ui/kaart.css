@@ -1,0 +1,82 @@
+/* Kaarten. Afmetingen komen van --kh (hoogte); alles daarbinnen schaalt mee via container-eenheden. */
+.kaart {
+  --kb: calc(var(--kh) * 0.694);
+  position: relative;
+  width: var(--kb);
+  height: var(--kh);
+  container-type: size;
+  background: var(--creme);
+  border-radius: calc(var(--kh) * 0.0706); /* 12px bij 170px */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.22);
+  color: var(--zwart);
+  flex: none;
+}
+.kaart::after {
+  /* dun binnenkader */
+  content: '';
+  position: absolute;
+  inset: 2.6cqw;
+  border-radius: calc(var(--kh) * 0.05);
+  border: 1px solid rgba(27, 27, 27, 0.1);
+  pointer-events: none;
+}
+.kaart.rood { color: var(--kaart-rood, #df0000); } /* rood van Knoll, zodat cijferkaarten en plaatjes aansluiten */
+.kaart .sym { display: block; fill: currentColor; }
+
+.kaart .index {
+  position: absolute;
+  top: 3.6cqh;
+  left: 2.5cqw;
+  width: 13.5cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+}
+.kaart .index.onder { top: auto; left: auto; bottom: 3.6cqh; right: 2.5cqw; transform: rotate(180deg); }
+.kaart .rang {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: 13.5cqh;
+  line-height: 0.95;
+  font-variant-numeric: lining-nums;
+}
+.kaart .rang.tien { letter-spacing: -0.09em; transform: scaleX(0.86); margin-left: -0.09em; }
+.kaart .index .sym { width: 9.5cqw; height: 9.5cqw; margin-top: 0.8cqh; }
+
+.kaart .pips { position: absolute; left: 21cqw; right: 21cqw; top: 10.5cqh; bottom: 10.5cqh; }
+.kaart .pip { position: absolute; width: 16cqw; height: 16cqw; transform: translate(-50%, -50%); }
+.kaart .pip.om { transform: translate(-50%, -50%) rotate(180deg); }
+.kaart .pip .sym { width: 100%; height: 100%; }
+
+.kaart .aas { position: absolute; inset: 0; display: grid; place-items: center; }
+.kaart .aas-rond {
+  width: 56cqw; height: 56cqw; border-radius: 50%;
+  border: 1px solid currentColor; opacity: 1;
+  display: grid; place-items: center;
+  box-shadow: inset 0 0 0 3cqw var(--creme), inset 0 0 0 calc(3cqw + 1px) rgba(0, 0, 0, 0.08);
+}
+.kaart .aas-rond .sym { width: 30cqw; height: 30cqw; }
+
+.kaart .plaatje { position: absolute; left: 17.5cqw; right: 17.5cqw; top: 50%; transform: translateY(-50%); }
+.kaart .plaatje img { display: block; width: 100%; height: auto; border-radius: 1.5cqw; pointer-events: none; }
+
+/* Achterkant: eigen ontwerp in groen en goud */
+.kaart.rug { background: #1a5c3b; }
+.kaart.rug::after { display: none; }
+.rug-vlak {
+  position: absolute; inset: 5cqw;
+  border-radius: calc(var(--kh) * 0.045);
+  border: max(1px, 1.2cqw) solid var(--goud);
+  background:
+    repeating-linear-gradient(45deg, transparent 0 6cqw, rgba(232, 200, 115, 0.35) 6cqw calc(6cqw + 1px)),
+    repeating-linear-gradient(-45deg, transparent 0 6cqw, rgba(232, 200, 115, 0.35) 6cqw calc(6cqw + 1px)),
+    radial-gradient(ellipse at center, #2e8a5c, #1f6743 70%);
+  display: grid; place-items: center;
+}
+.rug-embleem {
+  width: 42cqw; height: 42cqw; border-radius: 50%;
+  background: #1a5c3b; border: max(1px, 1.2cqw) solid var(--goud);
+  display: grid; place-items: center; color: var(--goud);
+}
+.rug-embleem .sym { width: 22cqw; height: 22cqw; fill: var(--goud); }

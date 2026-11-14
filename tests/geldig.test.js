@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { geldigeKaarten, isGeldig, AMSTERDAMS, ROTTERDAMS } from '../src/regels/geldig.js';
+import { geldigeKaarten, geldigMetReden, redenTekst, REDENEN, isGeldig, AMSTERDAMS, ROTTERDAMS } from '../src/regels/geldig.js';
 import { K, Ks, codes, slag } from './hulp.js';
 
 // Troef is in alle tests harten.
@@ -138,4 +138,31 @@ test('isGeldig controleert één kaart', () => {
 
 test('onbekend systeem geeft een fout', () => {
   assert.throws(() => geldigeKaarten(Ks('h7'), [], T, 'utrechts'));
+});
+
+describe('reden bij de geldige kaarten', () => {
+  const reden = (hand, opTafel, sys = AMSTERDAMS) => geldigMetReden(Ks(hand), opTafel, T, sys).reden;
+
+  test('elke situatie geeft de juiste reden', () => {
+    assert.equal(reden('k7 hB', []), 'uitkomen');
+    assert.equal(reden('k7 kA h9', slag(3, 'k10')), 'bekennen');
+    assert.equal(reden('h9 hV', slag(2, 'h10 hA')), 'troefOvertroeven');
+    assert.equal(reden('h7 h8 kA', slag(3, 'h9')), 'troefBekennen');
+    assert.equal(reden('k7 r8', slag(3, 'h9')), 'vrij');
+    assert.equal(reden('r8 s9', slag(1, 'kA')), 'vrij');
+    assert.equal(reden('h7 r8', slag(2, 'kA s7')), 'maatHeeftSlag');
+    assert.equal(reden('h7 hH r8', slag(0, 'kA hV k7')), 'maatHeeftSlagNietOnder');
+    assert.equal(reden('h7 h8', slag(0, 'kA hV k7')), 'alleenOndertroeven');
+    assert.equal(reden('h7 hB r8', slag(1, 'kA')), 'troeven');
+    assert.equal(reden('h7 hH r8', slag(1, 'kA hV')), 'overtroeven');
+    assert.equal(reden('h7 r8 s9', slag(1, 'kA hB')), 'nietOndertroeven');
+    assert.equal(reden('h7 h8', slag(1, 'kA hB')), 'alleenOndertroeven');
+    assert.equal(reden('h7 r8', slag(2, 'kA s7'), ROTTERDAMS), 'troeven');
+  });
+
+  test('uitlegtekst vult de gevraagde kleur in', () => {
+    const g = geldigMetReden(Ks('k7 h9'), slag(3, 'k10'), T);
+    assert.equal(redenTekst(g.reden, g.gevraagd), 'Je moet klaveren bekennen');
+    for (const r of Object.keys(REDENEN)) assert.ok(redenTekst(r, 'ruiten').length > 10);
+  });
 });

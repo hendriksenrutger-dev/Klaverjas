@@ -21,7 +21,9 @@ const spel = {
   gekozen: null, // kaartId van de opgetilde kaart
   getoondeSlag: null, // afgeronde slag die nog even blijft liggen
   laatsteSlag: null, // vorige slag, om terug te kijken
-  toonLaatsteSlag: false,
+  venster: null, // laatsteSlag | gespeeld | menu | nieuwBevestig | instellingen
+  verzaakReden: null,
+  nieuweKaart: null, // kaartId die net op tafel kwam (alleen die krijgt de animatie)
   roemMelding: null,
   uitslag: null,
 };
@@ -34,11 +36,13 @@ function later(fn, ms) {
 
 function teken() {
   render(document.getElementById('app'), spel, acties);
+  spel.nieuweKaart = null; // volgende keer tekenen: niet opnieuw animeren
 }
 
 function nieuwePartij() {
   spel.partij = R.nieuwePartij({ eersteDeler: Math.floor(Math.random() * 4) });
   spel.laatsteSlag = null;
+  spel.venster = null;
   startRonde();
 }
 
@@ -47,6 +51,7 @@ function startRonde() {
   spel.handen = handen;
   spel.draaien = draaien;
   spel.draaiKeuzes = {};
+  spel.nieuweKaart = R.kaartId(draaien.kaart);
   spel.potje = null;
   spel.uitslag = null;
   spel.gekozen = null;
@@ -90,6 +95,7 @@ function draai(speler, keuze) {
       teken();
       later(() => {
         spel.draaiKeuzes = {};
+        spel.nieuweKaart = R.kaartId(spel.draaien.kaart);
         volgende();
       }, snel ? 0 : 900);
       return;
@@ -100,7 +106,9 @@ function draai(speler, keuze) {
 
 function speel(speler, kaart) {
   const voor = spel.potje;
+  spel.verzaakReden = R.geldigMetReden(voor.handen[speler], voor.slag, voor.troef, voor.systeem);
   spel.potje = R.speelKaart(voor, speler, kaart);
+  spel.nieuweKaart = R.kaartId(kaart);
   spel.gekozen = null;
 
   if (spel.potje.verzaking) {
@@ -140,7 +148,7 @@ const acties = {
     }
   },
   tikKaart(id) {
-    if (spel.fase !== 'spelen' || spel.getoondeSlag || spel.potje.beurt !== JIJ) return;
+    if (spel.venster || spel.fase !== 'spelen' || spel.getoondeSlag || spel.potje.beurt !== JIJ) return;
     const hand = spel.potje.handen[JIJ];
     const kaart = hand.find((k) => R.kaartId(k) === id);
     if (!kaart) return;
@@ -158,8 +166,12 @@ const acties = {
   nieuwePartij() {
     nieuwePartij();
   },
-  wisselLaatsteSlag() {
-    spel.toonLaatsteSlag = !spel.toonLaatsteSlag;
+  open(naam) {
+    spel.venster = naam;
+    teken();
+  },
+  sluit() {
+    spel.venster = null;
     teken();
   },
 };
