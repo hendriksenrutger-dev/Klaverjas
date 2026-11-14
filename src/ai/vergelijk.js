@@ -1,10 +1,10 @@
 // Vergelijk met de computer: hoe verhoudt Rutgers kaart zich tot wat de computer had gespeeld?
 // Puur en zonder DOM. De computer rekent met precies wat de speler op dat moment wist.
 import { kaartId } from '../regels/kaarten.js';
-import { VUISTREGEL_MARGE } from './simulatie.js';
-
-// Verschillen kleiner dan dit (in punten voor ons team) tellen als gelijkwaardig.
-export const GELIJKWAARDIG = VUISTREGEL_MARGE / 2;
+// Verschillen kleiner dan dit (in punten voor ons team) tellen als gelijkwaardig. Kleinere
+// verschillen zijn niet betrouwbaar: de simulatie onderschat bijvoorbeeld het openhouden van
+// opties (duiken, wachten op een kale tien). Na Rutgers voorbeeld verhoogd van 4 naar 10.
+export const GELIJKWAARDIG = 10;
 
 // scores: [{kaart, gemiddeld}] uit kiesKaart (gemiddeld = wij − zij); computer: de kaart
 // die de computer koos; gespeeld: de kaart die de speler speelde.
