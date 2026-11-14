@@ -8,9 +8,9 @@ import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij } from '
 
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
 // Computerspelers "denken" zichtbaar 0,5 tot 1 seconde (ook als het rekenen sneller gaat).
-const denktijd = () => (snel ? 0 : 500 + Math.random() * 450);
-const SLAG_PAUZE = snel ? 0 : 1400;
-const MELDING_TIJD = snel ? 0 : 1800;
+const denktijd = () => (snel ? 0 : 350 + Math.random() * 300);
+const SLAG_PAUZE = snel ? 0 : 1000;
+const MELDING_TIJD = snel ? 0 : 1500;
 
 const JIJ = 0;
 
@@ -27,6 +27,8 @@ const spel = {
   venster: null, // laatsteSlag | gespeeld | menu | nieuwBevestig | instellingen
   verzaakReden: null,
   instellingen: laadInstellingen(), // ook de namen en het niveau
+  scherm: 'start', // start | tafel
+  bewaard: null, // korte samenvatting van een bewaarde partij, voor het beginscherm
   get namen() {
     return this.instellingen.namen;
   },
@@ -53,7 +55,7 @@ function computerZet(vraagFn, doeFn) {
   Promise.all([vraagFn(), minimaal])
     .then(([antwoord]) => {
       if (token !== beurtToken) return;
-      if (PAUZE.has(spel.venster)) uitgesteld = () => doeFn(antwoord);
+      if (PAUZE.has(spel.venster) || spel.scherm === 'start') uitgesteld = () => doeFn(antwoord);
       else doeFn(antwoord);
     })
     .catch((fout) => console.error('Computerspeler:', fout));
@@ -80,6 +82,7 @@ function nieuwePartij() {
   spel.partij = R.nieuwePartij({ instellingen: regelInstellingen(), eersteDeler: Math.floor(Math.random() * 4) });
   spel.laatsteSlag = null;
   spel.venster = null;
+  spel.scherm = 'tafel';
   startRonde();
 }
 
@@ -143,7 +146,7 @@ function draai(speler, keuze) {
         spel.nieuweKaart = R.kaartId(spel.draaien.kaart);
         geluid.kaartNeer();
         volgende();
-      }, snel ? 0 : 900);
+      }, snel ? 0 : 600);
       return;
     }
     volgende();
@@ -175,7 +178,7 @@ function speel(speler, kaart) {
       spel.roemMelding = null;
       if (spel.potje.klaar) eindPotje();
       else volgende();
-    }, SLAG_PAUZE + (spel.roemMelding ? 600 : 0));
+    }, SLAG_PAUZE + (spel.roemMelding ? 400 : 0));
     return;
   }
   volgende();
@@ -211,12 +214,30 @@ const acties = {
     if (spel.fase === 'potjeKlaar') startRonde();
   },
   nieuwePartij() {
-    if (!hervat()) nieuwePartij();
-
-// Offline spelen en installeren op het startscherm.
-if ('serviceWorker' in navigator && !snel) {
-  navigator.serviceWorker.register('./klaverjas-sw.js').catch((fout) => console.warn('Service worker:', fout));
-}
+    nieuwePartij();
+  },
+  // Beginscherm
+  nieuwePartijVraag() {
+    if (heeftLopendePartij()) acties.open('nieuwBevestig');
+    else nieuwePartij();
+  },
+  verderSpelen() {
+    spel.venster = null;
+    if (spel.partij) {
+      spel.scherm = 'tafel';
+      teken();
+      if (uitgesteld) {
+        const f = uitgesteld;
+        uitgesteld = null;
+        f();
+      }
+    } else if (!hervat()) nieuwePartij();
+  },
+  naarStart() {
+    spel.scherm = 'start';
+    spel.venster = null;
+    spel.gekozen = null;
+    teken();
   },
   open(naam) {
     spel.venster = naam;
@@ -259,10 +280,23 @@ if ('serviceWorker' in navigator && !snel) {
   },
 };
 
+function heeftLopendePartij() {
+  if (spel.partij) return spel.fase !== 'partijKlaar';
+  return Boolean(spel.bewaard);
+}
+
+// Samenvatting van een bewaarde, nog niet afgelopen partij (of null).
+function bewaardeSamenvatting() {
+  const b = laadPartij();
+  if (!b?.partij || !b.fase || b.fase === 'partijKlaar') return null;
+  return { potje: R.potjeNummer(b.partij), totaal: b.partij.totaal };
+}
+
 // Een bewaarde partij hervatten. Geeft false als er niets (bruikbaars) bewaard is.
 function hervat() {
   const bewaard = laadPartij();
   if (!bewaard?.partij || !bewaard.fase) return false;
+  spel.scherm = 'tafel';
   try {
     for (const k of BEWAAR) spel[k] = bewaard[k] ?? null;
     spel.draaiKeuzes ??= {};
@@ -305,7 +339,9 @@ window.addEventListener('pointerdown', geluid.ontgrendel, { once: false, passive
 // Voor automatische tests en foutzoeken.
 window.klaverjas = { spel, acties, regels: R };
 
-if (!hervat()) nieuwePartij();
+// Beginscherm tonen; de partij gaat pas verder na "Verder spelen".
+spel.bewaard = bewaardeSamenvatting();
+teken();
 
 // Offline spelen en installeren op het startscherm.
 if ('serviceWorker' in navigator && !snel) {

@@ -12,7 +12,7 @@ function alleBestanden(map) {
   for (const e of fs.readdirSync(path.join(root, map), { withFileTypes: true })) {
     const rel = path.join(map, e.name);
     if (e.isDirectory()) res.push(...alleBestanden(rel));
-    else if (/\.(js|css|webp|woff2|png)$/.test(e.name)) res.push(rel.split(path.sep).join('/'));
+    else if (/\.(js|css|webp|woff2|png|ogg)$/.test(e.name)) res.push(rel.split(path.sep).join('/'));
   }
   return res;
 }
