@@ -9,7 +9,7 @@ const W = await import('../src/ai/willekeurig.js');
 function speler(cfg, rng) {
   return {
     draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim', trekken: cfg.draaiTrekken ?? cfg.trekken }).keuze,
-    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, draaiInfo: cfg.draaiInfo ?? true, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
+    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, draaiInfo: cfg.draaiInfo ?? true, vuistregels: cfg.vuist ?? true, marge: cfg.marge ?? A.VUISTREGEL_MARGE, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
   };
 }
 
@@ -72,6 +72,11 @@ if (mode === 'kaartspel') {
 }
 if (mode === 'vals') {
   console.log('valsspeler vs normaal', duel({ sims: 20, vals: true, draaiStrategie: 'simpel' }, { sims: 100, draaiStrategie: 'simpel' }, +(process.argv[3] || 100), 12));
+}
+if (mode === 'vuist') {
+  // node duel.mjs vuist <delingen> <zaad> <marge>
+  const [, , , n, z, m] = process.argv;
+  console.log('vuistregels (marge', +(m || A.VUISTREGEL_MARGE), ') vs zonder', duel({ sims: 100, marge: +(m || A.VUISTREGEL_MARGE) }, { sims: 100, vuist: false }, +(n || 150), +(z || 21)));
 }
 if (mode === 'groot') {
   // node duel.mjs groot <vergelijking> <delingen> <zaad>
