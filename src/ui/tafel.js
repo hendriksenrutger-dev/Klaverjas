@@ -198,8 +198,13 @@ function knoppenRechts(spel) {
 }
 
 // ---------- Vensters ----------
-function venster(inhoud, sluitbaar = true) {
-  return `<div class="venster-achter" ${sluitbaar ? 'data-actie="sluit"' : ''}><div class="venster" data-binnen>${inhoud}</div></div>`;
+// Alleen een venster dat net opengaat krijgt de infade-animatie (niet bij elke hertekening).
+let vorigVenster = null;
+let ditVenster = null;
+function venster(inhoud, sluitbaar = true, naam = 'venster') {
+  ditVenster = naam;
+  const nieuw = naam !== vorigVenster ? 'nieuw' : '';
+  return `<div class="venster-achter ${nieuw}" ${sluitbaar ? 'data-actie="sluit"' : ''}><div class="venster" data-binnen>${inhoud}</div></div>`;
 }
 
 function laatsteSlagVenster(spel) {
@@ -207,7 +212,7 @@ function laatsteSlagVenster(spel) {
   return venster(`<h2>Laatste slag</h2>
     <p class="sub">Gewonnen door ${naam(s.winnaar)} · ${s.punten} punten${s.roem.totaal ? ` · ${s.roem.totaal} roem` : ''}</p>
     <div class="rij-kaarten">${s.kaarten.map((x) => `<div class="met-naam ${x.speler === s.winnaar ? 'winnaar' : ''}">${kaartHtml(x.kaart)}<div>${naam(x.speler)}</div></div>`).join('')}</div>
-    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`);
+    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`, true, 'laatsteSlag');
 }
 
 function gespeeldVenster(spel) {
@@ -228,7 +233,7 @@ function gespeeldVenster(spel) {
   return venster(`<h2>Gespeeld</h2><p class="sub">Dit potje · ${p.slagen.length} van 8 slagen</p>
     <div class="gespeeld">${rijen}</div>
     <div class="legenda"><span>Wit: gespeeld</span><span>Goud: in jouw hand</span><span>Gestippeld: nog bij anderen</span></div>
-    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`);
+    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`, true, 'gespeeld');
 }
 
 function menuVenster() {
@@ -236,13 +241,13 @@ function menuVenster() {
     <div class="menu-lijst">
       <button class="knop goud" data-actie="sluit">Verder spelen</button>
       <button class="knop" data-actie="open" data-venster="nieuwBevestig">Nieuwe partij</button>
-    </div>`);
+    </div>`, true, 'menu');
 }
 
 function nieuwBevestigVenster() {
   return venster(`<h2>Nieuwe partij?</h2><p class="sub">De lopende partij gaat verloren.</p>
     <div class="venster-knoppen"><button class="knop" data-actie="sluit">Annuleren</button>
-    <button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button></div>`);
+    <button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button></div>`, true, 'nieuwBevestig');
 }
 
 function keuzeRij(label, sleutel, huidig, opties, uitleg = '') {
@@ -269,7 +274,7 @@ function instellingenVenster(spel) {
         <div class="namen">${namen}</div>
       </div>
     </div>
-    <div class="venster-knoppen"><button class="knop goud" data-actie="sluit">Klaar</button></div>`);
+    <div class="venster-knoppen"><button class="knop goud" data-actie="sluit">Klaar</button></div>`, true, 'instellingen');
 }
 
 function slagenOverzicht(spel) {
@@ -316,10 +321,17 @@ function uitslagVenster(spel) {
     ${klaar ? `<p class="eindstand">${t[0] > t[1] ? 'Wij winnen de partij!' : t[0] < t[1] ? 'Zij winnen de partij.' : 'Gelijkspel.'}</p>` : ''}
     <div class="venster-knoppen">${klaar
       ? '<button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button>'
-      : '<button class="knop goud" data-actie="volgendPotje">Volgend potje</button>'}</div>`, false);
+      : '<button class="knop goud" data-actie="volgendPotje">Volgend potje</button>'}</div>`, false, `uitslag-${spel.partij.potjes.length}`);
 }
 
 function vensters(spel) {
+  ditVenster = null;
+  const html = vensterHtml(spel);
+  vorigVenster = ditVenster;
+  return html;
+}
+
+function vensterHtml(spel) {
   if (spel.fase === 'potjeKlaar' || spel.fase === 'partijKlaar') return uitslagVenster(spel);
   switch (spel.venster) {
     case 'laatsteSlag': return spel.laatsteSlag ? laatsteSlagVenster(spel) : '';
