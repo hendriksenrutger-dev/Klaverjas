@@ -96,10 +96,12 @@ function midden(spel) {
     const d = spel.draaien;
     const m = spel.draaiMelding;
     const jij = spel.fase === 'draaien' && d.beurt === 0 && !d.uitkomst && !m;
-    const kleur = m?.kleur ?? d.kaart.kleur;
+    const kleur = m?.kleur ?? d.kaart?.kleur ?? null;
     const sym = (k) => `<span class="bubbel-sym ${ROOD.has(k) ? 'rood' : ''}">${symbool(k)}</span>`;
     // Midden: alleen de voorgestelde kleur, groot, in een rond schijfje.
-    const schijf = `<div class="troef-schijf ${ROOD.has(kleur) ? 'rood' : ''} ${m?.soort === 'speelt' ? 'gekozen' : ''} ${m?.soort === 'iedereenPast' || spel.fase === 'opnieuwDelen' ? 'gepast' : ''}" data-sleutel="schijf-${kleur}">${symbool(kleur)}</div>`;
+    const schijf = kleur
+      ? `<div class="troef-schijf ${ROOD.has(kleur) ? 'rood' : ''} ${m?.soort === 'speelt' ? 'gekozen' : ''} ${m?.soort === 'iedereenPast' || spel.fase === 'opnieuwDelen' ? 'gepast' : ''}" data-sleutel="schijf-${kleur}">${symbool(kleur)}</div>`
+      : '<div class="troef-schijf open" data-sleutel="schijf-open">?</div>';
     // Op de plek van elke speler zijn keuze, als tekstballon die even ploft.
     const bubbels = PLEKKEN.map((pl, i) => {
       let inhoud = null;
@@ -108,6 +110,11 @@ function midden(spel) {
       else if (spel.draaiKeuzes[i] === 'passen') { soort = 'past'; inhoud = 'Ik pas'; }
       else if (i !== 0 && spel.fase === 'draaien' && !d.uitkomst && !m && d.beurt === i) {
         soort = 'denkt'; inhoud = '<span class="puntjes"><i>•</i><i>•</i><i>•</i></span>';
+      }
+      if (i === 0 && jij && d.verplicht) {
+        // Verplicht spelen: jij kiest zelf de troefkleur.
+        return `<div class="bubbel-plek zuid" data-sleutel="bubbel-zuid-kiezen"><div class="draai-knoppen troef-kiezen">${['schoppen', 'harten', 'klaveren', 'ruiten']
+          .map((k) => `<button class="knop licht troefknop ${ROOD.has(k) ? 'rood' : ''}" data-actie="kiesTroef" data-kleur="${k}" aria-label="Troef ${KLEURNAAM[k]}">${symbool(k)}</button>`).join('')}</div></div>`;
       }
       if (i === 0 && jij) {
         return `<div class="bubbel-plek zuid" data-sleutel="bubbel-zuid-knoppen"><div class="draai-knoppen">
@@ -149,6 +156,9 @@ function hint(spel) {
     if (m?.soort === 'speelt') return `<strong>${naam(m.speler)}</strong> speelt · troef ${kleurNaam(m.kleur)}`;
     if (m?.soort === 'iedereenPast') return 'Iedereen past';
     if (spel.draaien.uitkomst) return '';
+    if (spel.draaien.verplicht) {
+      return spel.draaien.beurt === 0 ? '<strong>Jouw beurt</strong> · kies troef, je moet spelen' : `${naam(spel.draaien.beurt)} kiest troef…`;
+    }
     const vraag = `troef ${kleurNaam(spel.draaien.kaart.kleur)}?`;
     return spel.draaien.beurt === 0
       ? `<strong>Jouw beurt</strong> · ${vraag}`
@@ -217,7 +227,7 @@ function knoppenRechts(spel) {
   if (!spel.potje) return '';
   return `<div class="knoppen-rechts">
     <button class="knop" data-actie="open" data-venster="laatsteSlag" ${spel.laatsteSlag ? '' : 'disabled'}>${IKOON.terug}Laatste slag</button>
-    <button class="knop" data-actie="open" data-venster="gespeeld">${IKOON.lijst}Gespeeld</button>
+    ${spel.instellingen.gespeeld ? `<button class="knop" data-actie="open" data-venster="gespeeld">${IKOON.lijst}Gespeeld</button>` : ''}
   </div>`;
 }
 
@@ -289,10 +299,12 @@ function instellingenVenster(spel) {
   return venster(`<h2>Instellingen</h2>
     <div class="instellingen">
       ${keuzeRij('Spelregels', 'systeem', i.systeem, [['amsterdams', 'Amsterdams'], ['rotterdams', 'Rotterdams']], 'Vanaf het volgende potje')}
+      ${keuzeRij('Troefkeuze', 'troefkeuze', i.troefkeuze, [['traditioneel', 'Traditioneel'], ['verplicht', 'Verplicht']], 'Verplicht: de voorhand kiest troef en moet spelen · vanaf het volgende potje')}
       ${keuzeRij('Opnieuw delen na', 'rondes', i.rondesVoorOpnieuwDelen, [[2, '2 rondes passen'], [3, '3 rondes passen']], 'Vanaf het volgende potje')}
       ${keuzeRij('Verzaakbescherming', 'verzaakbescherming', i.verzaakbescherming ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Aan: alleen kaarten die mogen zijn speelbaar')}
       ${keuzeRij('Computerspelers', 'niveau', i.niveau, [['makkelijk', 'Makkelijk'], ['normaal', 'Normaal'], ['sterk', 'Sterk']])}
       ${keuzeRij('Geluid', 'geluid', i.geluid ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Schudden en kaarten leggen')}
+      ${keuzeRij('Overzicht gespeelde kaarten', 'gespeeld', i.gespeeld ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Uit: zelf onthouden wat er gespeeld is, zoals aan tafel')}
       ${keuzeRij('Vergelijk met de computer', 'vergelijk', i.vergelijk ? 'aan' : 'uit', [['aan', 'Aan'], ['uit', 'Uit']], 'Na elk potje: wat de computer met jouw kaarten had gedaan')}
       <div class="instelling">
         <div class="instelling-label">Namen</div>
@@ -339,13 +351,16 @@ function vergelijkBlok(spel) {
     const som = kaarten.filter((a) => a.oordeel === 'beter' || a.oordeel === 'minder').reduce((n, a) => n + a.verschil, 0);
     regels.push(`<b>Dit potje:</b> ${tel('zelfde')}× dezelfde kaart, ${tel('gelijkwaardig')}× even goed, ${anders}× anders · ${puntenZin(som)}`);
   }
+  for (const d of lijst.filter((a) => a.soort === 'troef')) {
+    regels.push(`<b>Troefkeuze:</b> jij koos ${SYMBOOL[d.jij]}, ${d.jij === d.computer ? 'de computer ook' : `de computer had ${SYMBOOL[d.computer]} gekozen`}`);
+  }
   for (const d of lijst.filter((a) => a.soort === 'draai')) {
     const woord = (k) => (k === 'spelen' ? 'gespeeld' : 'gepast');
     regels.push(`<b>Spelen of passen op ${SYMBOOL[d.kleur]}:</b> jij hebt ${woord(d.jij)}, ${d.jij === d.computer ? 'de computer ook' : `de computer had ${woord(d.computer)}`}`);
   }
   const v = spel.vergelijking;
   if (v?.kaarten > kaarten.length) {
-    regels.push(`<b>Deze partij:</b> ${v.zelfde + v.gelijkwaardig} van ${v.kaarten} kaarten zoals de computer of even goed · ${puntenZin(v.punten)}${v.draaien ? ` · spelen of passen ${v.draaiAnders} van ${v.draaien} keer anders` : ''}`);
+    regels.push(`<b>Deze partij:</b> ${v.zelfde + v.gelijkwaardig} van ${v.kaarten} kaarten zoals de computer of even goed · ${puntenZin(v.punten)}${v.draaien ? ` · troefkeuze ${v.draaiAnders} van ${v.draaien} keer anders` : ''}`);
   }
   if (spel.analyseBezig) regels.push('<span class="licht">De computer rekent nog…</span>');
   if (!regels.length) return '';
@@ -577,6 +592,7 @@ function koppel(el, acties) {
       if (knop.classList.contains('venster-achter') && e.target.closest('[data-binnen]')) return;
       const { actie } = knop.dataset;
       if (actie === 'draai') acties.draai(knop.dataset.keuze);
+      else if (actie === 'kiesTroef') acties.kiesTroef(knop.dataset.kleur);
       else if (actie === 'open') acties.open(knop.dataset.venster);
       else if (actie === 'instelling') acties.instelling(knop.dataset.sleutel, knop.dataset.waarde);
       else acties[actie]?.();

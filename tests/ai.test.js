@@ -455,3 +455,12 @@ describe('vuistregel: gedekte kaart bij afgooien', async () => {
     assert.equal(vuistregelStraf(w, K('sH'), undefined, true), 0);
   });
 });
+
+describe('troef kiezen bij verplicht spelen', async () => {
+  const { kiesVerplicht } = await import('../src/ai/simulatie.js');
+  test('kiest de kleur waarin hij sterk is', () => {
+    const r = kiesVerplicht(Ks('hB h9 hA h10 sA k7 r8 s7'), { speler: 1, deler: 0, rng: maakRng(3), simulaties: 60 });
+    assert.equal(r.kleur, 'harten');
+    assert.equal(r.scores.length, 4);
+  });
+});

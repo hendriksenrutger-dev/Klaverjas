@@ -24,7 +24,7 @@ export function legeVergelijking() {
 // Telt één beoordeling op bij het totaal (geeft een nieuw object).
 export function telOp(totaal, b) {
   const t = { ...legeVergelijking(), ...totaal };
-  if (b.soort === 'draai') {
+  if (b.soort === 'draai' || b.soort === 'troef') {
     t.draaien++;
     if (b.jij !== b.computer) t.draaiAnders++;
     return t;

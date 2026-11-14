@@ -708,6 +708,14 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
   return wint ? 0 : 1;
 }
 
+// ---------- Troef kiezen bij verplicht spelen ----------
+// De voorhand moet spelen: hij kiest de kleur met de beste verwachte uitkomst.
+export function kiesVerplicht(hand, opties = {}) {
+  const scores = ['klaveren', 'ruiten', 'harten', 'schoppen'].map((kleur) => ({ kleur, gemiddeld: kiesDraai(hand, kleur, opties).gemiddeld }));
+  const best = scores.reduce((a, b) => (b.gemiddeld > a.gemiddeld ? b : a));
+  return { kleur: best.kleur, scores };
+}
+
 // ---------- Spelen of passen bij het draaien ----------
 // Speelt de hand vaak uit met deze troef (andere handen willekeurig) en speelt als het
 // verwachte verschil (wij − zij) boven de drempel ligt.

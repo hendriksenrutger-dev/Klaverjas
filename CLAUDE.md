@@ -57,6 +57,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 3. **Past iedereen,** dan wordt de volgende kaart gedraaid. **Een kleur waarop al gepast is, telt niet en wordt overgeslagen.** Er wordt doorgedraaid tot er een nieuwe kleur verschijnt. Twee keer klaveren is dus één ronde.
 4. Na **2 rondes** waarin iedereen past, wordt opnieuw gedeeld. Dit is een instelling: **2 (standaard) of 3**.
 5. Na rondpassen deelt **dezelfde deler** opnieuw. Het potje telt niet mee.
+6. **Instelling troefkeuze: traditioneel (standaard, zoals hierboven) of verplicht** (op Rutgers verzoek). Verplicht: er wordt niet gedraaid; de voorhand (links van de deler, die ook uitkomt) kiest zelf een troefkleur en moet spelen. De computer kiest de kleur met de beste verwachte uitkomst.
 
 ### Uitkomen
 
@@ -100,11 +101,13 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 ## Instellingen
 
 - Amsterdams (standaard) of Rotterdams
+- Troefkeuze traditioneel (standaard) of verplicht
 - Opnieuw delen na 2 (standaard) of 3 rondes passen
 - Verzaakbescherming aan (standaard) of uit
 - Moeilijkheid van de computerspelers: makkelijk, normaal (standaard), sterk (afgestemd met Rutger, zie RAPPORT-FASE-4.md)
 - Geluid aan (standaard) of uit
 - Vergelijk met de computer aan of uit (standaard uit, op Rutgers verzoek): na elk potje per kaart van jou wat de computer (niveau sterk, met alleen jouw kennis) had gespeeld en het verschil in punten, plus spelen/passen en een totaal over de partij. Bij een verschil kleiner dan 10 punten: "even goed" (na Rutgers voorbeeld; kleinere verschillen zijn niet betrouwbaar). Het getal is een gemiddelde schatting vooraf, geen uitslag achteraf. Altijd met "volgens de computer".
+- Overzicht gespeelde kaarten aan of uit (standaard uit, op Rutgers verzoek): uit = zelf onthouden, zoals aan tafel. De computer onthoudt wel alles, net als een goede speler.
 - Namen van de spelers (standaard Zuid, West, Noord, Oost)
 
 ## Uiterlijk
@@ -128,7 +131,7 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - **Uitslag:** bij alle slagen voor de spelende partij gewoon "Pit!".
 - **Na een potje:** "Bekijk alle slagen" (per slag de kaarten, winnaar, punten en roem) en de knop "Alle handen": de vier handen zoals ze gedeeld waren, rond de tafel.
 - **Gespeelde kaart:** schuift volledig zichtbaar vanaf de kant van de speler op zijn plek (geen infade). Het scherm wordt niet steeds helemaal opnieuw getekend: bestaande kaarten blijven staan (`src/ui/patch.js`), zodat niets opnieuw wordt opgebouwd.
-- **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten).
+- **Rechtsonder:** knoppen "Laatste slag" (de vorige slag terugkijken, belangrijk voor seinen) en "Gespeeld" (overzicht van gespeelde kaarten, alleen als die instelling aan staat).
 - **Lettertypen:** Playfair Display voor cijfers en kaartindexen, Inter voor de interface. Bundel ze lokaal, want de app moet offline werken.
 - Knoppen en aanraakvlakken zijn minimaal 44 px.
 
