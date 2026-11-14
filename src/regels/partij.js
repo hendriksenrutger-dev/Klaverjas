@@ -11,8 +11,7 @@ export const STANDAARD_INSTELLINGEN = Object.freeze({
   systeem: AMSTERDAMS, // of 'rotterdams'
   rondesVoorOpnieuwDelen: 2, // of 3
   verzaakbescherming: true,
-  // NOG OPEN (vraag aan Rutger): wie deelt opnieuw na rondpassen?
-  // 'zelfde' = dezelfde deler, 'volgende' = de volgende speler.
+  // Wie deelt opnieuw na rondpassen. Afgesproken met Rutger: dezelfde deler.
   opnieuwDelenDoor: 'zelfde',
 });
 

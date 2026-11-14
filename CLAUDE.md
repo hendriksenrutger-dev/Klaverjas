@@ -56,7 +56,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 2. Om de beurt, te beginnen bij de speler links van de deler, kiest iedereen **spelen** of **passen**. Wie speelt, maakt die kleur troef. Zijn team is de spelende partij.
 3. **Past iedereen,** dan wordt de volgende kaart gedraaid. **Een kleur waarop al gepast is, telt niet en wordt overgeslagen.** Er wordt doorgedraaid tot er een nieuwe kleur verschijnt. Twee keer klaveren is dus één ronde.
 4. Na **2 rondes** waarin iedereen past, wordt opnieuw gedeeld. Dit is een instelling: **2 (standaard) of 3**.
-5. **Nog te vragen aan Rutger:** wie deelt er opnieuw, dezelfde deler of de volgende?
+5. Na rondpassen deelt **dezelfde deler** opnieuw. Het potje telt niet mee.
 
 ### Uitkomen
 
@@ -148,9 +148,15 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 6. **Instellingen,** opslaan van de partij, PWA en offline.
 7. **Publiceren** op GitHub Pages en testen op de tablet.
 
+## Besluiten na fase 1 (met Rutger afgestemd)
+
+- **Verzaken:** volgens het reglement. Verzakers 0, tegenpartij 162 + 100 strafpunten + alle roem die al gemaakt is.
+- **Vier boeren:** 200 roem. Vier azen, tienen, heren of vrouwen: 100. Vier zevens, achten of negens: geen roem.
+- **Pit:** 100 roem, alleen voor de spelende partij. Haalt de tegenpartij alle slagen, dan is de spelende partij gewoon nat (geen tegenpit).
+- **Ondertroeven:** in Amsterdams én Rotterdams alleen als je niets anders hebt.
+- **Opnieuw delen:** dezelfde deler.
+
 ## Nog open (vragen aan Rutger op het moment dat het speelt)
 
-- Wie deelt er opnieuw nadat iedereen past?
 - Hoe worden de moeilijkheidsniveaus ingevuld?
-- De afwijkingen tussen het reglement en dit bestand voor nat, pit en verzaken.
 - Het ontwerp van de achterkant van de kaarten.

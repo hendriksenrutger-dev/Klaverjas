@@ -32,14 +32,14 @@ Een actueel wedstrijdreglement van de bond heb ik niet online gevonden.
 | Uitkomen | Speler links van de deler, los van wie speelt. Deler schuift per gespeeld potje door. |
 | Partij | 16 potjes; rondgepaste potjes tellen niet mee. |
 
-## Vragen voor Rutger
+## Besluiten van Rutger
 
-1. **Verzaken:** het reglement geeft 162 + **100 strafpunten** + alle roem (262 + roem). CLAUDE.md zegt "alle punten en alle roem". Ik heb het reglement gevolgd. Goed zo?
-2. **Vier boeren:** ik heb 200 genomen (gangbaar). Het Gouden Boekje lijkt 100 voor alle "vier gelijken" te geven. 200 of 100?
-3. **Vier zevens/achten/negens:** ik geef hiervoor geen roem. Klopt dat voor jou?
-4. **Pit door de tegenpartij:** als de niet-spelende partij alle slagen haalt, krijgt die nu 162 + roem, maar geen 100 pitbonus. Wil je die wel?
-5. **Ondertroeven bij Rotterdams:** bronnen zijn vaag. Ik heb het ondertroefverbod (alleen als je niets anders hebt) in beide systemen toegepast. Klopt dat?
-6. **Wie deelt opnieuw** na rondpassen? Nu instelbaar, tijdelijk "dezelfde deler".
+1. Verzaken: reglement volgen (262 + roem). Akkoord.
+2. Vier boeren: 200.
+3. Vier zevens/achten/negens: geen roem.
+4. Pit door de tegenpartij: geen bonus; officieel is de spelende partij dan gewoon nat.
+5. Ondertroefverbod in beide systemen: klopt.
+6. Opnieuw delen door dezelfde deler.
 
 ## Tests
 

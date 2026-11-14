@@ -38,7 +38,7 @@ test('uitkomen: speler links van de deler, los van wie speelt', () => {
   }
 });
 
-test('opnieuw delen: dezelfde of de volgende deler (instelling, nog af te stemmen)', () => {
+test('opnieuw delen: dezelfde of de volgende deler (afgesproken: dezelfde)', () => {
   assert.equal(naOpnieuwDelen(nieuwePartij({ eersteDeler: 1 })).deler, 1);
   const p = nieuwePartij({ eersteDeler: 3, instellingen: { opnieuwDelenDoor: 'volgende' } });
   assert.equal(naOpnieuwDelen(p).deler, 0);

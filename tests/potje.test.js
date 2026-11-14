@@ -176,7 +176,7 @@ describe('nat en pit (telling)', () => {
     assert.deepEqual(u.totaal, [332, 0]);
   });
 
-  test('alle slagen voor de tegenpartij: nat, geen pitbonus (zie open vraag)', () => {
+  test('alle slagen voor de tegenpartij: nat, geen pitbonus voor de tegenpartij', () => {
     const u = uitslag(nepPotje(0, [[1, 152, 20], [3, 0], [1, 0], [3, 0], [1, 0], [3, 0], [1, 0], [3, 10]]));
     assert.equal(u.nat, true);
     assert.equal(u.pit, 1);
