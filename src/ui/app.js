@@ -6,7 +6,8 @@ import { beoordeelKaart, legeVergelijking, telOp } from '../ai/vergelijk.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
 import { laadPlaatjes } from './plaatjes.js';
-import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij } from './opslag.js';
+import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek } from './opslag.js';
+import { compleet, legeStatistiek, telPotje, telPartij, telVergelijk } from './statistiek.js';
 
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
 // Computerspelers "denken" zichtbaar 0,5 tot 1 seconde (ook als het rekenen sneller gaat).
@@ -45,6 +46,8 @@ const spel = {
   analyses: [], // { soort: 'kaart'|'draai', potje, slag?, ... }
   vergelijking: null, // totalen over de partij
   analyseBezig: 0,
+  statistiek: compleet(laadStatistiek()), // over alle partijen, los van de lopende partij
+  wisVraag: false, // eerste tik op "Statistieken wissen"
 };
 
 let timer = null;
@@ -294,6 +297,10 @@ function verwerkAnalyse(sessie, a) {
   if (sessie !== analyseSessie) return;
   spel.analyseBezig = Math.max(0, spel.analyseBezig - 1);
   if (a) {
+    if (a.soort === 'kaart') {
+      spel.statistiek = telVergelijk(spel.statistiek, a.oordeel);
+      bewaarStatistiek(spel.statistiek);
+    }
     spel.analyses = [...(spel.analyses ?? []), a];
     spel.vergelijking = telOp(spel.vergelijking ?? legeVergelijking(), a);
   }
@@ -370,6 +377,9 @@ function eindPotje() {
   spel.uitslag = R.uitslag(spel.potje);
   spel.partij = R.rondPotjeAf(spel.partij, spel.potje);
   spel.fase = R.partijKlaar(spel.partij) ? 'partijKlaar' : 'potjeKlaar';
+  spel.statistiek = telPotje(spel.statistiek, spel.uitslag, spel.potje.spelendTeam);
+  if (spel.fase === 'partijKlaar') spel.statistiek = telPartij(spel.statistiek, spel.partij.totaal);
+  bewaarStatistiek(spel.statistiek);
   teken();
 }
 
@@ -429,6 +439,17 @@ const acties = {
       }
     } else if (!hervat()) nieuwePartij();
   },
+  wisStatistiek() {
+    // Twee tikken: de eerste vraagt om bevestiging.
+    if (!spel.wisVraag) {
+      spel.wisVraag = true;
+    } else {
+      spel.statistiek = legeStatistiek();
+      bewaarStatistiek(spel.statistiek);
+      spel.wisVraag = false;
+    }
+    teken();
+  },
   naarStart() {
     spel.scherm = 'start';
     spel.venster = null;
@@ -441,6 +462,7 @@ const acties = {
   },
   sluit() {
     spel.venster = null;
+    spel.wisVraag = false;
     teken();
     if (uitgesteld) {
       const f = uitgesteld;
