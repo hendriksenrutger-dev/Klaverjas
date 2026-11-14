@@ -91,7 +91,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
   3. Kies de kaart met het beste gemiddelde resultaat: punten plus roem, met nat en pit meegerekend.
 - **Seinen in de simulatie:** verdelingen waarin een sein klopt krijgen een hoger gewicht, maar niet 100%. Dit is een eigen ontwerpkeuze, niet beproefd. Maak de factor instelbaar in de code, zodat hij na testen bij te stellen is.
 - **Zelf seinen:** de computerspelers seinen volgens de afspraken hierboven, zodat Rutger als maat de seinen kan lezen.
-- **Vuistregels bij bijna gelijke kaarten** (na Rutgers voorbeelden): scoren kaarten in de simulatie bijna gelijk, dan beslist een menselijke vuistregel: als tegenpartij niet met troef uitkomen, en een vrije kaart niet weggooien op een slag die je er niet mee wint. Alleen als een andere kaart duidelijk beter is, wijkt de computer daarvan af. Eigen ontwerpkeuze; de marge staat instelbaar in de code.
+- **Vuistregels bij bijna gelijke kaarten** (na Rutgers voorbeelden): scoren kaarten in de simulatie bijna gelijk, dan beslist een menselijke vuistregel: als tegenpartij niet met troef uitkomen, en een kaart die nog een slag kan worden (een vrije kaart, of bijvoorbeeld een heer naast je eigen aas) niet weggooien op een slag die je er niet mee wint. Alleen als een andere kaart duidelijk beter is, wijkt de computer daarvan af. Eigen ontwerpkeuze; de marge staat instelbaar in de code.
 - **Spelen of passen bij het draaien:** ook via simulatie. Speel de hand met deze troef vaak uit en speel als de verwachte uitkomst boven een drempel ligt.
 - **Moeilijkheidsniveau** (instelling): makkelijk (5 simulaties, eenvoudige strategie), normaal (100, slimme strategie, laatste 3 slagen exact) en sterk (300). Akkoord van Rutger.
 - Draai de AI in een **Web Worker** zodat het scherm niet hapert. Doel: minder dan ongeveer 1 seconde per zet op de tablet.
@@ -104,7 +104,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Verzaakbescherming aan (standaard) of uit
 - Moeilijkheid van de computerspelers: makkelijk, normaal (standaard), sterk (afgestemd met Rutger, zie RAPPORT-FASE-4.md)
 - Geluid aan (standaard) of uit
-- Vergelijk met de computer aan of uit (standaard uit, op Rutgers verzoek): na elk potje per kaart van jou wat de computer (niveau sterk, met alleen jouw kennis) had gespeeld en het verschil in punten, plus spelen/passen en een totaal over de partij. Bij een verschil kleiner dan 4 punten: "even goed". Altijd met "volgens de computer".
+- Vergelijk met de computer aan of uit (standaard uit, op Rutgers verzoek): na elk potje per kaart van jou wat de computer (niveau sterk, met alleen jouw kennis) had gespeeld en het verschil in punten, plus spelen/passen en een totaal over de partij. Bij een verschil kleiner dan 10 punten: "even goed" (na Rutgers voorbeeld; kleinere verschillen zijn niet betrouwbaar). Het getal is een gemiddelde schatting vooraf, geen uitslag achteraf. Altijd met "volgens de computer".
 - Namen van de spelers (standaard Zuid, West, Noord, Oost)
 
 ## Uiterlijk

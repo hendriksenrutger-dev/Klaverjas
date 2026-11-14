@@ -304,7 +304,6 @@ function instellingenVenster(spel) {
 
 // ---------- Vergelijk met de computer ----------
 const kort = (k) => `<span class="kaartje ${ROOD.has(k.kleur) ? 'rood' : 'zwart'}">${SYMBOOL[k.kleur]}${k.rang}</span>`;
-const metTeken = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 
 // Analyses van het potje dat in de uitslag staat.
 function analysesUitslag(spel) {
@@ -319,12 +318,13 @@ function vergelijkLabel(spel, slagIndex) {
   if (!a) return spel.analyseBezig ? '<div class="vgl">…</div>' : '';
   if (a.oordeel === 'zelfde') return '<div class="vgl zelfde" title="De computer speelde dezelfde kaart">✓</div>';
   if (a.oordeel === 'gelijkwaardig') return `<div class="vgl" title="Computer: andere kaart, even goed">≈ ${kort(a.computer)}</div>`;
-  return `<div class="vgl ${a.oordeel}" title="Kaart van de computer en het verschil in punten">${kort(a.computer)} ${metTeken(a.verschil)}</div>`;
+  const n = Math.abs(a.verschil);
+  return `<div class="vgl ${a.oordeel}" title="Kaart van de computer, gemiddeld verschil in punten">${kort(a.computer)}<small>gem. ${n} ${a.oordeel === 'minder' ? 'beter' : 'minder'}</small></div>`;
 }
 
 function puntenZin(n) {
   if (n === 0) return 'even goed als de computer';
-  return `naar schatting ${Math.abs(n)} ${Math.abs(n) === 1 ? 'punt' : 'punten'} ${n > 0 ? 'beter' : 'minder'} dan de computer`;
+  return `naar schatting gemiddeld ${Math.abs(n)} ${Math.abs(n) === 1 ? 'punt' : 'punten'} ${n > 0 ? 'beter' : 'minder'} dan de computer`;
 }
 
 function vergelijkBlok(spel) {
@@ -350,7 +350,7 @@ function vergelijkBlok(spel) {
   if (!regels.length) return '';
   return `<div class="vergelijk-blok"><div class="vergelijk-kop">Vergeleken met de computer</div>
     ${regels.map((r) => `<p>${r}</p>`).join('')}
-    <p class="vergelijk-uitleg">Volgens de computer; die kan zich ook vergissen.</p></div>`;
+    <p class="vergelijk-uitleg">Een schatting vooraf, met wat jij toen wist; niet wat het achteraf opleverde. De computer kan zich ook vergissen.</p></div>`;
 }
 
 function slagenOverzicht(spel) {
@@ -365,7 +365,7 @@ function slagenOverzicht(spel) {
     </div>`;
   }).join('');
   const uitleg = spel.instellingen.vergelijk
-    ? '<p class="vergelijk-uitleg">Onder jouw kaart: ✓ dezelfde kaart als de computer, ≈ een andere maar even goede kaart, of de kaart van de computer met het verschil in punten.</p>'
+    ? '<p class="vergelijk-uitleg">Onder jouw kaart: ✓ dezelfde kaart als de computer, ≈ een andere kaart die (bijna) even goed is, of de kaart van de computer met hoeveel die gemiddeld beter of minder was.</p>'
     : '';
   return `<details class="slagen-overzicht"><summary>Bekijk alle slagen</summary><div class="slagen-lijst">${uitleg}${rijen}</div></details>`;
 }

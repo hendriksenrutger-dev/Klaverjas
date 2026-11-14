@@ -39,3 +39,8 @@ describe('vergelijk met de computer', () => {
     assert.deepEqual(t, { kaarten: 3, zelfde: 1, gelijkwaardig: 1, beter: 0, minder: 1, punten: -14, draaien: 2, draaiAnders: 1 });
   });
 });
+
+test('5 punten verschil (voorbeeld Rutger) telt als even goed', () => {
+  const s = [{ kaart: K('sH'), gemiddeld: 20 }, { kaart: K('k8'), gemiddeld: 10 }];
+  assert.equal(beoordeelKaart(s, K('sH'), K('k8')).oordeel, 'gelijkwaardig');
+});
