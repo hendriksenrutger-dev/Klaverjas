@@ -47,7 +47,7 @@ Vraag: speel een kaart die mag en waarmee je de slag wint. → **♣A**
 Fout met een andere kleur: "Je moet klaveren bekennen."
 Fout met ♣7: "Die mag, maar daarmee win je de slag niet."
 
-**Opdracht 2** — Troef is ruiten. West komt uit met ♣A, Noord speelt ♣8, Oost ♣9.
+**Opdracht 2** — Troef is ruiten. West komt uit met ♣A, Noord speelt ♣8, Oost ♣B. (Aangepast: met ♣9 erin maakte ♣7 een driekaart.)
 Jouw hand: ♣7 ♣V ♥10 ♥8 ♦9 ♠H ♠V ♠8.
 Vraag: West wint deze slag toch. Speel de kaart die de tegenpartij de minste punten geeft. → **♣7**
 Fout met ♣V: "Die mag, maar geeft 3 punten weg. De 7 geeft niets weg."
@@ -70,7 +70,7 @@ Fout met een andere kleur: "Je kunt niet bekennen: je moet troeven."
 
 **Opdracht 2** — Troef is harten. West komt uit met ♠9, Noord speelt ♠A, Oost ♠8.
 Jouw hand: dezelfde als hierboven.
-Vraag: Noord (je maat) heeft de slag. Moet je troeven? → **Nee.** Speel bijvoorbeeld ♣8 of ♦7: geen punten, troef bewaard. Goed: elke kaart die mag; de app benoemt dat je hier niet hoeft te troeven.
+Vraag: Noord (je maat) heeft de slag. Moet je troeven? → **Nee.** Goed: elke kaart die mag. Tekst: "Je maat heeft de slag, dus je hoeft niet te troeven. Punten die je nu bijspeelt, gaan naar jullie." (Aangepast na Rutgers test: eerst stond er dat een kaart zonder punten prima was.)
 
 **Opdracht 3** — Troef is klaveren. West komt uit met ♣V, Noord speelt ♣7, Oost ♣A.
 Jouw hand: ♣9 ♣8 ♥A ♥10 ♦H ♦8 ♠V ♠7.

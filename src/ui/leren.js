@@ -9,8 +9,8 @@ export const STANDAARD_UITLEG = 'Deze kaart levert gemiddeld de meeste punten op
 
 // Stap 1 (lessen) wordt later gebouwd.
 export const STAPPEN = {
-  2: { naam: 'Oefenen met open kaarten', uitleg: 'Je ziet alle kaarten. Hulp en hint staan aan.', open: true, hulp: true, hint: true, niveau: 'makkelijk' },
-  3: { naam: 'Oefenen met dichte kaarten', uitleg: 'Zoals aan tafel. Hulp en hint staan aan.', open: false, hulp: true, hint: true, niveau: 'makkelijk' },
+  2: { naam: 'Oefenen met open kaarten', uitleg: 'Je ziet alle kaarten. Hulp, hint en een tweede kans staan aan.', open: true, hulp: true, hint: true, tweedeKans: true, niveau: 'makkelijk' },
+  3: { naam: 'Oefenen met dichte kaarten', uitleg: 'Zoals aan tafel. Hulp, hint en een tweede kans staan aan.', open: false, hulp: true, hint: true, tweedeKans: true, niveau: 'makkelijk' },
   4: { naam: 'Zelfstandig', uitleg: 'Zonder hulp, tegen normale tegenstanders. De hint blijft beschikbaar.', open: false, hulp: false, hint: true, niveau: 'normaal' },
   5: { naam: 'Echt', uitleg: 'Tegen sterke tegenstanders, zonder hulp.', open: false, hulp: false, hint: false, niveau: 'sterk' },
 };
@@ -69,6 +69,16 @@ export function seinUitleg(slagVoor, maat, kaart, troef, naam) {
   const wat = sein.kaart.rang === 'A' ? `de aas van ${NAAM_KLEUR[kaart.kleur]}` : `ook de tien van ${NAAM_KLEUR[kaart.kleur]}`;
   const hoe = sein.kaart.rang === 'A' ? 'een kleintje' : 'de aas';
   return `${naam} seint: ${hoe} (${kaartTekst(kaart)}) bijgespeeld op een slag van jullie. ${naam} heeft waarschijnlijk ${wat}.`;
+}
+
+// Tweede kans bij spelen of passen: alleen feiten uit je hand, plus wat de computer verwacht.
+export function draaiUitleg(hand, kleur, computer) {
+  const troeven = hand.filter((k) => k.kleur === kleur);
+  const naamKleur = NAAM_KLEUR[kleur];
+  const wat = troeven.length ? `Je hebt ${troeven.length} ${naamKleur}: ${troeven.map(kaartTekst).join(' ')}.` : `Je hebt geen ${naamKleur}.`;
+  return computer === 'spelen'
+    ? `De computer zou hier spelen. ${wat} Volgens de computer haal je daarmee gemiddeld genoeg punten.`
+    : `De computer zou hier passen. ${wat} Volgens de computer is dat gemiddeld te weinig om het te halen.`;
 }
 
 // Uitleg bij de kaart die de hint voorstelt. Alleen vaste regels; anders de standaardtekst.

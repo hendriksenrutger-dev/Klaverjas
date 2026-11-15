@@ -32,6 +32,19 @@ describe('lessen', () => {
     }
   });
 
+  test('opdrachten over punten weggeven bevatten geen verborgen roem', async () => {
+    const { roemInSlag } = await import('../src/regels/roem.js');
+    for (const les of LESSEN) {
+      for (const o of les.opdrachten) {
+        if (o.soort !== 'kaart') continue;
+        for (const k of o.hand) {
+          const r = roemInSlag([...o.slag.map((x) => x.kaart), k], o.troef).totaal;
+          assert.equal(r, 0, `les ${les.nr}: ${kaartId(k)} geeft ${r} roem`);
+        }
+      }
+    }
+  });
+
   test('foute antwoorden krijgen de juiste uitleg', () => {
     const [l2a] = LESSEN[1].opdrachten;
     assert.equal(beoordeel(l2a, kaarten('h10')[0]).tekst, 'Je moet klaveren bekennen.');

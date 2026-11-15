@@ -543,3 +543,6 @@ button { font: inherit; }
 .lessen-lijst { gap: 5px; }
 .lessen-lijst .leer-rij { padding: 4px 12px; }
 .lessen-lijst .leer-rij .knop { min-height: 44px; }
+
+/* Tweede kans (leren, stap 2 en 3) */
+.tweede-kans-tekst { max-width: 560px; margin: 6px auto 4px; font-size: 18px; line-height: 1.45; }

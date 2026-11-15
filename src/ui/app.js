@@ -2,12 +2,12 @@
 
 import * as R from '../regels/index.js';
 import { vraagKaart, vraagDraai, vraagVerplicht, analyseerKaart, analyseerDraai, analyseerVerplicht } from '../ai/client.js';
-import { beoordeelKaart, legeVergelijking, telOp } from '../ai/vergelijk.js';
+import { beoordeelKaart, legeVergelijking, telOp, GELIJKWAARDIG } from '../ai/vergelijk.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
 import { laadPlaatjes } from './plaatjes.js';
 import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek, laadVoortgang, bewaarVoortgang } from './opslag.js';
-import { STAPPEN, LEER_REGELS, compleetVoortgang, telLeerPotje, hintUitleg, roemUitleg, seinUitleg } from './leren.js';
+import { STAPPEN, LEER_REGELS, compleetVoortgang, telLeerPotje, hintUitleg, roemUitleg, seinUitleg, draaiUitleg } from './leren.js';
 import { LESSEN, beoordeel, lesKlaar, alleLessenKlaar } from './lessen.js';
 import { compleet, legeStatistiek, telPotje, telPartij, telVergelijk } from './statistiek.js';
 
@@ -58,7 +58,64 @@ const spel = {
   hintBezig: false,
   nieuweStap: null, // net vrijgespeelde stap, voor de uitslag
   les: null, // { nr, deel: 'uitleg'|'opdracht'|'klaar', pagina, opdracht, antwoord, uitslag }
+  tweedeKans: null, // { soort: 'draai'|'kaart', keuze, tekst, knop } als je anders kiest dan de computer
+  wachtOpAdvies: false,
 };
+
+// ---------- Tweede kans (leren, stap 2 en 3) ----------
+// Zodra jij aan de beurt bent, rekent de computer al mee; bij je keuze ligt het advies dan klaar.
+let advies = null; // { sleutel, belofte }
+function adviesVoor() {
+  if (!stapInfo()?.tweedeKans) return null;
+  if (spel.fase === 'spelen' && spel.potje.beurt === JIJ && !spel.getoondeSlag) {
+    const p = spel.potje;
+    if (advies?.sleutel !== p) advies = { sleutel: p, belofte: analyseerKaart(p, JIJ).catch(() => null) };
+    return advies;
+  }
+  const d = spel.draaien;
+  if (spel.fase === 'draaien' && !d.verplicht && d.beurt === JIJ && !d.uitkomst && !spel.draaiMelding) {
+    if (advies?.sleutel !== d) {
+      advies = { sleutel: d, belofte: analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }).catch(() => null) };
+    }
+    return advies;
+  }
+  return null;
+}
+
+// Vergelijkt jouw keuze met het advies. Roept doe() aan als het goed is of als je doorzet.
+let gezien = null; // { sleutel, keuze }: je zag het advies al en kiest opnieuw hetzelfde → doorgaan
+const zelfdeKeuze = (a, b) => (typeof a === 'string' ? a === b : a.kleur === b.kleur && a.rang === b.rang);
+function metTweedeKans(soort, keuze, doe) {
+  const a = adviesVoor();
+  if (!a) return doe();
+  const sleutel = a.sleutel;
+  if (gezien?.sleutel === sleutel && zelfdeKeuze(gezien.keuze, keuze)) return doe();
+  spel.wachtOpAdvies = true;
+  teken();
+  a.belofte.then((r) => {
+    spel.wachtOpAdvies = false;
+    if (sleutel !== (soort === 'draai' ? spel.draaien : spel.potje)) return teken();
+    if (!r) return doe();
+    if (soort === 'draai') {
+      if (r === keuze) return doe();
+      gezien = { sleutel, keuze };
+      spel.tweedeKans = { soort, keuze, doe, tekst: draaiUitleg(spel.handen[JIJ], spel.draaien.kaart.kleur, r), knop: keuze === 'spelen' ? 'Toch spelen' : 'Toch passen' };
+      return teken();
+    }
+    const b = beoordeelKaart(r.scores ?? [], r.kaart, keuze);
+    if (b.oordeel !== 'minder' || -b.verschil < GELIJKWAARDIG) return doe();
+    const p = spel.potje;
+    const uitleg = hintUitleg({ hand: p.handen[JIJ], slag: p.slag, troef: p.troef, spelendTeam: p.spelendTeam, speler: JIJ }, R.geldigVoor(p, JIJ), r.kaart);
+    const naamKaart = (k) => `${{ klaveren: '♣', ruiten: '♦', harten: '♥', schoppen: '♠' }[k.kleur]}${k.rang}`;
+    gezien = { sleutel, keuze };
+    spel.tweedeKans = {
+      soort, keuze, doe,
+      tekst: `De computer zou ${naamKaart(r.kaart)} spelen. ${uitleg} Volgens de computer levert dat gemiddeld ${-b.verschil} punten meer op dan ${naamKaart(keuze)}.`,
+      knop: `Toch ${naamKaart(keuze)}`,
+    };
+    teken();
+  });
+}
 
 const stapInfo = () => (spel.leren ? STAPPEN[spel.leren.stap] : null);
 const hulpAan = () => Boolean(stapInfo()?.hulp);
@@ -146,6 +203,8 @@ function nieuwePartij(leren = null) {
 
 function startRonde() {
   beurtToken++;
+  spel.tweedeKans = null;
+  advies = null;
   spel.hulpMelding = null;
   spel.nieuweStap = null;
   // Alleen de vergelijking van het vorige en het huidige potje bewaren.
@@ -237,6 +296,7 @@ function vliegPakje(speler) {
 
 function volgende() {
   teken();
+  adviesVoor(); // tweede kans: de computer rekent alvast mee als jij aan de beurt bent
   if (spel.fase === 'draaien' && spel.draaien.verplicht && !spel.draaien.uitkomst && spel.draaien.beurt !== JIJ) {
     // Verplicht spelen: de voorhand kiest zelf troef.
     const s = spel.draaien.beurt;
@@ -435,10 +495,25 @@ const acties = {
     }
   },
   draai(keuze) {
+    if (spel.wachtOpAdvies) return;
     if (spel.fase === 'draaien' && !spel.draaien.verplicht && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && !spel.draaiMelding) {
-      vergelijkDraai(keuze);
-      draai(JIJ, keuze);
+      spel.tweedeKans = null;
+      metTweedeKans('draai', keuze, () => {
+        vergelijkDraai(keuze);
+        draai(JIJ, keuze);
+      });
     }
+  },
+  tweedeKansOpnieuw() {
+    spel.tweedeKans = null;
+    spel.gekozen = null;
+    teken();
+  },
+  tweedeKansToch() {
+    const t = spel.tweedeKans;
+    if (!t) return;
+    spel.tweedeKans = null;
+    t.doe();
   },
   tikKaart(id) {
     if (spel.venster || spel.fase !== 'spelen' || spel.getoondeSlag || spel.potje.beurt !== JIJ) return;
@@ -460,7 +535,9 @@ const acties = {
       );
       return;
     }
-    if (spel.gekozen === id) speel(JIJ, kaart);
+    if (spel.wachtOpAdvies) return;
+    if (spel.tweedeKans) { spel.tweedeKans = null; spel.gekozen = id; return teken(); }
+    if (spel.gekozen === id) metTweedeKans('kaart', kaart, () => speel(JIJ, kaart));
     else {
       spel.gekozen = id;
       teken();

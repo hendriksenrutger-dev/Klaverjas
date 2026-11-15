@@ -129,6 +129,7 @@ Leerpad in vijf stappen. Een stap gaat open na 4 gespeelde potjes in de vorige s
 5. **Echt:** tegenstanders sterk, geen hulp.
 
 - **Hulp:** uitleg waarom een kaart niet mag (dezelfde teksten als de spelregels), uitleg bij roem, en een melding bij een sein van je maat met wat het betekent.
+- **Tweede kans** (stap 2 en 3, op Rutgers verzoek): kies je bij spelen/passen iets anders dan de computer, of een kaart die volgens de computer duidelijk slechter is (10 punten of meer), dan verschijnt eerst een venster met uitleg en de knoppen "Opnieuw kiezen" en "Toch …". Kies je daarna opnieuw hetzelfde, dan gaat het spel gewoon door. De computer rekent al mee zodra jij aan de beurt bent.
 - **Hint-knop:** de computer kiest de kaart (of spelen/passen); de uitleg komt uit vaste regels. Past geen regel, dan alleen "deze kaart levert gemiddeld de meeste punten op". Geen verzonnen uitleg.
 - Oefenpartijen staan los van de gewone partij (eigen opslag `klaverjas_leerpartij`, voortgang in `klaverjas_leren`) en tellen niet mee in de statistieken. Regels in de oefenstand: Amsterdams, traditioneel, verzaakbescherming aan.
 
