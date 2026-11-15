@@ -58,12 +58,23 @@ export function bewaarInstellingen(instellingen) {
   schrijf(SLEUTEL_INSTELLINGEN, { instellingen });
 }
 
-export function laadPartij() {
-  return lees(SLEUTEL_PARTIJ)?.spel ?? null;
+// soort: 'gewoon' (de echte partij) of 'leer' (oefenpartij uit Leren klaverjassen, apart bewaard).
+const partijSleutel = (soort) => (soort === 'leer' ? 'klaverjas_leerpartij' : SLEUTEL_PARTIJ);
+
+export function laadPartij(soort = 'gewoon') {
+  return lees(partijSleutel(soort))?.spel ?? null;
 }
 
-export function bewaarPartij(spel) {
-  schrijf(SLEUTEL_PARTIJ, { spel });
+export function bewaarPartij(spel, soort = 'gewoon') {
+  schrijf(partijSleutel(soort), { spel });
+}
+
+export function laadVoortgang() {
+  return lees('klaverjas_leren')?.voortgang ?? null;
+}
+
+export function bewaarVoortgang(voortgang) {
+  schrijf('klaverjas_leren', { voortgang });
 }
 
 export function wisPartij() {

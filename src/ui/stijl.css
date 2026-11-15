@@ -470,3 +470,39 @@ button { font: inherit; }
 .venster .sub + .stat-tabs { margin-top: 0; }
 .stat td { padding: 2px 6px; }
 .start-kolom h1 { margin-bottom: 22px; }
+
+/* ---------- Leren klaverjassen ---------- */
+.oefenlabel { margin-left: 10px; font-size: 14px; font-weight: 600; color: var(--goud); white-space: nowrap; }
+/* Uitleg (hulp en hint) linksonder, tegenover de knoppen rechtsonder. */
+.knoppen-links { position: absolute; left: 16px; bottom: calc(var(--hand-ruimte) + var(--hk) * 0.13 + 4px); z-index: 3; }
+.hint { pointer-events: none; }
+.hulp-paneel {
+  position: absolute; left: 16px; bottom: calc(var(--hand-ruimte) + var(--hk) * 0.13 + 64px); z-index: 3;
+  max-width: min(36vw, 420px); display: flex; gap: 10px; align-items: flex-start;
+  background: var(--creme); color: var(--zwart); border: 1.5px solid var(--goud); border-radius: 14px;
+  padding: 10px 14px; font-size: 15px; line-height: 1.35; box-shadow: 0 6px 16px rgba(0,0,0,.3);
+  animation: plof 0.3s cubic-bezier(.2,1.4,.4,1);
+}
+.hulp-ikoon { flex: none; }
+.knop.goud-rand { border-color: var(--goud); color: var(--goud); }
+.open-hand { display: flex; margin-top: 4px; justify-content: center; --kh: 68px; }
+.open-hand .kaart { margin-left: calc(var(--kh) * -0.36); box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+/* West en Oost: open hand boven de speler, zodat het uitlegvak linksonder vrij blijft. */
+.speler.west .open-hand, .speler.oost .open-hand { position: absolute; bottom: calc(100% + 8px); margin: 0; }
+.speler.west .open-hand { left: 0; }
+.speler.oost .open-hand { right: 0; }
+.open-hand .kaart:first-child { margin-left: 0; }
+.leer-lijst { display: flex; flex-direction: column; gap: 8px; text-align: left; margin-top: 6px; }
+.leer-rij { display: flex; align-items: center; gap: 14px; padding: 8px 12px; border-radius: 12px; background: rgba(0,0,0,.04); }
+.leer-rij.dicht { opacity: .55; }
+.leer-nr { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--goud); font-family: var(--cijfers); font-weight: 700; font-size: 18px; flex: none; }
+.leer-rij.dicht .leer-nr { background: rgba(0,0,0,.08); font-size: 15px; }
+.leer-tekst { flex: 1; display: flex; flex-direction: column; font-size: 14px; line-height: 1.3; }
+.leer-tekst b { font-size: 16px; }
+.leer-status { font-size: 12px; opacity: .65; margin-top: 2px; }
+.leer-rij .knop { min-width: 92px; }
+.knop.licht-donker { background: rgba(0,0,0,.06); }
+.leer-stand, .leer-nieuw { margin: 4px 0 0; font-size: 15px; }
+.leer-nieuw { color: #8a6a14; font-weight: 600; }
+.speler.west .open-hand, .speler.oost .open-hand { --kh: 60px; bottom: calc(100% + 4px); }
+.speler.noord .open-hand { margin-left: 70px; }

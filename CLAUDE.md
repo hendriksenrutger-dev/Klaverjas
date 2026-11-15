@@ -116,6 +116,22 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Partijen: gespeeld, gewonnen (%), verloren, op rij gewonnen en record, hoogste en laagste eindstand, grootste overwinning.
 - Potjes: gespeeld; wij speelden en zij speelden, elk met gehaald, nat en pit; gemiddeld per potje en roem (wij – zij); en met "Vergelijk met de computer" aan: hoe vaak je speelde zoals de computer of even goed.
 
+## Leren klaverjassen (op Rutgers verzoek, uit "Later" naar voren gehaald)
+
+Afgesproken met Rutger: in deze app, met een knop "Leren klaverjassen" op het beginscherm. De leerling leert Amsterdams met traditioneel draaien; Rotterdams komt als losse les aan het eind. Seinen (volgens onze afspraken) horen erbij. Lesteksten schrijft Claude, Rutger controleert ze. Toon: volwassen, kort en helder.
+
+Leerpad in vijf stappen. Een stap gaat open na 4 gespeelde potjes in de vorige stap; teruggaan kan altijd.
+
+1. **Lessen** (wordt als laatste gebouwd): korte lessen met vooraf bedachte handen, uitleg en een opdracht. Volgorde: kaartwaarden en troefvolgorde → bekennen → troeven → roem → nat en pit → seinen → Rotterdams.
+2. **Oefenen met open kaarten:** alle handen zichtbaar, tegenstanders makkelijk, hulp aan, hint-knop.
+3. **Oefenen met dichte kaarten:** tegenstanders makkelijk, hulp aan, hint-knop.
+4. **Zelfstandig:** tegenstanders normaal, hulp uit, hint-knop.
+5. **Echt:** tegenstanders sterk, geen hulp.
+
+- **Hulp:** uitleg waarom een kaart niet mag (dezelfde teksten als de spelregels), uitleg bij roem, en een melding bij een sein van je maat met wat het betekent.
+- **Hint-knop:** de computer kiest de kaart (of spelen/passen); de uitleg komt uit vaste regels. Past geen regel, dan alleen "deze kaart levert gemiddeld de meeste punten op". Geen verzonnen uitleg.
+- Oefenpartijen staan los van de gewone partij (eigen opslag `klaverjas_leerpartij`, voortgang in `klaverjas_leren`) en tellen niet mee in de statistieken. Regels in de oefenstand: Amsterdams, traditioneel, verzaakbescherming aan.
+
 ## Uiterlijk
 
 Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het **mooi**.
@@ -195,14 +211,5 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 - Solo spelen blijft volledig offline.
 - Houd hier nu al rekening mee: spelregels los van het scherm, spelstand serialiseerbaar, elke zet een losse actie.
 
-### Leerstand voor volwassenen die willen leren klaverjassen
-Drie onderdelen:
-1. Lessen: korte stappen met vooraf bedachte handen, uitleg en een opdracht per les.
-   Volgorde: kaartwaarden en troefvolgorde → bekennen → troeven (Amsterdams/Rotterdams) → roem → nat en pit → seinen (volgens onze afspraken).
-2. Hulp tijdens het spelen (aan/uit te zetten):
-   - uitleg waarom een kaart niet mag;
-   - melding bij roem en bij een sein van je maat, met uitleg wat het sein betekent;
-   - hint-knop: de simulatie-AI kiest de kaart, en uitleg in mensentaal komt uit vaste regels. Waar geen regel past, toon dan alleen "deze kaart levert gemiddeld de meeste punten op". Verzin geen uitleg.
-3. Oefenen met open kaarten tegen makkelijke tegenstanders.
-- Toon: volwassen, kort en helder, niet kinderachtig.
-- Hergebruik de uitlegteksten uit de spelregels (waarom een zet niet mag) in de hele app.
+### Leerstand
+- Naar voren gehaald: zie "Leren klaverjassen" hierboven.

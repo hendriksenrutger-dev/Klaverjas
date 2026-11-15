@@ -6,7 +6,8 @@ import { beoordeelKaart, legeVergelijking, telOp } from '../ai/vergelijk.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
 import { laadPlaatjes } from './plaatjes.js';
-import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek } from './opslag.js';
+import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek, laadVoortgang, bewaarVoortgang } from './opslag.js';
+import { STAPPEN, LEER_REGELS, compleetVoortgang, telLeerPotje, hintUitleg, roemUitleg, seinUitleg } from './leren.js';
 import { compleet, legeStatistiek, telPotje, telPartij, telVergelijk } from './statistiek.js';
 
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
@@ -49,7 +50,17 @@ const spel = {
   statistiek: compleet(laadStatistiek()), // over alle partijen, los van de lopende partij
   wisVraag: false, // eerste tik op "Statistieken wissen"
   statSysteem: null, // welk tabblad van de statistieken (standaard het ingestelde systeem)
+  // Leren klaverjassen
+  leren: null, // { stap } tijdens een oefenpartij, anders null
+  voortgang: compleetVoortgang(laadVoortgang()),
+  hulpMelding: null, // uitleg onder de tafel (hulp en hint)
+  hintBezig: false,
+  nieuweStap: null, // net vrijgespeelde stap, voor de uitslag
 };
+
+const stapInfo = () => (spel.leren ? STAPPEN[spel.leren.stap] : null);
+const hulpAan = () => Boolean(stapInfo()?.hulp);
+const niveau = () => stapInfo()?.niveau ?? spel.instellingen.niveau;
 
 let timer = null;
 let beurtToken = 0; // voorkomt dat een oud AI-antwoord in een nieuwe situatie wordt toegepast
@@ -76,7 +87,7 @@ function computerZet(vraagFn, doeFn, tijd = denktijd()) {
 }
 
 // Welke delen van de toestand bewaard worden (alles is gewone data, dus JSON).
-const BEWAAR = ['partij', 'fase', 'handen', 'draaien', 'draaiKeuzes', 'potje', 'laatsteSlag', 'uitslag', 'verzaakReden', 'analyses', 'vergelijking'];
+const BEWAAR = ['partij', 'fase', 'handen', 'draaien', 'draaiKeuzes', 'potje', 'laatsteSlag', 'uitslag', 'verzaakReden', 'analyses', 'vergelijking', 'leren'];
 
 function teken() {
   // Niet opnieuw tekenen terwijl er in een tekstveld getypt wordt.
@@ -95,7 +106,14 @@ function bewaarLater() {
 let bewaarTimer = null;
 function bewaarNu() {
   clearTimeout(bewaarTimer);
-  if (spel.partij) bewaarPartij(Object.fromEntries(BEWAAR.map((k) => [k, spel[k]])));
+  if (spel.partij) bewaarPartij(Object.fromEntries(BEWAAR.map((k) => [k, spel[k]])), spel.leren ? 'leer' : 'gewoon');
+}
+
+// Lopende zetten en timers stoppen (bij wisselen tussen gewone partij en oefenpartij).
+function stopLopend() {
+  clearTimeout(timer);
+  beurtToken++;
+  uitgesteld = null;
 }
 // App gaat naar de achtergrond of sluit: meteen opslaan.
 addEventListener('pagehide', bewaarNu);
@@ -103,11 +121,17 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 
 // Regels-instellingen voor een (nieuwe) partij.
 function regelInstellingen() {
+  if (spel.leren) return { ...LEER_REGELS };
   const i = spel.instellingen;
   return { systeem: i.systeem, rondesVoorOpnieuwDelen: i.rondesVoorOpnieuwDelen, verzaakbescherming: i.verzaakbescherming, troefkeuze: i.troefkeuze };
 }
 
-function nieuwePartij() {
+function nieuwePartij(leren = null) {
+  if (spel.partij) bewaarNu(); // de vorige (gewone of oefen-)partij eerst veilig opslaan
+  stopLopend();
+  spel.leren = leren;
+  spel.hulpMelding = null;
+  spel.nieuweStap = null;
   spel.partij = R.nieuwePartij({ instellingen: regelInstellingen(), eersteDeler: Math.floor(Math.random() * 4) });
   spel.laatsteSlag = null;
   spel.venster = null;
@@ -120,6 +144,8 @@ function nieuwePartij() {
 
 function startRonde() {
   beurtToken++;
+  spel.hulpMelding = null;
+  spel.nieuweStap = null;
   // Alleen de vergelijking van het vorige en het huidige potje bewaren.
   const nr = spel.partij.potjes.length;
   spel.analyses = (spel.analyses ?? []).filter((a) => a.potje >= nr - 1);
@@ -213,7 +239,7 @@ function volgende() {
     // Verplicht spelen: de voorhand kiest zelf troef.
     const s = spel.draaien.beurt;
     computerZet(
-      () => vraagVerplicht(spel.handen[s], { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, spel.instellingen.niveau),
+      () => vraagVerplicht(spel.handen[s], { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, niveau()),
       (kleur) => kiesTroef(s, kleur),
       denktijdDraai(),
     );
@@ -221,13 +247,13 @@ function volgende() {
     const s = spel.draaien.beurt;
     const d = spel.draaien;
     computerZet(
-      () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, spel.instellingen.niveau),
+      () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, niveau()),
       (keuze) => draai(s, keuze),
       denktijdDraai(),
     );
   } else if (spel.fase === 'spelen' && !spel.getoondeSlag && spel.potje.beurt !== JIJ) {
     const s = spel.potje.beurt;
-    computerZet(() => vraagKaart(spel.potje, s, spel.instellingen.niveau), (kaart) => speel(s, kaart));
+    computerZet(() => vraagKaart(spel.potje, s, niveau()), (kaart) => speel(s, kaart));
   }
 }
 
@@ -291,7 +317,7 @@ function begin(uitkomst) {
 let analyseSessie = 0; // een nieuwe partij negeert antwoorden die nog onderweg waren
 
 function vergelijkAan() {
-  return spel.instellingen.vergelijk && spel.partij;
+  return spel.instellingen.vergelijk && spel.partij && !spel.leren;
 }
 
 function verwerkAnalyse(sessie, a) {
@@ -345,6 +371,12 @@ function vergelijkTroef(kleur) {
 function speel(speler, kaart) {
   const voor = spel.potje;
   if (speler === JIJ) vergelijkKaart(voor, kaart);
+  if (speler === JIJ) spel.hulpMelding = null;
+  // Hulp (leren): melding als je maat seint.
+  if (hulpAan() && speler === 2) {
+    const sein = seinUitleg(voor.slag, 2, kaart, voor.troef, spel.namen[2]);
+    if (sein) spel.hulpMelding = sein;
+  }
   spel.verzaakReden = R.geldigMetReden(voor.handen[speler], voor.slag, voor.troef, voor.systeem);
   spel.potje = R.speelKaart(voor, speler, kaart);
   spel.nieuweKaart = R.kaartId(kaart);
@@ -361,6 +393,7 @@ function speel(speler, kaart) {
     const slag = spel.potje.slagen.at(-1);
     spel.getoondeSlag = slag.kaarten;
     spel.roemMelding = slag.roem.totaal > 0 ? slag.roem : null;
+    if (hulpAan() && spel.roemMelding) spel.hulpMelding = roemUitleg(slag.roem);
     teken();
     later(() => {
       spel.laatsteSlag = slag;
@@ -378,9 +411,17 @@ function eindPotje() {
   spel.uitslag = R.uitslag(spel.potje);
   spel.partij = R.rondPotjeAf(spel.partij, spel.potje);
   spel.fase = R.partijKlaar(spel.partij) ? 'partijKlaar' : 'potjeKlaar';
-  spel.statistiek = telPotje(spel.statistiek, spel.uitslag, spel.potje.spelendTeam, spel.potje.systeem);
-  if (spel.fase === 'partijKlaar') spel.statistiek = telPartij(spel.statistiek, spel.partij.totaal, spel.partij.instellingen.systeem);
-  bewaarStatistiek(spel.statistiek);
+  if (spel.leren) {
+    // Oefenpartij: telt niet in de statistieken, wel in de voortgang van het leerpad.
+    const r = telLeerPotje(spel.voortgang, spel.leren.stap);
+    spel.voortgang = r.voortgang;
+    spel.nieuweStap = r.nieuweStap;
+    bewaarVoortgang(spel.voortgang);
+  } else {
+    spel.statistiek = telPotje(spel.statistiek, spel.uitslag, spel.potje.spelendTeam, spel.potje.systeem);
+    if (spel.fase === 'partijKlaar') spel.statistiek = telPartij(spel.statistiek, spel.partij.totaal, spel.partij.instellingen.systeem);
+    bewaarStatistiek(spel.statistiek);
+  }
   teken();
 }
 
@@ -404,7 +445,13 @@ const acties = {
     if (!kaart) return;
     const mag = R.geldigVoor(spel.potje, JIJ).some((k) => R.kaartId(k) === id);
     if (!mag && spel.potje.verzaakbescherming) {
-      // Mag niet: de kaart schudt kort (geen uitleg, geen grijze kaarten).
+      // Mag niet: de kaart schudt kort (geen grijze kaarten). Bij hulp (leren) ook de reden.
+      if (hulpAan()) {
+        const p = spel.potje;
+        const g = R.geldigMetReden(hand, p.slag, p.troef, p.systeem);
+        spel.hulpMelding = `${R.redenTekst(g.reden, g.gevraagd)}.`;
+        teken();
+      }
       document.querySelector(`.hand [data-kaart="${id}"]`)?.animate(
         [{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }],
         { duration: 260 },
@@ -430,6 +477,13 @@ const acties = {
   },
   verderSpelen() {
     spel.venster = null;
+    if (spel.partij && spel.leren) {
+      // Van een oefenpartij terug naar de gewone partij.
+      bewaarNu();
+      stopLopend();
+      spel.leren = null;
+      spel.partij = null;
+    }
     if (spel.partij) {
       spel.scherm = 'tafel';
       teken();
@@ -456,10 +510,64 @@ const acties = {
     teken();
   },
   naarStart() {
+    bewaarNu();
     spel.scherm = 'start';
     spel.venster = null;
     spel.gekozen = null;
+    spel.bewaard = bewaardeSamenvatting();
     teken();
+  },
+  // Leren klaverjassen: een stap starten of daarin verdergaan.
+  leerStap(stap) {
+    stap = Number(stap);
+    if (!STAPPEN[stap] || stap > spel.voortgang.open) return;
+    spel.venster = null;
+    if (spel.leren?.stap === stap && spel.partij && spel.fase !== 'partijKlaar') {
+      spel.scherm = 'tafel';
+      teken();
+      if (uitgesteld) { const f = uitgesteld; uitgesteld = null; f(); }
+      return;
+    }
+    const bewaard = laadPartij('leer');
+    if (bewaard?.leren?.stap === stap && bewaard.fase !== 'partijKlaar') {
+      if (spel.partij) bewaarNu();
+      stopLopend();
+      if (hervat('leer')) return;
+    }
+    nieuwePartij({ stap });
+  },
+  // Hint: de computer stelt een kaart (of spelen/passen) voor, met uitleg uit vaste regels.
+  hint() {
+    if (!stapInfo()?.hint || spel.hintBezig || spel.venster) return;
+    if (spel.fase === 'spelen' && spel.potje.beurt === JIJ && !spel.getoondeSlag) {
+      const p = spel.potje;
+      spel.hintBezig = true;
+      teken();
+      analyseerKaart(p, JIJ).then((r) => {
+        spel.hintBezig = false;
+        if (spel.potje !== p) return teken();
+        const geldig = R.geldigVoor(p, JIJ);
+        spel.gekozen = R.kaartId(r.kaart);
+        const uitleg = hintUitleg({ hand: p.handen[JIJ], slag: p.slag, troef: p.troef, spelendTeam: p.spelendTeam, speler: JIJ }, geldig, r.kaart);
+        // Dwingt een spelregel de keuze af (troeven, overtroeven …), dan die regel erbij.
+        const g = R.geldigMetReden(p.handen[JIJ], p.slag, p.troef, p.systeem);
+        const regel = ['uitkomen', 'bekennen', 'vrij'].includes(g.reden) || geldig.length === 1 ? '' : `${R.redenTekst(g.reden, g.gevraagd)}. `;
+        spel.hulpMelding = regel + uitleg;
+        teken();
+      }).catch(() => { spel.hintBezig = false; teken(); });
+    } else if (spel.fase === 'draaien' && !spel.draaien.verplicht && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && !spel.draaiMelding) {
+      const d = spel.draaien;
+      spel.hintBezig = true;
+      teken();
+      analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }).then((keuze) => {
+        spel.hintBezig = false;
+        if (spel.draaien !== d) return teken();
+        spel.hulpMelding = keuze === 'spelen'
+          ? 'Advies: spelen. Volgens de computer haal je met deze troef gemiddeld genoeg punten.'
+          : 'Advies: passen. Volgens de computer is deze troef te zwak voor jouw kaarten.';
+        teken();
+      }).catch(() => { spel.hintBezig = false; teken(); });
+    }
   },
   open(naam) {
     spel.venster = naam;
@@ -491,8 +599,8 @@ const acties = {
     spel.instellingen = i;
     geluid.zetGeluid(i.geluid);
     bewaarInstellingen(i);
-    if (spel.partij) spel.partij = { ...spel.partij, instellingen: { ...spel.partij.instellingen, ...regelInstellingen() } };
-    if (spel.potje && sleutel === 'verzaakbescherming') spel.potje = { ...spel.potje, verzaakbescherming: i.verzaakbescherming };
+    if (spel.partij && !spel.leren) spel.partij = { ...spel.partij, instellingen: { ...spel.partij.instellingen, ...regelInstellingen() } };
+    if (spel.potje && !spel.leren && sleutel === 'verzaakbescherming') spel.potje = { ...spel.potje, verzaakbescherming: i.verzaakbescherming };
     teken();
   },
   naam(index, tekst) {
@@ -507,7 +615,7 @@ const acties = {
 };
 
 function heeftLopendePartij() {
-  if (spel.partij) return spel.fase !== 'partijKlaar';
+  if (spel.partij && !spel.leren) return spel.fase !== 'partijKlaar';
   return Boolean(spel.bewaard);
 }
 
@@ -519,9 +627,12 @@ function bewaardeSamenvatting() {
 }
 
 // Een bewaarde partij hervatten. Geeft false als er niets (bruikbaars) bewaard is.
-function hervat() {
-  const bewaard = laadPartij();
+function hervat(soort = 'gewoon') {
+  const bewaard = laadPartij(soort);
   if (!bewaard?.partij || !bewaard.fase) return false;
+  stopLopend();
+  spel.hulpMelding = null;
+  spel.nieuweStap = null;
   spel.scherm = 'tafel';
   try {
     for (const k of BEWAAR) spel[k] = bewaard[k] ?? null;

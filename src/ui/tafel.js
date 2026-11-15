@@ -7,6 +7,7 @@ import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
 import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD, SYMBOOL } from './kaart.js';
 import { patchHtml } from './patch.js';
 import { vulPlaatjes } from './plaatjes.js';
+import { STAPPEN, POTJES_PER_STAP, EERSTE_STAP, LAATSTE_STAP } from './leren.js';
 
 const KLEURNAAM = { klaveren: 'Klaveren', ruiten: 'Ruiten', harten: 'Harten', schoppen: 'Schoppen' };
 const PLEKKEN = [
@@ -38,7 +39,7 @@ function balk(spel) {
   } else troef = '';
   const nr = Math.min(potjeNummer(partij), AANTAL_POTJES);
   return `<header class="balk">
-    <div class="balk-links"><button class="knop ikoon" data-actie="naarStart" aria-label="Beginscherm">${IKOON.huis}</button></div>
+    <div class="balk-links"><button class="knop ikoon" data-actie="naarStart" aria-label="Beginscherm">${IKOON.huis}</button>${spel.leren ? `<span class="oefenlabel">Oefenen · stap ${spel.leren.stap}</span>` : ''}</div>
     <div class="score">
       <div class="score-team wij"><span class="score-label">Wij</span><span class="score-getal">${partij.totaal[0]}</span></div>
       <div class="potjenr">${nr} / ${AANTAL_POTJES}</div>
@@ -74,7 +75,12 @@ function spelerHtml(spel, i) {
   }
   const aantal = spel.fase === 'delen' ? spel.zichtbaar?.[i] ?? 0
     : spel.potje ? spel.potje.handen[i].length : spel.handen?.[i]?.length ?? 0;
-  const ruggen = i === 0 ? '' : `<div class="ruggen">${rugHtml().repeat(aantal)}</div>`;
+  // Leren, stap 2: de handen van de computerspelers liggen open.
+  const openHand = spel.leren && STAPPEN[spel.leren.stap].open && spel.fase !== 'delen'
+    ? (spel.potje ? spel.potje.handen[i] : spel.handen?.[i]) : null;
+  const ruggen = i === 0 ? ''
+    : openHand ? `<div class="open-hand">${sorteerHand(openHand, spel.potje?.troef ?? null).map((k) => kaartHtml(k)).join('')}</div>`
+      : `<div class="ruggen">${rugHtml().repeat(aantal)}</div>`;
   return `<div class="speler ${s.plek} ${s.klasse} ${aanBeurt ? 'aan-beurt' : ''}">
     <div class="avatar">${n.charAt(0).toUpperCase()}</div>
     <div class="speler-tekst">
@@ -150,6 +156,7 @@ function midden(spel) {
 
 // ---------- Hint ----------
 function hint(spel) {
+  if (spel.hintBezig) return 'De computer denkt na over een hint…';
   if (spel.fase === 'draaien') {
     const m = spel.draaiMelding;
     const kleurNaam = (k) => KLEURNAAM[k].toLowerCase();
@@ -224,10 +231,16 @@ function troefGroot(spel) {
 }
 
 function knoppenRechts(spel) {
-  if (!spel.potje) return '';
-  return `<div class="knoppen-rechts">
+  const stap = spel.leren ? STAPPEN[spel.leren.stap] : null;
+  const jijAanBeurt = (spel.fase === 'spelen' && spel.potje.beurt === 0 && !spel.getoondeSlag)
+    || (spel.fase === 'draaien' && !spel.draaien.verplicht && spel.draaien.beurt === 0 && !spel.draaien.uitkomst && !spel.draaiMelding);
+  const hintKnop = stap?.hint && jijAanBeurt
+    ? `<button class="knop goud-rand" data-actie="hint" ${spel.hintBezig ? 'disabled' : ''}>💡 Hint</button>` : '';
+  const links = hintKnop ? `<div class="knoppen-links">${hintKnop}</div>` : '';
+  if (!spel.potje) return links;
+  return `${links}<div class="knoppen-rechts">
     <button class="knop" data-actie="open" data-venster="laatsteSlag" ${spel.laatsteSlag ? '' : 'disabled'}>${IKOON.terug}Laatste slag</button>
-    ${spel.instellingen.gespeeld ? `<button class="knop" data-actie="open" data-venster="gespeeld">${IKOON.lijst}Gespeeld</button>` : ''}
+    ${spel.instellingen.gespeeld || stap?.hulp ? `<button class="knop" data-actie="open" data-venster="gespeeld">${IKOON.lijst}Gespeeld</button>` : ''}
   </div>`;
 }
 
@@ -435,6 +448,7 @@ function uitslagVenster(spel) {
     ${vergelijkBlok(spel)}
     ${slagenOverzicht(spel)}
     <p class="stand">Stand na ${spel.partij.potjes.length} van ${AANTAL_POTJES}: Wij <b>${t[0]}</b> · Zij <b>${t[1]}</b></p>
+    ${spel.leren ? leerRegel(spel) : ''}
     ${klaar ? `<p class="eindstand">${t[0] > t[1] ? 'Wij winnen de partij!' : t[0] < t[1] ? 'Zij winnen de partij.' : 'Gelijkspel.'}</p>` : ''}
     <div class="venster-knoppen">${spel.handen ? '<button class="knop" data-actie="open" data-venster="handen">Alle handen</button>' : ''}${klaar
       ? '<button class="knop" data-actie="naarStart">Beginscherm</button><button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button>'
@@ -460,6 +474,39 @@ function vensterHtml(spel) {
     case 'instellingen': return instellingenVenster(spel);
     default: return '';
   }
+}
+
+// ---------- Leren klaverjassen ----------
+function leerRegel(spel) {
+  const stap = spel.leren.stap;
+  const n = spel.voortgang.potjes[stap] ?? 0;
+  if (spel.nieuweStap) return `<p class="leer-nieuw">★ Stap ${spel.nieuweStap} is vrijgespeeld: ${STAPPEN[spel.nieuweStap].naam}. Kies hem via het huisje en "Leren klaverjassen".</p>`;
+  if (stap < spel.voortgang.open || stap === LAATSTE_STAP) return `<p class="leer-stand">Oefenen · stap ${stap} · ${n} ${n === 1 ? 'potje' : 'potjes'} gespeeld</p>`;
+  return `<p class="leer-stand">Oefenen · stap ${stap} · ${Math.min(n, POTJES_PER_STAP)} van ${POTJES_PER_STAP} potjes voor de volgende stap</p>`;
+}
+
+function lerenVenster(spel) {
+  const v = spel.voortgang;
+  const rijen = [];
+  rijen.push(`<div class="leer-rij dicht"><div class="leer-nr">1</div><div class="leer-tekst"><b>Lessen</b><span>Kaartwaarden, bekennen, troeven, roem, nat en pit, seinen. Komt binnenkort.</span></div></div>`);
+  for (let stap = EERSTE_STAP; stap <= LAATSTE_STAP; stap++) {
+    const s = STAPPEN[stap];
+    const open = stap <= v.open;
+    const n = v.potjes[stap] ?? 0;
+    const bezig = (spel.leren?.stap === stap && spel.partij && spel.fase !== 'partijKlaar');
+    const status = !open ? `Na ${POTJES_PER_STAP} potjes in stap ${stap - 1}`
+      : stap < v.open || stap === LAATSTE_STAP ? `${n} ${n === 1 ? 'potje' : 'potjes'} gespeeld`
+        : `${Math.min(n, POTJES_PER_STAP)} van ${POTJES_PER_STAP} potjes`;
+    rijen.push(`<div class="leer-rij ${open ? '' : 'dicht'}">
+      <div class="leer-nr">${open ? stap : '🔒'}</div>
+      <div class="leer-tekst"><b>${s.naam}</b><span>${s.uitleg}</span><span class="leer-status">${status}</span></div>
+      ${open ? `<button class="knop ${stap === v.open ? 'goud' : 'licht-donker'}" data-actie="leerStap" data-stap="${stap}">${bezig ? 'Verder' : 'Start'}</button>` : ''}
+    </div>`);
+  }
+  return venster(`<h2>Leren klaverjassen</h2>
+    <p class="sub">Amsterdams · stap voor stap van open kaarten naar sterke tegenstanders</p>
+    <div class="leer-lijst">${rijen.join('')}</div>
+    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`, true, 'leren');
 }
 
 // ---------- Statistieken ----------
@@ -512,8 +559,9 @@ function statistiekVenster(spel) {
 
 // ---------- Beginscherm ----------
 function beginscherm(spel) {
-  const loopt = spel.partij ? spel.fase !== 'partijKlaar' : Boolean(spel.bewaard);
-  const info = spel.partij
+  const gewoon = spel.partij && !spel.leren; // een oefenpartij telt hier niet als lopende partij
+  const loopt = gewoon ? spel.fase !== 'partijKlaar' : Boolean(spel.bewaard);
+  const info = gewoon
     ? { potje: Math.min(potjeNummer(spel.partij), AANTAL_POTJES), totaal: spel.partij.totaal }
     : spel.bewaard;
   const waaier = [
@@ -529,6 +577,7 @@ function beginscherm(spel) {
           ${loopt ? `<button class="knop goud start-knop" data-actie="verderSpelen">Verder spelen
             <span class="start-knop-sub">Potje ${info.potje} van ${AANTAL_POTJES} · Wij ${info.totaal[0]} – Zij ${info.totaal[1]}</span></button>` : ''}
           <button class="knop ${loopt ? 'licht' : 'goud'} start-knop" data-actie="nieuwePartijVraag">Nieuwe partij</button>
+          <button class="knop licht start-knop" data-actie="open" data-venster="leren">Leren klaverjassen</button>
           <div class="start-rij">
             <button class="knop licht start-knop" data-actie="open" data-venster="statistiek">Statistieken</button>
             <button class="knop licht start-knop" data-actie="open" data-venster="instellingen">Instellingen</button>
@@ -553,7 +602,7 @@ export function render(el, spel, acties) {
   NAMEN = spel.namen;
   if (spel.scherm === 'start') {
     zorgVoorSprite();
-    patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : spel.venster === 'statistiek' ? statistiekVenster(spel) : ''}`);
+    patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : spel.venster === 'statistiek' ? statistiekVenster(spel) : spel.venster === 'leren' ? lerenVenster(spel) : ''}`);
     vulPlaatjes(el);
     koppel(el, acties);
     return;
@@ -562,6 +611,7 @@ export function render(el, spel, acties) {
   // Posities van vóór het bijwerken: daarvandaan vliegt een gespeelde kaart en schuift de hand.
   const voor = new Map();
   for (const k of el.querySelectorAll('.hand [data-kaart]')) voor.set(k.dataset.kaart, k.getBoundingClientRect());
+  for (const k of el.querySelectorAll('.open-hand [data-sleutel]')) voor.set(k.dataset.sleutel, k.getBoundingClientRect());
   patchHtml(el, `
     <div class="laken"></div>
     ${balk(spel)}
@@ -571,6 +621,7 @@ export function render(el, spel, acties) {
     ${troefGroot(spel)}
     ${knoppenRechts(spel)}
     <div class="hint">${hint(spel)}</div>
+    ${spel.hulpMelding && ['draaien', 'spelen'].includes(spel.fase) ? `<div class="hulp-paneel" data-sleutel="hulp-${spel.hulpMelding.length}"><span class="hulp-ikoon">💡</span><span>${spel.hulpMelding}</span></div>` : ''}
     ${hand(spel)}
     ${vensters(spel)}`);
   vulPlaatjes(el);
@@ -643,6 +694,7 @@ function koppel(el, acties) {
       if (actie === 'draai') acties.draai(knop.dataset.keuze);
       else if (actie === 'kiesTroef') acties.kiesTroef(knop.dataset.kleur);
       else if (actie === 'statSysteem') acties.statSysteem(knop.dataset.waarde);
+      else if (actie === 'leerStap') acties.leerStap(knop.dataset.stap);
       else if (actie === 'open') acties.open(knop.dataset.venster);
       else if (actie === 'instelling') acties.instelling(knop.dataset.sleutel, knop.dataset.waarde);
       else acties[actie]?.();
