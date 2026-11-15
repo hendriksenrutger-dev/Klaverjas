@@ -8,6 +8,7 @@ import * as geluid from './geluid.js';
 import { laadPlaatjes } from './plaatjes.js';
 import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek, laadVoortgang, bewaarVoortgang } from './opslag.js';
 import { STAPPEN, LEER_REGELS, compleetVoortgang, telLeerPotje, hintUitleg, roemUitleg, seinUitleg } from './leren.js';
+import { LESSEN, beoordeel, lesKlaar, alleLessenKlaar } from './lessen.js';
 import { compleet, legeStatistiek, telPotje, telPartij, telVergelijk } from './statistiek.js';
 
 const snel = new URLSearchParams(location.search).has('snel'); // voor automatische tests
@@ -56,6 +57,7 @@ const spel = {
   hulpMelding: null, // uitleg onder de tafel (hulp en hint)
   hintBezig: false,
   nieuweStap: null, // net vrijgespeelde stap, voor de uitslag
+  les: null, // { nr, deel: 'uitleg'|'opdracht'|'klaar', pagina, opdracht, antwoord, uitslag }
 };
 
 const stapInfo = () => (spel.leren ? STAPPEN[spel.leren.stap] : null);
@@ -535,6 +537,62 @@ const acties = {
       if (hervat('leer')) return;
     }
     nieuwePartij({ stap });
+  },
+  // ---------- Lessen ----------
+  startLes(nr) {
+    nr = Number(nr);
+    if (!LESSEN.some((l) => l.nr === nr)) return;
+    bewaarNu();
+    stopLopend();
+    spel.les = { nr, deel: 'uitleg', pagina: 0, opdracht: 0, antwoord: null, uitslag: null };
+    spel.scherm = 'les';
+    spel.venster = null;
+    teken();
+  },
+  lesVolgende() {
+    const l = spel.les;
+    if (!l) return;
+    const les = LESSEN.find((x) => x.nr === l.nr);
+    if (l.deel === 'uitleg') {
+      if (l.pagina < les.uitleg.length - 1) l.pagina++;
+      else Object.assign(l, { deel: 'opdracht', opdracht: 0, antwoord: null, uitslag: null });
+    } else if (l.deel === 'opdracht' && l.uitslag?.goed) {
+      if (l.opdracht < les.opdrachten.length - 1) Object.assign(l, { opdracht: l.opdracht + 1, antwoord: null, uitslag: null });
+      else {
+        l.deel = 'klaar';
+        const v = lesKlaar(spel.voortgang, l.nr);
+        // Alle lessen klaar: stap 2 (oefenen met open kaarten) gaat open.
+        if (alleLessenKlaar(v) && v.open < 2) { v.open = 2; l.stapOpen = true; }
+        spel.voortgang = v;
+        bewaarVoortgang(v);
+      }
+    } else if (l.deel === 'klaar') {
+      const volgende = LESSEN.find((x) => x.nr === l.nr + 1);
+      if (volgende) return acties.startLes(volgende.nr);
+      return acties.lesStop();
+    }
+    teken();
+  },
+  lesTerug() {
+    const l = spel.les;
+    if (l?.deel === 'uitleg' && l.pagina > 0) { l.pagina--; teken(); }
+  },
+  lesAntwoord(waarde) {
+    const l = spel.les;
+    if (!l || l.deel !== 'opdracht' || l.uitslag?.goed) return;
+    const o = LESSEN.find((x) => x.nr === l.nr).opdrachten[l.opdracht];
+    const antwoord = o.soort === 'keuze' ? Number(waarde) : o.hand.find((k) => R.kaartId(k) === waarde);
+    if (antwoord === undefined) return;
+    l.antwoord = waarde;
+    l.uitslag = beoordeel(o, antwoord);
+    teken();
+  },
+  lesStop() {
+    spel.les = null;
+    spel.scherm = 'start';
+    spel.venster = 'lessen';
+    spel.bewaard = bewaardeSamenvatting();
+    teken();
   },
   // Hint: de computer stelt een kaart (of spelen/passen) voor, met uitleg uit vaste regels.
   hint() {
