@@ -53,7 +53,7 @@ export const LESSEN = [
       { soort: 'kaart', troef: 'ruiten', slag: slag('kV'), hand: kaarten('k7 kA h10 h8 r9 sH sV s8'),
         vraag: 'Speel een kaart die mag en waarmee je de slag wint.', goed: ['klaveren-A'],
         fout: { 'klaveren-7': 'Die mag, maar daarmee win je de slag niet.' }, goedTekst: 'De aas wint de slag.' },
-      { soort: 'kaart', troef: 'ruiten', slag: slag('kA k8 k9'), hand: kaarten('k7 kV h10 h8 r9 sH sV s8'),
+      { soort: 'kaart', troef: 'ruiten', slag: slag('kA k8 kB'), hand: kaarten('k7 kV h10 h8 r9 sH sV s8'),
         vraag: 'West wint deze slag toch. Speel de kaart die de tegenpartij de minste punten geeft.', goed: ['klaveren-7'],
         fout: { 'klaveren-V': 'Die mag, maar geeft 3 punten weg. De 7 geeft niets weg.' }, goedTekst: 'De 7 geeft geen punten weg.' },
     ],

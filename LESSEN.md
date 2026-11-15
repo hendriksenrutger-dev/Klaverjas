@@ -47,7 +47,7 @@ Vraag: speel een kaart die mag en waarmee je de slag wint. → **♣A**
 Fout met een andere kleur: "Je moet klaveren bekennen."
 Fout met ♣7: "Die mag, maar daarmee win je de slag niet."
 
-**Opdracht 2** — Troef is ruiten. West komt uit met ♣A, Noord speelt ♣8, Oost ♣9.
+**Opdracht 2** — Troef is ruiten. West komt uit met ♣A, Noord speelt ♣8, Oost ♣B. (Aangepast: met ♣9 erin maakte ♣7 een driekaart.)
 Jouw hand: ♣7 ♣V ♥10 ♥8 ♦9 ♠H ♠V ♠8.
 Vraag: West wint deze slag toch. Speel de kaart die de tegenpartij de minste punten geeft. → **♣7**
 Fout met ♣V: "Die mag, maar geeft 3 punten weg. De 7 geeft niets weg."
