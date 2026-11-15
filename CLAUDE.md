@@ -122,7 +122,7 @@ Afgesproken met Rutger: in deze app, met een knop "Leren klaverjassen" op het be
 
 Leerpad in vijf stappen. Een stap gaat open na 4 gespeelde potjes in de vorige stap; teruggaan kan altijd.
 
-1. **Lessen** (wordt als laatste gebouwd): korte lessen met vooraf bedachte handen, uitleg en een opdracht. Volgorde: kaartwaarden en troefvolgorde → bekennen → troeven → roem → nat en pit → seinen → Rotterdams.
+1. **Lessen** (tekst goedgekeurd door Rutger, zie `LESSEN.md`; inhoud in `src/ui/lessen.js`): zeven korte lessen met uitleg en opdrachten aan tafel (kaart aantikken of antwoord kiezen; fout geeft uitleg, opnieuw proberen). Volgorde: kaartwaarden en troefvolgorde → bekennen → troeven → roem → spelen of passen, nat en pit → seinen → Rotterdams. Stap 2 gaat open als alle lessen klaar zijn; lessen blijven later opnieuw te doen.
 2. **Oefenen met open kaarten:** alle handen zichtbaar, tegenstanders makkelijk, hulp aan, hint-knop.
 3. **Oefenen met dichte kaarten:** tegenstanders makkelijk, hulp aan, hint-knop.
 4. **Zelfstandig:** tegenstanders normaal, hulp uit, hint-knop.

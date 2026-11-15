@@ -8,6 +8,7 @@ import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD, SYMBOOL } 
 import { patchHtml } from './patch.js';
 import { vulPlaatjes } from './plaatjes.js';
 import { STAPPEN, POTJES_PER_STAP, EERSTE_STAP, LAATSTE_STAP } from './leren.js';
+import { LESSEN, AANTAL_LESSEN, kaarten as lesKaarten } from './lessen.js';
 
 const KLEURNAAM = { klaveren: 'Klaveren', ruiten: 'Ruiten', harten: 'Harten', schoppen: 'Schoppen' };
 const PLEKKEN = [
@@ -488,13 +489,18 @@ function leerRegel(spel) {
 function lerenVenster(spel) {
   const v = spel.voortgang;
   const rijen = [];
-  rijen.push(`<div class="leer-rij dicht"><div class="leer-nr">1</div><div class="leer-tekst"><b>Lessen</b><span>Kaartwaarden, bekennen, troeven, roem, nat en pit, seinen. Komt binnenkort.</span></div></div>`);
+  const klaar = (v.lessen ?? []).length;
+  rijen.push(`<div class="leer-rij">
+      <div class="leer-nr">1</div>
+      <div class="leer-tekst"><b>Lessen</b><span>Kaartwaarden, bekennen, troeven, roem, nat en pit, seinen, Rotterdams.</span><span class="leer-status">${klaar} van ${AANTAL_LESSEN} lessen klaar</span></div>
+      <button class="knop ${v.open === 1 ? 'goud' : 'licht-donker'}" data-actie="open" data-venster="lessen">Lessen</button>
+    </div>`);
   for (let stap = EERSTE_STAP; stap <= LAATSTE_STAP; stap++) {
     const s = STAPPEN[stap];
     const open = stap <= v.open;
     const n = v.potjes[stap] ?? 0;
     const bezig = (spel.leren?.stap === stap && spel.partij && spel.fase !== 'partijKlaar');
-    const status = !open ? `Na ${POTJES_PER_STAP} potjes in stap ${stap - 1}`
+    const status = !open ? (stap === EERSTE_STAP ? 'Na de lessen' : `Na ${POTJES_PER_STAP} potjes in stap ${stap - 1}`)
       : stap < v.open || stap === LAATSTE_STAP ? `${n} ${n === 1 ? 'potje' : 'potjes'} gespeeld`
         : `${Math.min(n, POTJES_PER_STAP)} van ${POTJES_PER_STAP} potjes`;
     rijen.push(`<div class="leer-rij ${open ? '' : 'dicht'}">
@@ -507,6 +513,82 @@ function lerenVenster(spel) {
     <p class="sub">Amsterdams · stap voor stap van open kaarten naar sterke tegenstanders</p>
     <div class="leer-lijst">${rijen.join('')}</div>
     <div class="venster-knoppen"><button class="knop" data-actie="sluit">Sluiten</button></div>`, true, 'leren');
+}
+
+// ---------- Lessen ----------
+function lessenVenster(spel) {
+  const klaar = new Set(spel.voortgang.lessen ?? []);
+  const eerstVolgende = LESSEN.find((l) => !klaar.has(l.nr))?.nr;
+  const rijen = LESSEN.map((l) => `<div class="leer-rij">
+      <div class="leer-nr">${klaar.has(l.nr) ? '✓' : l.nr}</div>
+      <div class="leer-tekst"><b>${l.titel}</b><span class="leer-status">${klaar.has(l.nr) ? 'Klaar' : `${l.opdrachten.length} ${l.opdrachten.length === 1 ? 'opdracht' : 'opdrachten'}`}</span></div>
+      <button class="knop ${l.nr === eerstVolgende ? 'goud' : 'licht-donker'}" data-actie="startLes" data-les="${l.nr}">${klaar.has(l.nr) ? 'Opnieuw' : 'Start'}</button>
+    </div>`).join('');
+  return venster(`<h2>Lessen</h2>
+    <p class="sub">Kort uitleg, daarna opdrachten aan tafel. Na alle lessen gaat het oefenen open.</p>
+    <div class="leer-lijst lessen-lijst">${rijen}</div>
+    <div class="venster-knoppen"><button class="knop" data-actie="open" data-venster="leren">Terug</button></div>`, true, 'lessen');
+}
+
+function lesBlok(b) {
+  if (typeof b === 'string') return `<p>${b}</p>`;
+  if (Array.isArray(b)) return `<ul>${b.map((x) => `<li>${x}</li>`).join('')}</ul>`;
+  if (b.rij) {
+    return `<div class="les-rij">${lesKaarten(b.rij).map((k, i) => `<div class="met-naam">${kaartHtml(k)}<div>${b.onder?.[i] ?? ''}</div></div>`).join('')}</div>`;
+  }
+  return '';
+}
+
+function lesScherm(spel) {
+  const l = spel.les;
+  const les = LESSEN.find((x) => x.nr === l.nr);
+  const kop = `<header class="les-kop">
+      <button class="knop ikoon" data-actie="lesStop" aria-label="Terug naar de lessen">${IKOON.huis}</button>
+      <div class="les-titel">Les ${les.nr} · ${les.titel}</div>
+      <div class="les-stand">${l.deel === 'uitleg' ? `Uitleg ${l.pagina + 1} van ${les.uitleg.length}` : l.deel === 'opdracht' ? `Opdracht ${l.opdracht + 1} van ${les.opdrachten.length}` : ''}</div>
+    </header>`;
+  if (l.deel === 'uitleg') {
+    return `<main class="les">${kop}
+      <div class="les-uitleg" data-sleutel="uitleg-${l.nr}-${l.pagina}">${les.uitleg[l.pagina].map(lesBlok).join('')}</div>
+      <div class="les-knoppen">${l.pagina > 0 ? '<button class="knop licht" data-actie="lesTerug">Vorige</button>' : ''}<button class="knop goud" data-actie="lesVolgende">${l.pagina < les.uitleg.length - 1 ? 'Volgende' : 'Naar de opdrachten'}</button></div>
+    </main>`;
+  }
+  if (l.deel === 'klaar') {
+    const volgende = LESSEN.find((x) => x.nr === l.nr + 1);
+    return `<main class="les">${kop}
+      <div class="les-uitleg les-klaar"><h2>Les ${les.nr} klaar</h2>
+        ${l.stapOpen ? '<p class="leer-nieuw">★ Alle lessen gedaan. Oefenen met open kaarten staat nu open.</p>' : ''}
+        <p>${volgende ? `Volgende: les ${volgende.nr}, ${volgende.titel.toLowerCase()}.` : 'Dit was de laatste les.'}</p></div>
+      <div class="les-knoppen"><button class="knop licht" data-actie="lesStop">Naar de lessen</button>${volgende ? '<button class="knop goud" data-actie="lesVolgende">Volgende les</button>' : ''}</div>
+    </main>`;
+  }
+  // Opdracht
+  const o = les.opdrachten[l.opdracht];
+  const troef = o.troef
+    ? `<div class="les-troef"><span class="troefrond ${ROOD.has(o.troef) ? 'rood' : ''}">${symbool(o.troef)}</span>Troef · ${KLEURNAAM[o.troef]}${o.systeem === 'rotterdams' ? ' · Rotterdams' : ''}</div>` : '';
+  const slag = o.slag ? `<div class="les-slag">${o.slag.map((x) => `<div class="met-naam">${kaartHtml(x.kaart)}<div>${naam(x.speler)}</div></div>`).join('')}</div>` : '';
+  const kanKiezen = o.soort === 'kaart' && !l.uitslag?.goed;
+  const hand = o.hand ? `<div class="les-hand ${kanKiezen ? 'kiesbaar' : ''}">${o.hand.map((k) => {
+    const id = kaartId(k);
+    const inner = kaartHtml(k, { klasse: l.antwoord === id ? (l.uitslag?.goed ? 'les-goed' : 'les-fout') : '' });
+    return kanKiezen ? `<button class="les-kaart" data-actie="lesAntwoord" data-waarde="${id}" data-sleutel="lk-${id}">${inner}</button>` : `<div class="les-kaart" data-sleutel="lk-${id}">${inner}</div>`;
+  }).join('')}</div>` : '';
+  const opties = o.soort === 'keuze' ? `<div class="les-opties">${o.opties.map((t, i) => {
+    const klasse = String(i) === String(l.antwoord) ? (l.uitslag?.goed ? 'les-goed' : 'les-fout') : '';
+    return `<button class="knop licht-donker ${klasse}" data-actie="lesAntwoord" data-waarde="${i}" ${l.uitslag?.goed ? 'disabled' : ''}>${t}</button>`;
+  }).join('')}</div>` : '';
+  const terugkoppeling = l.uitslag
+    ? `<div class="les-terug ${l.uitslag.goed ? 'goed' : 'fout'}">${l.uitslag.tekst}</div>` : '';
+  return `<main class="les">${kop}
+    <div class="les-opdracht" data-sleutel="opdracht-${l.nr}-${l.opdracht}">
+      ${troef}${slag}
+      <p class="les-vraag">${o.vraag}</p>
+      ${opties}
+      ${terugkoppeling}
+      ${l.uitslag?.goed ? `<div class="les-knoppen"><button class="knop goud" data-actie="lesVolgende">${l.opdracht < les.opdrachten.length - 1 ? 'Volgende opdracht' : 'Les afronden'}</button></div>` : ''}
+    </div>
+    ${hand}
+  </main>`;
 }
 
 // ---------- Statistieken ----------
@@ -602,7 +684,14 @@ export function render(el, spel, acties) {
   NAMEN = spel.namen;
   if (spel.scherm === 'start') {
     zorgVoorSprite();
-    patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : spel.venster === 'statistiek' ? statistiekVenster(spel) : spel.venster === 'leren' ? lerenVenster(spel) : ''}`);
+    patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : spel.venster === 'statistiek' ? statistiekVenster(spel) : spel.venster === 'leren' ? lerenVenster(spel) : spel.venster === 'lessen' ? lessenVenster(spel) : ''}`);
+    vulPlaatjes(el);
+    koppel(el, acties);
+    return;
+  }
+  if (spel.scherm === 'les' && spel.les) {
+    zorgVoorSprite();
+    patchHtml(el, `<div class="laken"></div>${lesScherm(spel)}`);
     vulPlaatjes(el);
     koppel(el, acties);
     return;
@@ -695,6 +784,8 @@ function koppel(el, acties) {
       else if (actie === 'kiesTroef') acties.kiesTroef(knop.dataset.kleur);
       else if (actie === 'statSysteem') acties.statSysteem(knop.dataset.waarde);
       else if (actie === 'leerStap') acties.leerStap(knop.dataset.stap);
+      else if (actie === 'startLes') acties.startLes(knop.dataset.les);
+      else if (actie === 'lesAntwoord') acties.lesAntwoord(knop.dataset.waarde);
       else if (actie === 'open') acties.open(knop.dataset.venster);
       else if (actie === 'instelling') acties.instelling(knop.dataset.sleutel, knop.dataset.waarde);
       else acties[actie]?.();

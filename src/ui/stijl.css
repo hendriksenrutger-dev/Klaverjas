@@ -506,3 +506,40 @@ button { font: inherit; }
 .leer-nieuw { color: #8a6a14; font-weight: 600; }
 .speler.west .open-hand, .speler.oost .open-hand { --kh: 60px; bottom: calc(100% + 4px); }
 .speler.noord .open-hand { margin-left: 70px; }
+
+/* ---------- Lessen ---------- */
+.les { position: absolute; inset: 0; display: flex; flex-direction: column; color: #fff; }
+.les-kop { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: rgba(8,30,19,.55); }
+.les-titel { flex: 1; font-family: var(--cijfers); font-size: 22px; font-weight: 700; color: var(--goud); }
+.les-stand { font-size: 14px; opacity: .8; }
+.les-uitleg { flex: 1; overflow-y: auto; max-width: 860px; margin: 0 auto; padding: 18px 24px; font-size: 18px; line-height: 1.5; }
+.les-uitleg p { margin: 0 0 12px; }
+.les-uitleg ul { margin: 0 0 12px; padding-left: 22px; }
+.les-uitleg li { margin-bottom: 8px; }
+.les-uitleg b { color: var(--goud); }
+.les-klaar { text-align: center; }
+.les-klaar h2 { font-family: var(--cijfers); color: var(--goud); font-size: 34px; margin: 20px 0 10px; }
+.les-rij { display: flex; gap: 8px; justify-content: center; margin: 6px 0 14px; --kh: 86px; }
+.les-rij .met-naam, .les-slag .met-naam { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; }
+.les-knoppen { display: flex; gap: 12px; justify-content: center; padding: 10px 16px 16px; }
+.les-knoppen .knop { min-width: 180px; }
+.les-opdracht { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 16px 0; overflow-y: auto; }
+.les-troef { display: flex; align-items: center; gap: 8px; background: var(--creme); color: var(--zwart); border-radius: 20px; padding: 4px 14px 4px 4px; font-weight: 600; font-size: 15px; }
+.les-troef .troefrond { width: 30px; height: 30px; }
+.les-slag { display: flex; gap: 12px; --kh: 96px; }
+.les-vraag { font-size: 19px; font-weight: 600; text-align: center; margin: 4px 0; max-width: 760px; }
+.les-opties { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.les-opties .knop { min-width: 120px; color: #fff; background: rgba(255,255,255,.12); }
+.les-terug { max-width: 720px; text-align: center; padding: 8px 16px; border-radius: 12px; font-size: 16px; }
+.les-terug.goed { background: rgba(232, 200, 115, .95); color: var(--zwart); }
+.les-terug.fout { background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.3); }
+.knop.les-goed { background: var(--goud) !important; color: var(--zwart) !important; }
+.knop.les-fout { background: rgba(179,38,45,.85) !important; }
+.les-hand { display: flex; gap: 6px; justify-content: center; padding: 8px 16px 12px; --kh: min(19dvh, 150px); }
+.les-kaart { border: none; background: none; padding: 0; cursor: pointer; }
+.les-hand.kiesbaar .les-kaart:active { transform: translateY(-6px); }
+.kaart.les-goed { box-shadow: 0 0 0 4px var(--goud), 0 8px 18px rgba(0,0,0,.4); transform: translateY(-10px); }
+.kaart.les-fout { box-shadow: 0 0 0 4px #b3262d; }
+.lessen-lijst { gap: 5px; }
+.lessen-lijst .leer-rij { padding: 4px 12px; }
+.lessen-lijst .leer-rij .knop { min-height: 44px; }
