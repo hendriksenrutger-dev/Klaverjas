@@ -5,7 +5,7 @@ import { K, Ks } from './hulp.js';
 
 describe('leerpad: voortgang', () => {
   test('na 4 potjes in de open stap gaat de volgende open', () => {
-    let v = legeVoortgang();
+    let v = { ...legeVoortgang(), open: 2 };
     let nieuw = null;
     for (let i = 0; i < POTJES_PER_STAP; i++) ({ voortgang: v, nieuweStap: nieuw } = telLeerPotje(v, 2));
     assert.equal(v.open, 3);

@@ -20,15 +20,16 @@ export const LAATSTE_STAP = 5;
 // Regels in de oefenstand.
 export const LEER_REGELS = Object.freeze({ systeem: 'amsterdams', rondesVoorOpnieuwDelen: 2, verzaakbescherming: true, troefkeuze: 'traditioneel' });
 
+// open: hoogste stap die open is (1 = alleen de lessen). lessen: nummers van afgeronde lessen.
 export function legeVoortgang() {
-  return { open: EERSTE_STAP, potjes: {} };
+  return { open: 1, potjes: {}, lessen: [] };
 }
 
 export function compleetVoortgang(v) {
   const leeg = legeVoortgang();
   if (!v) return leeg;
-  const open = Number.isInteger(v.open) ? Math.min(LAATSTE_STAP, Math.max(EERSTE_STAP, v.open)) : leeg.open;
-  return { open, potjes: { ...(v.potjes ?? {}) } };
+  const open = Number.isInteger(v.open) ? Math.min(LAATSTE_STAP, Math.max(1, v.open)) : leeg.open;
+  return { open, potjes: { ...(v.potjes ?? {}) }, lessen: Array.isArray(v.lessen) ? v.lessen.slice() : [] };
 }
 
 // Telt een gespeeld potje in een stap. Geeft { voortgang, nieuweStap } (nieuweStap = net vrijgespeeld of null).
@@ -41,7 +42,7 @@ export function telLeerPotje(v, stap) {
     open += 1;
     nieuweStap = open;
   }
-  return { voortgang: { open, potjes }, nieuweStap };
+  return { voortgang: { ...voortgang, open, potjes }, nieuweStap };
 }
 
 const NAAM_KLEUR = { klaveren: 'klaveren', ruiten: 'ruiten', harten: 'harten', schoppen: 'schoppen' };
