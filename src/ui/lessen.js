@@ -74,7 +74,7 @@ export const LESSEN = [
         goedTekstPer: { 'harten-7': 'Je moet troeven, en met de 7 win je met de laagste troef.', 'harten-9': 'Je moet troeven. De 7 had ook gekund; dan had je je nel bewaard.' } },
       { soort: 'kaart', troef: 'harten', slag: slag('s9 sA s8'), hand: kaarten('h9 h7 kA k8 r10 rV r7 kH'),
         vraag: 'Noord, je maat, heeft de slag. Moet je troeven?', goed: 'alles',
-        goedTekst: 'Je maat heeft de slag, dus je hoeft niet te troeven. Een kaart zonder punten is hier prima.',
+        goedTekst: 'Je maat heeft de slag, dus je hoeft niet te troeven. Punten die je nu bijspeelt, gaan naar jullie.',
         goedTekstTroef: 'Dat mag, maar het hoefde niet: je maat heeft de slag. Zo ben je een troef kwijt.' },
       { soort: 'kaart', troef: 'klaveren', slag: slag('kV k7 kA'), hand: kaarten('k9 k8 hA h10 rH r8 sV s7'),
         vraag: 'Troef is gevraagd en Oost ligt hoog met de aas. Wat moet je spelen?', goed: ['klaveren-9'],

@@ -158,6 +158,7 @@ function midden(spel) {
 // ---------- Hint ----------
 function hint(spel) {
   if (spel.hintBezig) return 'De computer denkt na over een hint…';
+  if (spel.wachtOpAdvies) return 'De computer kijkt even mee…';
   if (spel.fase === 'draaien') {
     const m = spel.draaiMelding;
     const kleurNaam = (k) => KLEURNAAM[k].toLowerCase();
@@ -568,7 +569,7 @@ function lesScherm(spel) {
     ? `<div class="les-troef"><span class="troefrond ${ROOD.has(o.troef) ? 'rood' : ''}">${symbool(o.troef)}</span>Troef · ${KLEURNAAM[o.troef]}${o.systeem === 'rotterdams' ? ' · Rotterdams' : ''}</div>` : '';
   const slag = o.slag ? `<div class="les-slag">${o.slag.map((x) => `<div class="met-naam">${kaartHtml(x.kaart)}<div>${naam(x.speler)}</div></div>`).join('')}</div>` : '';
   const kanKiezen = o.soort === 'kaart' && !l.uitslag?.goed;
-  const hand = o.hand ? `<div class="les-hand ${kanKiezen ? 'kiesbaar' : ''}">${o.hand.map((k) => {
+  const hand = o.hand ? `<div class="les-hand ${kanKiezen ? 'kiesbaar' : ''}">${sorteerHand(o.hand, o.troef ?? null).map((k) => {
     const id = kaartId(k);
     const inner = kaartHtml(k, { klasse: l.antwoord === id ? (l.uitslag?.goed ? 'les-goed' : 'les-fout') : '' });
     return kanKiezen ? `<button class="les-kaart" data-actie="lesAntwoord" data-waarde="${id}" data-sleutel="lk-${id}">${inner}</button>` : `<div class="les-kaart" data-sleutel="lk-${id}">${inner}</div>`;
@@ -710,9 +711,12 @@ export function render(el, spel, acties) {
     ${troefGroot(spel)}
     ${knoppenRechts(spel)}
     <div class="hint">${hint(spel)}</div>
-    ${spel.hulpMelding && ['draaien', 'spelen'].includes(spel.fase) ? `<div class="hulp-paneel" data-sleutel="hulp-${spel.hulpMelding.length}"><span class="hulp-ikoon">💡</span><span>${spel.hulpMelding}</span></div>` : ''}
+    ${!spel.tweedeKans && spel.hulpMelding && ['draaien', 'spelen'].includes(spel.fase) ? `<div class="hulp-paneel" data-sleutel="hulp-${spel.hulpMelding.length}"><span class="hulp-ikoon">💡</span><span>${spel.hulpMelding}</span></div>` : ''}
     ${hand(spel)}
-    ${vensters(spel)}`);
+    ${vensters(spel)}
+    ${spel.tweedeKans ? venster(`<h2>Weet je het zeker?</h2>
+      <p class="tweede-kans-tekst">${spel.tweedeKans.tekst}</p>
+      <div class="venster-knoppen"><button class="knop goud" data-actie="tweedeKansOpnieuw">Opnieuw kiezen</button><button class="knop" data-actie="tweedeKansToch">${spel.tweedeKans.knop}</button></div>`, false, 'tweedeKans') : ''}`);
   vulPlaatjes(el);
   koppel(el, acties);
   if (spel.nieuweKaart) vliegNaarSlag(el, spel.nieuweKaart, voor);

@@ -70,7 +70,7 @@ Fout met een andere kleur: "Je kunt niet bekennen: je moet troeven."
 
 **Opdracht 2** — Troef is harten. West komt uit met ♠9, Noord speelt ♠A, Oost ♠8.
 Jouw hand: dezelfde als hierboven.
-Vraag: Noord (je maat) heeft de slag. Moet je troeven? → **Nee.** Speel bijvoorbeeld ♣8 of ♦7: geen punten, troef bewaard. Goed: elke kaart die mag; de app benoemt dat je hier niet hoeft te troeven.
+Vraag: Noord (je maat) heeft de slag. Moet je troeven? → **Nee.** Goed: elke kaart die mag. Tekst: "Je maat heeft de slag, dus je hoeft niet te troeven. Punten die je nu bijspeelt, gaan naar jullie." (Aangepast na Rutgers test: eerst stond er dat een kaart zonder punten prima was.)
 
 **Opdracht 3** — Troef is klaveren. West komt uit met ♣V, Noord speelt ♣7, Oost ♣A.
 Jouw hand: ♣9 ♣8 ♥A ♥10 ♦H ♦8 ♠V ♠7.
