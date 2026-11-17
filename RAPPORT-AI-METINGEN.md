@@ -23,6 +23,8 @@ Nieuw: `duelKaart` (gebruikt door `ontwikkeling/bovengrens.mjs`).
 | Speelstrategie: maat neemt hem (duiken) | 600 | −0,6 | ± 3,2 |
 | Vuistregel gedekte kaart (heer naast aas) | 2 × 500 | 0,0 | ± 1,4 |
 | Zonder vuistregels | 500 | −1,1 | ± 2,1 |
+| Zonder de drie nieuwe regels (uitkomen, bijgooien, troef gevraagd) | 4 × 400 | +0,7 | ± 2 (gecombineerd) |
+| Zonder de twaalf regels uit VUISTREGELS.md | 4 × 400 | −0,7 | ± 1,3 (gecombineerd) |
 
 ## Conclusies
 

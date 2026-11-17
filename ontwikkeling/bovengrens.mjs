@@ -18,6 +18,11 @@ const A = {
   gedekt: { ...basis, slim: { gedekt: true, maatNeemt: false } },
   maatNeemt: { ...basis, slim: { gedekt: false, maatNeemt: true } },
   regelGedekt: { ...basis, gedektRegel: true },
+  zonderLijst: { ...basis, regels: (await import('../src/ai/simulatie.js')).GEEN_NIEUWE_REGELS },
+  zonderNieuweRegels: { ...basis, regels: { uitkomen: false, bijgooien: false, troefGevraagd: false } },
+  alleenUitkomen: { ...basis, regels: { uitkomen: true, bijgooien: false, troefGevraagd: false } },
+  alleenBijgooien: { ...basis, regels: { uitkomen: false, bijgooien: true, troefGevraagd: false } },
+  alleenTroef: { ...basis, regels: { uitkomen: false, bijgooien: false, troefGevraagd: true } },
   geenVuistregels: { ...basis, vuist: false },
   beide: { ...basis, slim: { gedekt: true, maatNeemt: true } },
 }[welke];

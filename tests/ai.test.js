@@ -430,7 +430,8 @@ describe('vuistregels bij bijna gelijke kaarten', async () => {
     const w = basis({ speler: 3, hand: Ks('hA k10 kV'), slag: slagNu });
     assert.equal(vuistregelStraf(w, K('hA')), 1);
     assert.equal(vuistregelStraf(w, K('kV')), 0);
-    assert.equal(vuistregelStraf(w, K('k10')), 0); // niet vrij: ♣A zit er nog in
+    // Alleen de regel over vrije kaarten (de nieuwe regel 'bescherm een tien' telt apart).
+    assert.equal(vuistregelStraf(w, K('k10'), undefined, false, { uitkomen: true, bijgooien: true, troefGevraagd: true }), 0); // niet vrij: ♣A zit er nog in
   });
 
   test('een vrije kaart die de slag wint mag gewoon', () => {
@@ -446,13 +447,14 @@ describe('vuistregel: gedekte kaart bij afgooien', async () => {
 
   test('heer naast eigen aas niet weggooien als de tien nog in het spel is (voorbeeld Rutger)', () => {
     const w = basis({ speler: 0, hand: Ks('sA sH k8 k7'), slag });
-    assert.equal(vuistregelStraf(w, K('sH'), undefined, true), 1);
+    assert.ok(vuistregelStraf(w, K('sH'), undefined, true) > 0);
     assert.equal(vuistregelStraf(w, K('k8'), undefined, true), 0);
   });
 
   test('een kale heer zonder hogere eigen kaart mag wel weg', () => {
     const w = basis({ speler: 0, hand: Ks('sH k8 k7'), slag });
-    assert.equal(vuistregelStraf(w, K('sH'), undefined, true), 0);
+    // Alleen de regel over gedekte kaarten (punten bijgooien op een slag van de tegenpartij telt apart).
+    assert.equal(vuistregelStraf(w, K('sH'), undefined, true, { uitkomen: false, bijgooien: false, troefGevraagd: false }), 0);
   });
 });
 
@@ -462,5 +464,119 @@ describe('troef kiezen bij verplicht spelen', async () => {
     const r = kiesVerplicht(Ks('hB h9 hA h10 sA k7 r8 s7'), { speler: 1, deler: 0, rng: maakRng(3), simulaties: 60 });
     assert.equal(r.kleur, 'harten');
     assert.equal(r.scores.length, 4);
+  });
+});
+
+describe('vuistregels uit Rutgers voorbeelden (uitkomen, bijgooien, troef gevraagd)', async () => {
+  const { vuistregelStraf } = await import('../src/ai/simulatie.js');
+  const basis = (o) => ({ troef: 'harten', spelendTeam: 1, systeem: 'amsterdams', slagen: [], aantallen: [8, 8, 8, 8], uitkomer: 2, kiezer: 1, ...o });
+  // Onbekend: alles behalve de eigen hand en wat al gespeeld is.
+  const onbekendVan = (hand, weg = []) => {
+    const bekend = new Set([...hand, ...weg].map((k) => `${k.kleur}-${k.rang}`));
+    const alles = [];
+    for (const kleur of ['klaveren', 'ruiten', 'harten', 'schoppen']) for (const rang of ['7', '8', '9', '10', 'B', 'V', 'H', 'A']) alles.push({ kleur, rang });
+    return alles.filter((k) => !bekend.has(`${k.kleur}-${k.rang}`));
+  };
+
+  test('uitkomen zonder de hoogste kaart: de laagste, en geen roemgevaar (voorbeeld ♦V uit V-9-8)', () => {
+    const hand = Ks('hB hH sA sB rV r9 r8 kB');
+    const w = basis({ speler: 2, hand, slag: [] });
+    const onb = onbekendVan(hand);
+    assert.equal(vuistregelStraf(w, K('r8'), onb), 0);
+    assert.ok(vuistregelStraf(w, K('rV'), onb) > 0);
+    assert.ok(vuistregelStraf(w, K('r9'), onb) > 0); // 9-10-B kan roem worden
+    assert.equal(vuistregelStraf(w, K('sA'), onb), 0); // aas: hoogste kaart, wint zelf
+  });
+
+  test('punten bijgooien alleen als je maat de slag al heeft (voorbeeld ♠A van Oost)', () => {
+    const hand = Ks('sA s8 kA');
+    const slag = [{ speler: 2, kaart: K('r7') }]; // Noord (tegenstander van Oost) ligt voor
+    const w = basis({ speler: 3, hand, slag });
+    const onb = onbekendVan(hand, [K('r7')]);
+    assert.ok(vuistregelStraf(w, K('sA'), onb) > 0);
+    assert.equal(vuistregelStraf(w, K('s8'), onb), 0);
+    const w2 = basis({ speler: 3, hand, slag: [{ speler: 2, kaart: K('r7') }, { speler: 0, kaart: K('rA') }, { speler: 1, kaart: K('h7') }] });
+    assert.equal(vuistregelStraf(w2, K('s8'), onbekendVan(hand, [K('r7'), K('rA'), K('h7')])), 0);
+  });
+
+  test('troef gevraagd en je kunt niet overtroeven: geen nel weggooien (voorbeeld West)', () => {
+    const hand = Ks('h9 h7 s8');
+    const slag = [{ speler: 3, kaart: K('hH') }, { speler: 0, kaart: K('hB') }];
+    const w = basis({ speler: 1, hand, slag });
+    const onb = onbekendVan(hand, [K('hH'), K('hB')]);
+    assert.ok(vuistregelStraf(w, K('h9'), onb) > 0);
+    assert.equal(vuistregelStraf(w, K('h7'), onb), 0);
+  });
+});
+
+describe('vuistregels uit VUISTREGELS.md', async () => {
+  const { vuistregelStraf } = await import('../src/ai/simulatie.js');
+  const basis = (o) => ({ troef: 'harten', spelendTeam: 0, systeem: 'amsterdams', slagen: [], aantallen: [8, 8, 8, 8], uitkomer: 0, kiezer: 0, ...o });
+  const onbekendVan = (bekend) => {
+    const ids = new Set(bekend.map((k) => `${k.kleur}-${k.rang}`));
+    const alles = [];
+    for (const kleur of ['klaveren', 'ruiten', 'harten', 'schoppen']) for (const rang of ['7', '8', '9', '10', 'B', 'V', 'H', 'A']) alles.push({ kleur, rang });
+    return alles.filter((k) => !ids.has(`${k.kleur}-${k.rang}`));
+  };
+  const alleenRegel = (naam) => ({ [naam]: true });
+
+  test('4: geen troef trekken als niemand anders nog troef heeft', () => {
+    const hand = Ks('hB hA kA k7');
+    const gespeeld = Ks('h7 h8 h9 h10 hV hH');
+    const w = basis({ speler: 0, hand, slag: [] });
+    assert.equal(vuistregelStraf(w, K('hB'), onbekendVan([...hand, ...gespeeld]), false, alleenRegel('trekNiet')), 1);
+    assert.equal(vuistregelStraf(w, K('kA'), onbekendVan([...hand, ...gespeeld]), false, alleenRegel('trekNiet')), 0);
+  });
+
+  test('5: na het troeftrekken je vrije aas innen', () => {
+    const hand = Ks('hB kA k7 s8');
+    const gespeeld = Ks('h7 h8 h9 h10 hV hH hA');
+    const w = basis({ speler: 0, hand, slag: [] });
+    const onb = onbekendVan([...hand, ...gespeeld]);
+    assert.equal(vuistregelStraf(w, K('kA'), onb, false, alleenRegel('innen')), 0);
+    assert.equal(vuistregelStraf(w, K('s8'), onb, false, alleenRegel('innen')), 1);
+  });
+
+  test('11: niet uitkomen met een kale tien', () => {
+    const hand = Ks('k10 s8 r7');
+    const w = basis({ speler: 1, spelendTeam: 0, hand, slag: [] });
+    assert.equal(vuistregelStraf(w, K('k10'), onbekendVan(hand), false, alleenRegel('kaleTien')), 1);
+  });
+
+  test('16: niet over je maat heen troeven', () => {
+    const hand = Ks('h7 s8');
+    const slag = [{ speler: 1, kaart: K('k9') }, { speler: 2, kaart: K('kA') }, { speler: 3, kaart: K('k8') }];
+    const w = basis({ speler: 0, hand, slag });
+    const onb = onbekendVan([...hand, ...slag.map((x) => x.kaart)]);
+    assert.equal(vuistregelStraf(w, K('h7'), onb, false, alleenRegel('nietOverMaat')), 1);
+    assert.equal(vuistregelStraf(w, K('s8'), onb, false, alleenRegel('nietOverMaat')), 0);
+  });
+
+  test('17: tweede hand laag', () => {
+    const hand = Ks('kH k7 s8');
+    const slag = [{ speler: 3, kaart: K('k9') }];
+    const w = basis({ speler: 0, hand, slag });
+    const onb = onbekendVan([...hand, K('k9')]);
+    assert.equal(vuistregelStraf(w, K('kH'), onb, false, alleenRegel('tweedeHandLaag')), 1);
+    assert.equal(vuistregelStraf(w, K('k7'), onb, false, alleenRegel('tweedeHandLaag')), 0);
+  });
+
+  test('21: geen roem afmaken op een slag van de tegenpartij', () => {
+    const hand = Ks('k9 s8');
+    const slag = [{ speler: 1, kaart: K('k10') }, { speler: 2, kaart: K('k7') }, { speler: 3, kaart: K('kB') }];
+    const w = basis({ speler: 0, hand, slag });
+    const onb = onbekendVan([...hand, ...slag.map((x) => x.kaart)]);
+    assert.equal(vuistregelStraf(w, K('k9'), onb, false, alleenRegel('geenRoemWeg')), 1);
+    assert.equal(vuistregelStraf(w, K('s8'), onb, false, alleenRegel('geenRoemWeg')), 0);
+  });
+
+  test('24: je laatste troef bewaren voor de laatste slagen', () => {
+    // Noord (maat) heeft de slag: Zuid mag vrij kiezen en hoeft niet te troeven.
+    const hand = Ks('h7 s8 r9');
+    const slag = [{ speler: 1, kaart: K('k9') }, { speler: 2, kaart: K('kA') }, { speler: 3, kaart: K('k8') }];
+    const w = basis({ speler: 0, hand, slag });
+    const onb = onbekendVan([...hand, ...slag.map((x) => x.kaart)]);
+    assert.equal(vuistregelStraf(w, K('h7'), onb, false, alleenRegel('lageTroefBewaren')), 1);
+    assert.equal(vuistregelStraf(w, K('s8'), onb, false, alleenRegel('lageTroefBewaren')), 0);
   });
 });
