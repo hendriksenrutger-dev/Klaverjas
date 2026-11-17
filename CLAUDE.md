@@ -118,7 +118,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 
 ## Logboek (op Rutgers verzoek)
 
-- Elk afgelopen potje van een gewone partij wordt op het apparaat vastgelegd (`klaverjas_logboek`, `src/ui/logboek.js`): gedeelde handen, het draaien, alle slagen, uitslag en instellingen. Oefenpartijen niet. Maximaal 2000 potjes (ongeveer 2 MB); daarna vallen de oudste eraf.
+- Elk afgelopen potje van een gewone partij wordt op het apparaat vastgelegd (`klaverjas_logboek`, `src/ui/logboek.js`): gedeelde handen, het draaien, alle slagen, uitslag, de stand vóór het potje en instellingen. Oefenpartijen niet. Maximaal 2000 potjes (ongeveer 2 MB); daarna vallen de oudste eraf.
 - In het venster Statistieken: het aantal vastgelegde potjes en een knop "Exporteren" (een JSON-bestand, via delen of downloaden). "Alles wissen" wist het logboek niet.
 - Doel: later van Rutgers partijen leren. Analyse en nadoen zijn nog niet gebouwd.
 

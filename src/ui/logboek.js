@@ -10,10 +10,11 @@ const LETTER = { klaveren: 'k', ruiten: 'r', harten: 'h', schoppen: 's' };
 export const code = (k) => `${LETTER[k.kleur]}${k.rang}`;
 
 // draaiLog: [{ speler, kleur, keuze }] (keuze 'spelen' | 'passen' | 'verplicht').
-export function potjeRecord({ partijId, nr, deler, handen, draaiLog, potje, uitslag, niveau, troefkeuze, tijd = new Date().toISOString() }) {
+export function potjeRecord({ partijId, nr, stand, deler, handen, draaiLog, potje, uitslag, niveau, troefkeuze, tijd = new Date().toISOString() }) {
   return {
     partij: partijId,
     nr,
+    stand, // [wij, zij] vóór dit potje
     tijd,
     niveau,
     systeem: potje.systeem,

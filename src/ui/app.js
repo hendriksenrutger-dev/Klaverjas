@@ -493,6 +493,7 @@ function eindPotje() {
       spel.logboek = voegToe(spel.logboek, potjeRecord({
         partijId: spel.partijId ?? 'onbekend', nr: spel.partij.potjes.length, deler: spel.potje.uitkomer === undefined ? null : (spel.potje.uitkomer + 3) % 4,
         handen: spel.handen, draaiLog: spel.draaiLog, potje: spel.potje, uitslag: spel.uitslag,
+        stand: spel.partij.totaal.map((t, i) => t - spel.uitslag.totaal[i]), // stand vóór dit potje
         niveau: spel.instellingen.niveau, troefkeuze: spel.partij.instellingen.troefkeuze ?? 'traditioneel',
       }));
       bewaarLogboek(spel.logboek);
