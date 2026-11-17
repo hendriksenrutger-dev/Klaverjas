@@ -543,6 +543,20 @@ describe('vuistregels uit VUISTREGELS.md', async () => {
     assert.equal(vuistregelStraf(w, K('kA'), onbekendVan([...hand, ...gespeeld]), false, alleenRegel('trekNiet')), 0);
   });
 
+  test('troef trekken met een troef die zeker wint (Rutgers voorbeeld: West ♠7)', () => {
+    // Troef harten. Alleen h8 zit nog buiten; jij hebt hB, h10, hH en h7.
+    const hand = Ks('hB h10 hH h7 kV k9');
+    const gespeeld = Ks('h9 hA hV');
+    const onb = onbekendVan([...hand, ...gespeeld]);
+    const w = basis({ speler: 1, spelendTeam: 1, hand, slag: [] });
+    assert.equal(vuistregelStraf(w, K('h7'), onb, false, alleenRegel('trekHoog')), 1);
+    for (const c of ['hB', 'h10', 'hH']) assert.equal(vuistregelStraf(w, K(c), onb, false, alleenRegel('trekHoog')), 0);
+    // Zonder troef die boven alles zit: geen straf voor de lage troef.
+    const hand2 = Ks('h10 h7 kV k9');
+    const w2 = basis({ speler: 1, spelendTeam: 1, hand: hand2, slag: [] });
+    assert.equal(vuistregelStraf(w2, K('h7'), onbekendVan([...hand2, ...gespeeld]), false, alleenRegel('trekHoog')), 0);
+  });
+
   test('5: na het troeftrekken je vrije aas innen', () => {
     const hand = Ks('hB kA k7 s8');
     const gespeeld = Ks('h7 h8 h9 h10 hV hH hA');

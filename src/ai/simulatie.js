@@ -705,6 +705,7 @@ export const VUISTREGELS = {
   uitkomen: true, bijgooien: true, troefGevraagd: true,
   // Uit VUISTREGELS.md (goedgekeurd door Rutger):
   trekNiet: true, // 4: geen troef trekken als niemand anders nog troef kan hebben
+  trekHoog: true, // Rutgers voorbeeld (West ♠7): trek met een troef die zeker wint als je die hebt
   innen: true, // 5 en 9: vrije azen en tienen binnenhalen
   maatKleur: true, // 6 en 10: de kleur van je maat (sein of eerder uitgekomen) naspelen
   kaleTien: true, // 11: niet uitkomen met een kale tien
@@ -758,6 +759,11 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
     const geenTroefElders = !onbekend.some((c) => c.kleur === troef);
     const eigenTroef = w.hand.some((c) => c.kleur === troef);
     if (regels.trekNiet && k.kleur === troef && geenTroefElders) straf++;
+    // Troef trekken: heb je een troef boven alle troeven die nog buiten zijn, trek dan daarmee.
+    if (regels.trekHoog && k.kleur === troef && !geenTroefElders) {
+      const boven = (c) => onbekend.every((o) => o.kleur !== troef || sterkte(c, troef) > sterkte(o, troef));
+      if (!boven(k) && w.hand.some((c) => c.kleur === troef && boven(c))) straf++;
+    }
     // Vrije azen en tienen innen als spelende partij, na het troeftrekken. (Als tegenpartij is een
     // aas uitkomen goed, maar geen plicht: Rutger vond ♠A of ♦8 allebei goed.)
     const tegenpartij = team(w.speler) !== w.spelendTeam;

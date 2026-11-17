@@ -20,6 +20,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 
 3. ✅ Trek troef als je sterk in troef bent: haal de troeven bij de tegenpartij weg.
 4. 🆕 Trek niet door als de tegenpartij geen troef meer kan hebben (tel de troeven).
+4b. ✅ (Rutgers voorbeeld: West trok met ♠7 terwijl alleen ♠8 nog buiten zat) Trek je troef en heb je een troef die boven alle troeven buiten je hand zit, trek dan daarmee.
 5. 🆕 Na het troeftrekken eerst je vrije azen en tienen binnenhalen.
 6. 🆕 Speel de kleur na waarin je maat geseind heeft.
 7. ❓ "Thuisblijven": met een lage troef jagen op de troefboer, alleen als je zelf veel troef hebt.
