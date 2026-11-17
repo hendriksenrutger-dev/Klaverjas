@@ -77,6 +77,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Seinen gebeurt alleen door **bij te spelen op een slag die je maat al heeft**, en **nooit met of bij troef**.
   - Afgestemd met Rutger: het geldt **ook bij bekennen** (bijv. maat speelt ♣H en heeft de slag, jij legt ♣7 bij = "ik heb ♣A").
   - "Bij troef" betekent: als **troef gevraagd** is. Heeft je maat een andere kleur **ingetroefd** en daarmee de slag, dan mag je wel seinen.
+  - **Uitzondering (Rutgers besluit, na het potje met ♠B van Noord):** trekt je maat **zelf troef** (hij komt uit met troef) en heeft hij de slag, dan is afgooien wél een sein. Troef gevraagd door de tegenpartij blijft zonder sein, ook als je maat overtroeft.
 - **Kleintje (7, 8 of 9) bijspelen:** "ik heb de aas van deze kleur".
 - **Aas bijspelen:** "ik heb ook de tien van deze kleur".
 - **Tien, boer, vrouw of heer bijspelen:** geen sein. Een tien is gewoon punten geven aan je maat.

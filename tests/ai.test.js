@@ -263,9 +263,24 @@ describe('seinen herkennen', () => {
     assert.equal(seinVan([], 0, K('r7'), T), null);
   });
 
-  test('troef gevraagd of met troef: geen sein', () => {
-    assert.equal(sein(2, 'hA h7', 'r7'), null);
+  test('met troef: geen sein', () => {
     assert.equal(sein(2, 'kA k8', 'h8'), null);
+    assert.equal(sein(2, 'hB h7', 'h8'), null);
+  });
+
+  test('maat trekt troef en heeft de slag: wel een sein (Rutgers afspraak)', () => {
+    // Speler 2 (maat van 0) trekt troef met hB, speler 3 bekent, speler 0 gooit r7 af.
+    assert.deepEqual(sein(2, 'hB h7', 'r7'), { speler: 0, kaart: { kleur: 'ruiten', rang: 'A' } });
+    assert.deepEqual(sein(2, 'hB h7', 'sA'), { speler: 0, kaart: { kleur: 'schoppen', rang: '10' } });
+  });
+
+  test('troef gevraagd door de tegenpartij: geen sein, ook niet als de maat overtroeft', () => {
+    // Speler 3 trekt troef met h7, speler 0 (maat van 2) overtroeft met hB, speler 1 bekent, speler 2 gooit r7 af.
+    assert.equal(sein(3, 'h7 hB h8', 'r7'), null);
+  });
+
+  test('maat trekt troef maar heeft de slag niet: geen sein', () => {
+    assert.equal(sein(2, 'h7 hB', 'r7'), null);
   });
 
   test('maat heeft ingetroefd: wel een sein', () => {
