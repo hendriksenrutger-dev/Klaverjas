@@ -116,6 +116,12 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Partijen: gespeeld, gewonnen (%), verloren, op rij gewonnen en record, hoogste en laagste eindstand, grootste overwinning.
 - Potjes: gespeeld; wij speelden en zij speelden, elk met gehaald, nat en pit; gemiddeld per potje en roem (wij – zij); en met "Vergelijk met de computer" aan: hoe vaak je speelde zoals de computer of even goed.
 
+## Logboek (op Rutgers verzoek)
+
+- Elk afgelopen potje van een gewone partij wordt op het apparaat vastgelegd (`klaverjas_logboek`, `src/ui/logboek.js`): gedeelde handen, het draaien, alle slagen, uitslag en instellingen. Oefenpartijen niet. Maximaal 2000 potjes (ongeveer 2 MB); daarna vallen de oudste eraf.
+- In het venster Statistieken: het aantal vastgelegde potjes en een knop "Exporteren" (een JSON-bestand, via delen of downloaden). "Alles wissen" wist het logboek niet.
+- Doel: later van Rutgers partijen leren. Analyse en nadoen zijn nog niet gebouwd.
+
 ## Leren klaverjassen (op Rutgers verzoek, uit "Later" naar voren gehaald)
 
 Afgesproken met Rutger: in deze app, met een knop "Leren klaverjassen" op het beginscherm. De leerling leert Amsterdams met traditioneel draaien; Rotterdams komt als losse les aan het eind. Seinen (volgens onze afspraken) horen erbij. Lesteksten schrijft Claude, Rutger controleert ze. Toon: volwassen, kort en helder.

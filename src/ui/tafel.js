@@ -634,6 +634,7 @@ function statistiekVenster(spel) {
         ${v.kaarten ? rij('Zoals de computer', pct(v.zelfde + v.gelijkwaardig, v.kaarten), `van ${v.kaarten} kaarten`) : ''}
       </table>
     </div>
+    <p class="stat-logboek">Logboek: ${spel.logboek?.potjes?.length ?? 0} ${spel.logboek?.potjes?.length === 1 ? 'potje' : 'potjes'} vastgelegd om later van te leren. ${spel.logboek?.potjes?.length ? '<button class="knop licht-donker klein" data-actie="exporteerLogboek">Exporteren</button>' : ''}</p>
     <div class="venster-knoppen">
       <button class="knop ${spel.wisVraag ? 'rood-knop' : ''}" data-actie="wisStatistiek">${spel.wisVraag ? 'Zeker weten? Tik nogmaals' : 'Alles wissen'}</button>
       <button class="knop goud" data-actie="sluit">Sluiten</button>

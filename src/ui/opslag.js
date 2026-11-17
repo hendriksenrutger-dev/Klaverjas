@@ -92,3 +92,12 @@ export function laadStatistiek() {
 export function bewaarStatistiek(statistiek) {
   schrijf(SLEUTEL_STATISTIEK, { statistiek });
 }
+
+// Logboek van de eigen partijen (om later van te leren). Kan groot worden: apart bewaard.
+export function laadLogboek() {
+  return lees('klaverjas_logboek')?.logboek ?? null;
+}
+
+export function bewaarLogboek(logboek) {
+  schrijf('klaverjas_logboek', { logboek });
+}

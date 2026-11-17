@@ -6,7 +6,8 @@ import { beoordeelKaart, legeVergelijking, telOp, GELIJKWAARDIG } from '../ai/ve
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
 import { laadPlaatjes } from './plaatjes.js';
-import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek, laadVoortgang, bewaarVoortgang } from './opslag.js';
+import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek, laadVoortgang, bewaarVoortgang, laadLogboek, bewaarLogboek } from './opslag.js';
+import { potjeRecord, voegToe, legLogboek, exportTekst } from './logboek.js';
 import { STAPPEN, LEER_REGELS, compleetVoortgang, telLeerPotje, hintUitleg, roemUitleg, seinUitleg, draaiUitleg } from './leren.js';
 import { LESSEN, beoordeel, lesKlaar, alleLessenKlaar } from './lessen.js';
 import { compleet, legeStatistiek, telPotje, telPartij, telVergelijk } from './statistiek.js';
@@ -58,6 +59,9 @@ const spel = {
   hintBezig: false,
   nieuweStap: null, // net vrijgespeelde stap, voor de uitslag
   les: null, // { nr, deel: 'uitleg'|'opdracht'|'klaar', pagina, opdracht, antwoord, uitslag }
+  logboek: laadLogboek() ?? legLogboek(), // eigen partijen, om later van te leren
+  draaiLog: [], // keuzes bij het draaien in het lopende potje
+  partijId: null,
   tweedeKans: null, // { soort: 'draai'|'kaart', keuze, tekst, knop } als je anders kiest dan de computer
   wachtOpAdvies: false,
 };
@@ -146,7 +150,7 @@ function computerZet(vraagFn, doeFn, tijd = denktijd()) {
 }
 
 // Welke delen van de toestand bewaard worden (alles is gewone data, dus JSON).
-const BEWAAR = ['partij', 'fase', 'handen', 'draaien', 'draaiKeuzes', 'potje', 'laatsteSlag', 'uitslag', 'verzaakReden', 'analyses', 'vergelijking', 'leren'];
+const BEWAAR = ['partij', 'fase', 'handen', 'draaien', 'draaiKeuzes', 'potje', 'laatsteSlag', 'uitslag', 'verzaakReden', 'analyses', 'vergelijking', 'leren', 'draaiLog', 'partijId'];
 
 function teken() {
   // Niet opnieuw tekenen terwijl er in een tekstveld getypt wordt.
@@ -189,6 +193,7 @@ function nieuwePartij(leren = null) {
   if (spel.partij) bewaarNu(); // de vorige (gewone of oefen-)partij eerst veilig opslaan
   stopLopend();
   spel.leren = leren;
+  spel.partijId = new Date().toISOString();
   spel.hulpMelding = null;
   spel.nieuweStap = null;
   spel.partij = R.nieuwePartij({ instellingen: regelInstellingen(), eersteDeler: Math.floor(Math.random() * 4) });
@@ -215,6 +220,7 @@ function startRonde() {
   spel.handen = handen;
   spel.draaien = draaien;
   spel.draaiKeuzes = {};
+  spel.draaiLog = [];
   spel.potje = null;
   spel.getoondeSlag = null;
   spel.roemMelding = null;
@@ -321,6 +327,7 @@ function volgende() {
 
 function kiesTroef(speler, kleur) {
   spel.draaien = R.kiesTroef(spel.draaien, speler, kleur);
+  spel.draaiLog = [...(spel.draaiLog ?? []), { speler, kleur, keuze: 'verplicht' }];
   const u = spel.draaien.uitkomst;
   spel.draaiMelding = { soort: 'speelt', speler, kleur: u.troef };
   teken();
@@ -334,6 +341,7 @@ function draai(speler, keuze) {
   const vorigeKaart = spel.draaien.kaart;
   spel.draaien = R.beslis(spel.draaien, speler, keuze);
   spel.draaiKeuzes[speler] = keuze;
+  spel.draaiLog = [...(spel.draaiLog ?? []), { speler, kleur: vorigeKaart.kleur, keuze }];
   const u = spel.draaien.uitkomst;
 
   if (u?.soort === 'spelen') {
@@ -480,6 +488,17 @@ function eindPotje() {
     spel.nieuweStap = r.nieuweStap;
     bewaarVoortgang(spel.voortgang);
   } else {
+    // Logboek: dit potje vastleggen (alleen gewone partijen).
+    try {
+      spel.logboek = voegToe(spel.logboek, potjeRecord({
+        partijId: spel.partijId ?? 'onbekend', nr: spel.partij.potjes.length, deler: spel.potje.uitkomer === undefined ? null : (spel.potje.uitkomer + 3) % 4,
+        handen: spel.handen, draaiLog: spel.draaiLog, potje: spel.potje, uitslag: spel.uitslag,
+        niveau: spel.instellingen.niveau, troefkeuze: spel.partij.instellingen.troefkeuze ?? 'traditioneel',
+      }));
+      bewaarLogboek(spel.logboek);
+    } catch (fout) {
+      console.warn('Logboek:', fout);
+    }
     spel.statistiek = telPotje(spel.statistiek, spel.uitslag, spel.potje.spelendTeam, spel.potje.systeem);
     if (spel.fase === 'partijKlaar') spel.statistiek = telPartij(spel.statistiek, spel.partij.totaal, spel.partij.instellingen.systeem);
     bewaarStatistiek(spel.statistiek);
@@ -572,6 +591,28 @@ const acties = {
         f();
       }
     } else if (!hervat()) nieuwePartij();
+  },
+  // Logboek exporteren: delen (bijv. via mail of WhatsApp) of anders downloaden.
+  async exporteerLogboek() {
+    const tekst = exportTekst(spel.logboek);
+    const naam = `klaverjassen-logboek-${new Date().toISOString().slice(0, 10)}.json`;
+    const bestand = new File([tekst], naam, { type: 'application/json' });
+    try {
+      if (navigator.canShare?.({ files: [bestand] })) {
+        await navigator.share({ files: [bestand], title: 'Klaverjassen logboek' });
+        return;
+      }
+    } catch (fout) {
+      if (fout?.name === 'AbortError') return; // delen geannuleerd
+    }
+    const url = URL.createObjectURL(bestand);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = naam;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   },
   statSysteem(systeem) {
     if (['amsterdams', 'rotterdams'].includes(systeem)) spel.statSysteem = systeem;
