@@ -28,7 +28,8 @@ export const NIVEAUS = {
 
 // ---------- Seinen (Rutgers afspraken, zie CLAUDE.md) ----------
 // Een sein is een kaart die wordt bijgespeeld op een slag die de maat op dat moment heeft,
-// als er geen troef gevraagd is en de kaart zelf geen troef is (bekennen of afgooien maakt niet uit).
+// en de kaart zelf geen troef is (bekennen of afgooien maakt niet uit). Bij troef gevraagd alleen als
+// de maat zelf troef trekt (uitkomt met troef) en de slag heeft (Rutgers afspraak).
 //   7, 8 of 9 → "ik heb de aas van deze kleur"
 //   aas        → "ik heb ook de tien van deze kleur"
 // Een sein is een sterke aanwijzing, geen zekerheid.
@@ -57,9 +58,11 @@ const KLEINTJES = new Set(['7', '8', '9']);
 // Geeft het sein dat 'speler' geeft door 'kaart' te spelen op slag 'slagVoor', of null.
 export function seinVan(slagVoor, speler, kaart, troef) {
   if (slagVoor.length === 0) return null;
-  if (slagVoor[0].kaart.kleur === troef || kaart.kleur === troef) return null;
+  if (kaart.kleur === troef) return null;
   const w = huidigeWinnaar(slagVoor, troef);
   if (team(w.speler) !== team(speler)) return null;
+  // Troef gevraagd: alleen als de maat zelf troef trekt (en de slag heeft).
+  if (slagVoor[0].kaart.kleur === troef && slagVoor[0].speler !== w.speler) return null;
   if (KLEINTJES.has(kaart.rang)) return { speler, kaart: { kleur: kaart.kleur, rang: 'A' } };
   if (kaart.rang === 'A') return { speler, kaart: { kleur: kaart.kleur, rang: '10' } };
   return null;
@@ -702,6 +705,7 @@ export const VUISTREGELS = {
   uitkomen: true, bijgooien: true, troefGevraagd: true,
   // Uit VUISTREGELS.md (goedgekeurd door Rutger):
   trekNiet: true, // 4: geen troef trekken als niemand anders nog troef kan hebben
+  trekHoog: true, // Rutgers voorbeeld (West ♠7): trek met een troef die zeker wint als je die hebt
   innen: true, // 5 en 9: vrije azen en tienen binnenhalen
   maatKleur: true, // 6 en 10: de kleur van je maat (sein of eerder uitgekomen) naspelen
   kaleTien: true, // 11: niet uitkomen met een kale tien
@@ -755,6 +759,11 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
     const geenTroefElders = !onbekend.some((c) => c.kleur === troef);
     const eigenTroef = w.hand.some((c) => c.kleur === troef);
     if (regels.trekNiet && k.kleur === troef && geenTroefElders) straf++;
+    // Troef trekken: heb je een troef boven alle troeven die nog buiten zijn, trek dan daarmee.
+    if (regels.trekHoog && k.kleur === troef && !geenTroefElders) {
+      const boven = (c) => onbekend.every((o) => o.kleur !== troef || sterkte(c, troef) > sterkte(o, troef));
+      if (!boven(k) && w.hand.some((c) => c.kleur === troef && boven(c))) straf++;
+    }
     // Vrije azen en tienen innen als spelende partij, na het troeftrekken. (Als tegenpartij is een
     // aas uitkomen goed, maar geen plicht: Rutger vond ♠A of ♦8 allebei goed.)
     const tegenpartij = team(w.speler) !== w.spelendTeam;

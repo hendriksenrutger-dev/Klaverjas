@@ -124,7 +124,7 @@ Vraag: spelen of passen? → **Spelen** (boer, nel en aas van troef plus twee az
 
 **Uitleg**
 Met seinen vertel je je maat iets over je kaarten, zonder te praten.
-- Je seint alleen door **bij te spelen op een slag die je maat al heeft**, nooit als er troef gevraagd is.
+- Je seint alleen door **bij te spelen op een slag die je maat al heeft**, nooit met troef. Is er troef gevraagd, dan alleen als je maat zelf troef trekt en de slag heeft.
 - **Een kleintje (7, 8 of 9) bijspelen** betekent: "ik heb de aas van deze kleur".
 - **De aas bijspelen** betekent: "ik heb ook de tien van deze kleur".
 - Een tien, boer, vrouw of heer bijspelen is geen sein.
