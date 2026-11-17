@@ -1,0 +1,68 @@
+# Vuistregels — concept ter controle door Rutger
+
+Bronnen: een paar Nederlandse tipspagina's (zie onderaan) en mijn eigen kennis van het spel.
+Controleer vooral wat ik zelf heb aangevuld: jij bent de klaverjasser.
+
+Legenda:
+- ✅ zit al in de computer (via de berekening of als vuistregel)
+- 🆕 nieuw voorstel
+- ❓ twijfel, graag jouw oordeel
+
+Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
+(zie CLAUDE.md). Elke nieuwe regel meet ik met de eerlijke duels voordat hij blijft.
+
+## A. Spelen of passen
+
+1. ✅ Speel met een sterke troefhand: boer en nel, of boer met twee andere troeven, of nel met aas en nog een troef. Bijkleur-azen tellen mee. (De computer rekent dit door; geen vaste regel.)
+2. ❓ Speel niet met alleen lage troeven en geen boer of nel, ook niet met veel azen.
+
+## B. Uitkomen als spelende partij
+
+3. ✅ Trek troef als je sterk in troef bent: haal de troeven bij de tegenpartij weg.
+4. 🆕 Trek niet door als de tegenpartij geen troef meer kan hebben (tel de troeven).
+5. 🆕 Na het troeftrekken eerst je vrije azen en tienen binnenhalen.
+6. 🆕 Speel de kleur na waarin je maat geseind heeft.
+7. ❓ "Thuisblijven": met een lage troef jagen op de troefboer, alleen als je zelf veel troef hebt.
+
+## C. Uitkomen als tegenpartij
+
+8. ✅ Niet met troef uitkomen.
+9. 🆕 Uitkomen met een aas in een bijkleur is goed; de tien daarna innen als die vrij is.
+10. 🆕 Speel de kleur van je maat (sein of eerder gespeeld) na.
+11. 🆕 Kom niet uit met een kale tien (een tien zonder de aas, terwijl de aas nog in het spel is).
+
+## D. Uitkomen, altijd
+
+12. ✅ (nieuw sinds vandaag) Let op roem: kies geen kaart waarmee de tegenpartij roem kan maken.
+13. ✅ (nieuw sinds vandaag) Zonder de hoogste kaart van een kleur: uitkomen met de laagste kaart.
+
+## E. Bijspelen
+
+14. ✅ (nieuw sinds vandaag) Punten bijgooien alleen als je maat de slag al heeft.
+15. ✅ Heeft je maat de slag: geef punten (een tien of heer erbij); dat doet de berekening.
+16. 🆕 Troef niet over je maat heen als die de slag al heeft (Amsterdams; je hoeft niet).
+17. 🆕 Tweede hand laag: kom je als tweede, speel dan laag, tenzij je de slag zeker kunt nemen.
+18. 🆕 Derde hand hoog: help je maat door hoog bij te spelen als de vierde speler nog kan overnemen.
+19. ✅ Laatste in de slag: win met de laagste kaart die genoeg is.
+20. ✅ Gooi geen kaart weg die nog een slag kan worden (vrije kaart, of heer naast je eigen aas).
+21. 🆕 Geef bij het bijspelen geen roem weg: maak geen reeks of stuk af op een slag van de tegenpartij.
+22. 🆕 Bescherm een tien: speel een tien niet bij zolang de aas van die kleur nog bij de tegenpartij kan zitten, tenzij je moet.
+
+## F. Troef
+
+23. ✅ (nieuw sinds vandaag) Troef gevraagd en je kunt niet overtroeven: de goedkoopste troef, en geen troef die nog een slag kan worden.
+24. 🆕 Bewaar een lage troef voor de laatste slagen (de laatste slag is 10 punten waard).
+25. ✅ Ondertroeven alleen als je niets anders hebt (spelregel).
+
+## G. Seinen
+
+26. ✅ Volgens onze afspraken (kleintje = aas, aas = tien), alleen op een slag van je maat en nooit bij troef gevraagd.
+
+## Bronnen
+
+- [Klaverjassen Tips — Strategie voor Beginners (klaverjassenregels.nl)](https://klaverjassenregels.nl/strategie-tips/)
+- [Kaartclub De Hoop — Tips & Trucs Klaverjassen](http://www.kaartclub-dehoop.nl/Onze-Kaartclub/Tips-Trucs-Klaverjassen/)
+- [Stoomcursus (vipklaverjas.nl)](https://vipklaverjas.nl/blog/stoomcursus-vip-klaverjas/)
+- [Alles over klaverjassen (josweb.nl)](http://josweb.nl/josweb/klaverjassen.htm)
+
+Ik kon alleen de zoekresultaten van deze pagina's lezen, niet de volledige pagina's.
