@@ -16,13 +16,14 @@ function gespeeldPotje(zaad) {
 describe('logboek', () => {
   test('een potje wordt compleet en compact vastgelegd', () => {
     const { handen, p } = gespeeldPotje(5);
-    const r = potjeRecord({ partijId: 'x', nr: 3, deler: 0, handen, draaiLog: [{ speler: 1, kleur: 'harten', keuze: 'passen' }, { speler: 2, kleur: 'harten', keuze: 'spelen' }], potje: p, uitslag: uitslag(p), niveau: 'sterk', troefkeuze: 'traditioneel', tijd: 't' });
+    const r = potjeRecord({ partijId: 'x', nr: 3, stand: [120, 300], deler: 0, handen, draaiLog: [{ speler: 1, kleur: 'harten', keuze: 'passen' }, { speler: 2, kleur: 'harten', keuze: 'spelen' }], potje: p, uitslag: uitslag(p), niveau: 'sterk', troefkeuze: 'traditioneel', tijd: 't' });
     assert.equal(r.handen.length, 4);
     assert.equal(r.handen[0].length, 8);
     assert.equal(r.slagen.length, 8);
     assert.equal(r.slagen.flat().length, 32);
     assert.deepEqual(r.draaien, [[1, 'h', 'passen'], [2, 'h', 'spelen']]);
     assert.equal(r.troef, 'harten');
+    assert.deepEqual(r.stand, [120, 300]);
     assert.equal(code({ kleur: 'ruiten', rang: '10' }), 'r10');
     // Uit het record is elke kaart van Zuid terug te vinden.
     const zuid = r.slagen.flat().filter(([s]) => s === 0).map(([, c]) => c).sort();
