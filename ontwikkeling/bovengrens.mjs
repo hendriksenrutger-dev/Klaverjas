@@ -18,6 +18,10 @@ const A = {
   gedekt: { ...basis, slim: { gedekt: true, maatNeemt: false } },
   maatNeemt: { ...basis, slim: { gedekt: false, maatNeemt: true } },
   regelGedekt: { ...basis, gedektRegel: true },
+  zonderNieuweRegels: { ...basis, regels: { uitkomen: false, bijgooien: false, troefGevraagd: false } },
+  alleenUitkomen: { ...basis, regels: { uitkomen: true, bijgooien: false, troefGevraagd: false } },
+  alleenBijgooien: { ...basis, regels: { uitkomen: false, bijgooien: true, troefGevraagd: false } },
+  alleenTroef: { ...basis, regels: { uitkomen: false, bijgooien: false, troefGevraagd: true } },
   geenVuistregels: { ...basis, vuist: false },
   beide: { ...basis, slim: { gedekt: true, maatNeemt: true } },
 }[welke];

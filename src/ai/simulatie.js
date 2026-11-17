@@ -591,7 +591,7 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, slimOpties = SLIM_OPTIES, gedektRegel = true,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -675,7 +675,7 @@ export function kiesKaart(w, {
   for (let i = 1; i < geldig.length; i++) {
     if (totaal(i) > totaal(best)) best = i;
   }
-  const regel = geldig.map((k) => (vuistregels ? vuistregelStraf(w, k, onbekend, gedektRegel) : 0));
+  const regel = geldig.map((k) => (vuistregels ? vuistregelStraf(w, k, onbekend, gedektRegel, vuistregelSet) : 0));
   if (vuistregels && regel[best] > 0) {
     // Binnen de marge de kaart die geen vuistregel breekt (bij gelijke straf: hoogste score).
     for (let i = 0; i < geldig.length; i++) {
@@ -689,23 +689,70 @@ export function kiesKaart(w, {
   };
 }
 
-// Hoe erg een kaart een menselijke vuistregel breekt (0 = niet).
+// Hoe erg een kaart een menselijke vuistregel breekt (0 = niet). Regels uit Rutgers voorbeelden.
 // - Als tegenpartij kom je niet met troef uit.
-// - Een vrije kaart (de hoogste die nog in zijn kleur zit, geen troef) gooi je niet weg
+// - Een kaart die nog een slag kan worden (vrij, of gedekt bij afgooien) gooi je niet weg
 //   op een slag die je er niet mee wint.
-export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRegel = false) {
+// - Uitkomen: let op roem; zonder de hoogste kaart van een kleur kom je uit met de laagste
+//   kaart die geen roem kan opleveren.
+// - Punten bijgooien alleen als je maat de slag al heeft.
+// - Troef gevraagd en je kunt niet overtroeven: de goedkoopste troef, en geen troef die nog
+//   een slag kan worden.
+export const VUISTREGELS = { uitkomen: true, bijgooien: true, troefGevraagd: true };
+
+// Kan deze kaart in een slag roem maken met kaarten die nog bij anderen zitten?
+function roemGevaar(k, onbekend, troef) {
+  const open = new Set(onbekend.filter((c) => c.kleur === k.kleur).map((c) => RANG_NAT.indexOf(c.rang)));
+  const r = RANG_NAT.indexOf(k.rang);
+  for (const [a, b] of [[r - 2, r - 1], [r - 1, r + 1], [r + 1, r + 2]]) if (open.has(a) && open.has(b)) return true;
+  if (k.kleur === troef && (k.rang === 'H' || k.rang === 'V')) return open.has(RANG_NAT.indexOf(k.rang === 'H' ? 'V' : 'H'));
+  return false;
+}
+
+export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRegel = false, regels = VUISTREGELS) {
+  const troef = w.troef;
+  const hoger = (c) => c.kleur === k.kleur && sterkte(c, troef) > sterkte(k, troef);
   if (w.slag.length === 0) {
-    return team(w.speler) !== w.spelendTeam && k.kleur === w.troef ? 1 : 0;
+    let straf = team(w.speler) !== w.spelendTeam && k.kleur === troef ? 1 : 0;
+    if (regels.uitkomen && k.kleur !== troef) {
+      const eigen = w.hand.filter((c) => c.kleur === k.kleur);
+      // Een kaart waar niemand meer boven zit, wint meestal zelf: dan is roem juist goed.
+      const kIsBaas = !onbekend.some(hoger);
+      if (!kIsBaas && roemGevaar(k, onbekend, troef)) straf++;
+      // Zonder de hoogste kaart van deze kleur: de laagste kaart die geen roem kan geven.
+      const baas = !onbekend.some((c) => c.kleur === k.kleur && eigen.every((e) => sterkte(c, troef) > sterkte(e, troef)));
+      if (!baas) {
+        const veilig = eigen.filter((c) => !roemGevaar(c, onbekend, troef));
+        const laagste = (veilig.length ? veilig : eigen).reduce((a, b) => (sterkte(b, troef) < sterkte(a, troef) ? b : a));
+        if (laagste.rang !== k.rang) straf++;
+      }
+    }
+    return straf;
   }
-  if (k.kleur === w.troef) return 0;
-  const hoger = (c) => c.kleur === k.kleur && sterkte(c, w.troef) > sterkte(k, w.troef);
+  const na = [...w.slag, { speler: w.speler, kaart: k }];
+  const wint = huidigeWinnaar(na, troef).speler === w.speler;
+  if (wint) return 0;
+  let straf = 0;
+  const gevraagd = w.slag[0].kaart.kleur;
+  if (k.kleur === troef) {
+    if (regels.troefGevraagd && gevraagd === troef) {
+      const elders = onbekend.filter(hoger).length;
+      if (elders <= w.hand.filter(hoger).length) straf++; // kan nog een slag worden
+      const opties = geldigeKaarten(w.hand, w.slag, troef, w.systeem).filter((c) => c.kleur === troef);
+      if (opties.some((c) => punten(c, troef) < punten(k, troef))) straf++;
+    }
+    return straf;
+  }
   const elders = onbekend.filter(hoger).length;
   // Gedekte kaart (zoals een heer naast je eigen aas), alleen bij afgooien. Gemeten: kost niets.
-  const gedekt = gedektRegel && elders > 0 && elders <= w.hand.filter(hoger).length && k.kleur !== w.slag[0].kaart.kleur;
-  const vrij = elders === 0;
-  if ((!vrij && !gedekt) || punten(k, w.troef) === 0) return 0;
-  const wint = huidigeWinnaar([...w.slag, { speler: w.speler, kaart: k }], w.troef).speler === w.speler;
-  return wint ? 0 : 1;
+  const gedekt = gedektRegel && elders > 0 && elders <= w.hand.filter(hoger).length && k.kleur !== gevraagd;
+  if ((elders === 0 || gedekt) && punten(k, troef) > 0) straf++;
+  // Punten bijgooien alleen als je maat de slag al heeft.
+  if (regels.bijgooien && punten(k, troef) > 0) {
+    const voor = huidigeWinnaar(w.slag, troef).speler;
+    if (team(voor) !== team(w.speler)) straf++;
+  }
+  return straf;
 }
 
 // ---------- Troef kiezen bij verplicht spelen ----------
