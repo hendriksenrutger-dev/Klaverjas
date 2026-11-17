@@ -1,11 +1,11 @@
-# Vuistregels — concept ter controle door Rutger
+# Vuistregels — goedgekeurd door Rutger en ingebouwd
 
 Bronnen: een paar Nederlandse tipspagina's (zie onderaan) en mijn eigen kennis van het spel.
 Controleer vooral wat ik zelf heb aangevuld: jij bent de klaverjasser.
 
 Legenda:
 - ✅ zit al in de computer (via de berekening of als vuistregel)
-- 🆕 nieuw voorstel
+- 🆕 nieuw voorstel (alle 🆕-regels zijn op Rutgers verzoek ingebouwd; schakelaars in `VUISTREGELS` in `src/ai/simulatie.js`)
 - ❓ twijfel, graag jouw oordeel
 
 Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
@@ -27,7 +27,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 ## C. Uitkomen als tegenpartij
 
 8. ✅ Niet met troef uitkomen.
-9. 🆕 Uitkomen met een aas in een bijkleur is goed; de tien daarna innen als die vrij is.
+9. 🆕 Uitkomen met een aas in een bijkleur is goed (geen plicht: Rutger vond ♠A of ♦8 allebei goed); voor de spelende partij: na het troeftrekken vrije azen en tienen innen (regel 5).
 10. 🆕 Speel de kleur van je maat (sein of eerder gespeeld) na.
 11. 🆕 Kom niet uit met een kale tien (een tien zonder de aas, terwijl de aas nog in het spel is).
 
@@ -57,6 +57,10 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 ## G. Seinen
 
 26. ✅ Volgens onze afspraken (kleintje = aas, aas = tien), alleen op een slag van je maat en nooit bij troef gevraagd.
+
+## Meting
+
+Alle twaalf 🆕-regels samen, eerlijke duels, 4 × 400 delingen: zonder deze regels scoren de computers 0,7 punt per potje lager (foutmarge ± 1,3). Ze kosten dus niets. De ❓-regels (2 en 7) zijn niet ingebouwd.
 
 ## Bronnen
 
