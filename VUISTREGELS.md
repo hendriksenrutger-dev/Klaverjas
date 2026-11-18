@@ -45,7 +45,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 16. 🆕 Troef niet over je maat heen als die de slag al heeft (Amsterdams; je hoeft niet).
 17. 🆕 Tweede hand laag: kom je als tweede, speel dan laag, tenzij je de slag zeker kunt nemen.
 18. 🆕 Derde hand hoog: help je maat door hoog bij te spelen als de vierde speler nog kan overnemen.
-19. ✅ Laatste in de slag: win met de laagste kaart die genoeg is.
+19. ✅ Laatste in de slag: win met de laagste kaart die genoeg is. (Sinds Rutgers potje met ♦9 ook als vaste vuistregel, omdat de berekening soms geen verschil zag.)
 20. ✅ Gooi geen kaart weg die nog een slag kan worden (vrije kaart, of heer naast je eigen aas).
 21. 🆕 Geef bij het bijspelen geen roem weg: maak geen reeks of stuk af op een slag van de tegenpartij.
 22. 🆕 Bescherm een tien: speel een tien niet bij zolang de aas van die kleur nog bij de tegenpartij kan zitten, tenzij je moet.
