@@ -28,6 +28,7 @@ Nieuw: `duelKaart` (gebruikt door `ontwikkeling/bovengrens.mjs`).
 | Zonder de regel "troef trekken met een troef die zeker wint" | 4 × 400 | −0,3 | ± 0,5 (gecombineerd) |
 | Zonder de spekregel (marge 20) | 4 × 400 | +0,8 | ± 0,5 (gecombineerd) |
 | Zonder tien-uitkomst lezen | 4 × 400 | +0,3 | ± 0,6 (gecombineerd) |
+| Snelle speelstijl zonder "vrije kaart bewaren" | 4 × 400 | −1,2 | ± 2,3 (gecombineerd) |
 
 ## Conclusies
 
