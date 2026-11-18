@@ -718,3 +718,16 @@ describe('aas voor tien op een slag van je maat (Rutger)', async () => {
   });
 });
 
+describe('vrije troef bewaren (Rutgers voorbeeld Noord ♠V)', async () => {
+  const { isTroefZonderNut } = await import('../src/ai/simulatie.js');
+  test('niemand anders heeft nog troef: niet met troef uitkomen', () => {
+    const gespeeld = Ks('sB sA s7 s9 s8 s10 sH');
+    const slagen = [{ kaarten: gespeeld.map((kaart, i) => ({ speler: i % 4, kaart })) }];
+    const w = { troef: 'schoppen', speler: 2, spelendTeam: 0, hand: Ks('sV rH hB'), slagen, slag: [] };
+    assert.equal(isTroefZonderNut(w, K('sV')), true);
+    assert.equal(isTroefZonderNut({ ...w, hand: Ks('sV') }, K('sV')), false);
+    const w2 = { ...w, slagen: [{ kaarten: gespeeld.slice(0, 6).map((kaart, i) => ({ speler: i % 4, kaart })) }] };
+    assert.equal(isTroefZonderNut(w2, K('sV')), false); // sH kan nog bij een ander zitten
+  });
+});
+

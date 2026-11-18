@@ -115,6 +115,14 @@ export function aasVoorTien(w, k, geldig) {
   return team(metAas) === team(w.speler) && team(metTien) === team(w.speler) && roem(aas) >= roem(k) ? aas : null;
 }
 
+// Geen troef uitkomen als niemand anders nog troef kan hebben (Rutger: bewaar die vrije troef, dan
+// haal je er later een slag mee, met een beetje geluk de laatste). Streng, net als doortrekken.
+export const TROEF_BEWAAR_MARGE = 40;
+export function isTroefZonderNut(w, k, onbekend = onbekendeKaarten(w)) {
+  return w.slag.length === 0 && k.kleur === w.troef && !onbekend.some((c) => c.kleur === w.troef)
+    && w.hand.some((c) => c.kleur !== w.troef);
+}
+
 // Is kaart k hier spekken?
 export function isSpek(w, k) {
   if (!w.slag.length || punten(k, w.troef) < 10) return false;
@@ -692,11 +700,11 @@ function opties(o = {}) {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, troefUitMarge = TROEF_UIT_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, troefUitMarge = TROEF_UIT_MARGE, troefBewaarMarge = TROEF_BEWAAR_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
   exactVanaf = 0, exactTop = 3, exactSims = 40,
   } = o;
   return { simulaties, rng, strategie, eindspel, seinGeven, seinLezen, seinFactor, bekendeHanden, trekken, trekBonus, seinStraf, seinStrafBekennen,
-    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims };
+    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims };
 }
 
 // Rekent voor de gegeven kaarten de gewogen totalen uit over 'simulaties' verdelingen
@@ -838,7 +846,7 @@ export function kiesKaart(w, o = {}) {
 
 // De keuze zelf: berekening plus voorkeuren, vuistregels en de strenge regels.
 export function beslis(w, o, geldig, gemiddeld) {
-  const { vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, gedektRegel, vuistregelSet } = opties(o);
+  const { vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, gedektRegel, vuistregelSet } = opties(o);
   const onbekend = onbekendeKaarten(w);
   const { seinCorrectie, trekCorrectie } = correcties(w, opties(o), geldig, onbekend);
   const totaal = (i) => gemiddeld[i] + seinCorrectie[i] + trekCorrectie[i];
@@ -874,6 +882,15 @@ export function beslis(w, o, geldig, gemiddeld) {
       }
       if (alt >= 0) best = alt;
     }
+  }
+  // Geen troef uitkomen als niemand anders nog troef heeft, tenzij elke andere kaart duidelijk slechter is.
+  if (vuistregels && troefBewaarMarge > 0 && isTroefZonderNut(w, geldig[best], onbekend)) {
+    let alt = -1;
+    for (let i = 0; i < geldig.length; i++) {
+      if (geldig[i].kleur === w.troef || totaal(best) - totaal(i) > troefBewaarMarge) continue;
+      if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
+    }
+    if (alt >= 0) best = alt;
   }
   // Tegenpartij: niet met troef uitkomen, tenzij elke andere kaart duidelijk slechter is.
   if (vuistregels && troefUitMarge > 0 && isTroefUitTegen(w, geldig[best])) {
