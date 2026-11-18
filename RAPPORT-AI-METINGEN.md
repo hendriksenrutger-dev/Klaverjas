@@ -34,6 +34,7 @@ Nieuw: `duelKaart` (gebruikt door `ontwikkeling/bovengrens.mjs`).
 | Zonder "doortrekken met de hoogste troef" (marge 40) | 4 × 400 | +0,5 | ± 1,0 (gecombineerd) |
 | Zonder "tegenpartij komt niet met troef uit" (marge 40) | 4 × 400 | +0,8 | ± 0,8 (gecombineerd) |
 | Zonder doortrekken, nu ook met verliezende troef (marge 40) | 4 × 400 | +0,8 | ± 1,0 (gecombineerd) |
+| **Optie A: exact vanaf 5 slagen** (4 kandidaten, 40 verdelingen) tegen zonder | 4 × 150 | **+3,8** | ± 2,7 (gecombineerd) |
 
 ## Conclusies
 
