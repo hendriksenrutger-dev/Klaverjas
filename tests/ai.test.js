@@ -623,3 +623,22 @@ describe('spekken (Rutgers regel)', async () => {
     assert.equal(isSpek(w([[1, 'k10']], 2), K('kA')), false);
   });
 });
+
+describe('tien-uitkomst lezen', async () => {
+  const { tienUitkomsten, tienGewicht, TIEN_FACTOR } = await import('../src/ai/simulatie.js');
+  const w = { troef: 'harten', speler: 2, hand: Ks('sA s10'), slagen: [], slag: [{ speler: 1, kaart: K('k10') }] };
+  test('wie met een tien uitkomt, heeft waarschijnlijk de aas', () => {
+    assert.deepEqual(tienUitkomsten(w), [{ speler: 1, kaart: { kleur: 'klaveren', rang: 'A' } }]);
+    const lijst = tienUitkomsten(w);
+    const met = [[], Ks('kA'), [], []];
+    const zonder = [Ks('kA'), [], [], []];
+    assert.equal(tienGewicht(met, lijst), 1);
+    assert.equal(tienGewicht(zonder, lijst), 1 / TIEN_FACTOR);
+  });
+  test('geen aanwijzing: troef, eigen uitkomst, of de aas is al bekend', () => {
+    assert.deepEqual(tienUitkomsten({ ...w, slag: [{ speler: 1, kaart: K('h10') }] }), []);
+    assert.deepEqual(tienUitkomsten({ ...w, speler: 1, hand: [], slag: [{ speler: 1, kaart: K('k10') }] }), []);
+    assert.deepEqual(tienUitkomsten({ ...w, hand: Ks('kA'), slag: [{ speler: 1, kaart: K('k10') }] }), []);
+  });
+});
+
