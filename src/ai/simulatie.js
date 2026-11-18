@@ -57,6 +57,15 @@ export const VUISTREGEL_MARGE = 8;
 // scoort, mag het toch. Eigen ontwerpkeuze, bij te stellen.
 export const SPEK_MARGE = 20;
 
+// Niet uitkomen met een tien als de aas van die kleur nog bij een ander zit, ook niet als hij
+// gedekt is (Rutger: houd hem achter, dan wordt hij misschien nog een slag of spek je hem bij je maat).
+// Even streng als spekken. De kale-tienregel blijft daarnaast gewoon gelden.
+export const TIEN_UIT_MARGE = 20;
+export function isTienUitkomst(w, k, onbekend = onbekendeKaarten(w)) {
+  return w.slag.length === 0 && k.rang === '10' && k.kleur !== w.troef
+    && onbekend.some((c) => c.kleur === k.kleur && c.rang === 'A');
+}
+
 // Is kaart k hier spekken?
 export function isSpek(w, k) {
   if (!w.slag.length || punten(k, w.troef) < 10) return false;
@@ -632,7 +641,7 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -731,6 +740,15 @@ export function kiesKaart(w, {
     let alt = -1;
     for (let i = 0; i < geldig.length; i++) {
       if (isSpek(w, geldig[i]) || totaal(best) - totaal(i) > spekMarge) continue;
+      if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
+    }
+    if (alt >= 0) best = alt;
+  }
+  // Niet uitkomen met een tien zonder de aas, tenzij elke andere kaart duidelijk slechter is.
+  if (vuistregels && tienUitMarge > 0 && isTienUitkomst(w, geldig[best], onbekend)) {
+    let alt = -1;
+    for (let i = 0; i < geldig.length; i++) {
+      if (isTienUitkomst(w, geldig[i], onbekend) || totaal(best) - totaal(i) > tienUitMarge) continue;
       if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
     }
     if (alt >= 0) best = alt;

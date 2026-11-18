@@ -31,6 +31,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 9. 🆕 Uitkomen met een aas in een bijkleur is goed (geen plicht: Rutger vond ♠A of ♦8 allebei goed); voor de spelende partij: na het troeftrekken vrije azen en tienen innen (regel 5).
 10. 🆕 Speel de kleur van je maat (sein of eerder gespeeld) na.
 11. 🆕 Kom niet uit met een kale tien (een tien zonder de aas, terwijl de aas nog in het spel is).
+11b. ✅ (Rutger, na Noords ♣10 met ♣H en ♣7 erbij) Kom ook niet uit met een gedekte tien als de aas nog bij een ander zit: houd hem achter, dan wordt hij misschien nog een slag of spek je hem bij je maat. Even streng als spekken (alleen als elke andere kaart minstens 20 punten slechter is). Regel 11 blijft daarnaast gelden.
 
 ## D. Uitkomen, altijd
 
