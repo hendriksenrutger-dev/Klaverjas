@@ -673,3 +673,17 @@ describe('spekken: roem weggeven is geen alternatief (Rutgers voorbeeld ♦B)', 
   });
 });
 
+describe('doortrekken (Rutgers standaardstrategie)', async () => {
+  const { trekKaarten } = await import('../src/ai/simulatie.js');
+  test('spelende partij met de hoogste troef trekt door; tegenpartij of zonder troef elders niet', () => {
+    // Troef ruiten; alleen r7 zit nog buiten; Noord (2, spelend) heeft rA.
+    const gespeeld = Ks('rB r9 rV r10 rH r8');
+    const hand = Ks('rA s7 hB');
+    const slagen = [{ kaarten: gespeeld.map((kaart, i) => ({ speler: i % 4, kaart })) }];
+    const w = { troef: 'ruiten', speler: 2, spelendTeam: 0, hand, slagen, slag: [] };
+    assert.deepEqual(trekKaarten(w).map((k) => k.rang), ['A']);
+    assert.deepEqual(trekKaarten({ ...w, spelendTeam: 1 }), []);
+    assert.deepEqual(trekKaarten({ ...w, hand: Ks('rA r7 s7') }), []);
+  });
+});
+

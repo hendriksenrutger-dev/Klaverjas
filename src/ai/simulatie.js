@@ -75,6 +75,17 @@ export function geeftRoemWeg(w, k) {
   return roemInSlag(na.map((x) => x.kaart), w.troef).totaal > roemInSlag(w.slag.map((x) => x.kaart), w.troef).totaal;
 }
 
+// Doortrekken (Rutger: standaardstrategie). Kom je uit als spelende partij, kan er nog troef bij een
+// ander zitten en heb je een troef die boven alle troeven buiten je hand zit, trek dan met die troef.
+// Even streng als spekken, met een ruimere marge: soms wijk je af, maar alleen als het duidelijk beter is.
+export const TREK_MARGE = 40;
+export function trekKaarten(w, onbekend = onbekendeKaarten(w)) {
+  if (w.slag.length || team(w.speler) !== w.spelendTeam) return [];
+  const elders = onbekend.filter((c) => c.kleur === w.troef);
+  if (!elders.length) return [];
+  return w.hand.filter((c) => c.kleur === w.troef && elders.every((o) => sterkte(c, w.troef) > sterkte(o, w.troef)));
+}
+
 // Is kaart k hier spekken?
 export function isSpek(w, k) {
   if (!w.slag.length || punten(k, w.troef) < 10) return false;
@@ -650,7 +661,7 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -752,6 +763,18 @@ export function kiesKaart(w, {
       if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
     }
     if (alt >= 0) best = alt;
+  }
+  // Doortrekken met je hoogste troef, tenzij een andere kaart duidelijk beter is.
+  if (vuistregels && trekMarge > 0) {
+    const trek = trekKaarten(w, onbekend);
+    if (trek.length && !trek.some((t) => zelfdeKaart(t, geldig[best]))) {
+      let alt = -1;
+      for (let i = 0; i < geldig.length; i++) {
+        if (!trek.some((t) => zelfdeKaart(t, geldig[i])) || totaal(best) - totaal(i) > trekMarge) continue;
+        if (alt < 0 || totaal(i) > totaal(alt)) alt = i;
+      }
+      if (alt >= 0) best = alt;
+    }
   }
   // Niet uitkomen met een tien zonder de aas, tenzij elke andere kaart duidelijk slechter is.
   if (vuistregels && tienUitMarge > 0 && isTienUitkomst(w, geldig[best], onbekend)) {
@@ -856,7 +879,8 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
     // Niet uitkomen met een kale tien (de aas zit nog bij een ander).
     if (regels.kaleTien && k.kleur !== troef && k.rang === '10' && onbekend.some((c) => c.kleur === k.kleur && c.rang === 'A')) straf++;
     // Je laatste troef bewaren voor de laatste slagen.
-    if (regels.lageTroefBewaren && k.kleur === troef && w.slagen.length < 6 && w.hand.filter((c) => c.kleur === troef).length === 1) straf++;
+    if (regels.lageTroefBewaren && k.kleur === troef && w.slagen.length < 6 && w.hand.filter((c) => c.kleur === troef).length === 1
+      && !trekKaarten(w, onbekend).some((t) => zelfdeKaart(t, k))) straf++; // doortrekken gaat voor
     return straf;
   }
   const na = [...w.slag, { speler: w.speler, kaart: k }];
