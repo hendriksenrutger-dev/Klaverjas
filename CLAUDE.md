@@ -213,14 +213,26 @@ Rutger heeft een ontwerp goedgekeurd: groen laken, tablet liggend. Hij wil het *
 
 - Op dit moment niets.
 
-## Later (na de solo-app, nu NIET bouwen)
+## Online spelen met familie (op Rutgers verzoek gestart, 18 november 2026)
 
-### Online spelen met familie en vrienden
-- Speltafel met code of link. Lege plekken worden opgevuld door computerspelers.
-- Supabase Realtime voor live zetten. Delen en controle van zetten op de server (Edge Function), zodat niemand andermans kaarten kan zien.
-- Opvangen als iemand wegvalt: wachten of tijdelijk een computerspeler laten invallen.
-- Solo spelen blijft volledig offline.
-- Houd hier nu al rekening mee: spelregels los van het scherm, spelstand serialiseerbaar, elke zet een losse actie.
+Besluiten met Rutger:
+- **Supabase** (gratis abonnement, account van Rutger). De server deelt de kaarten en controleert elke zet (Edge Function), zodat niemand andermans kaarten kan zien. Supabase Realtime voor live zetten.
+- Knop **"Online spelen"** op het beginscherm. De maker maakt een tafel en krijgt een code of link; anderen doen mee met naam en kiezen een plek.
+- **Computers op lege plekken** worden uitgerekend op het **apparaat van de maker**. De server stuurt daarvoor alleen wat zo'n computerspeler mag weten.
+- **Regels: de maker kiest** (Amsterdams of Rotterdams, troefkeuze, enzovoort), zoals bij de instellingen.
+- **Apparaten:** de familie gebruikt Android, net als Rutger. Liggend, zoals nu.
+- Wegvallen: de tafel wacht even, daarna neemt de computer de plek tijdelijk over.
+- **Solo spelen blijft volledig offline.**
+
+Bouwvolgorde (na elke stap testen en akkoord van Rutger):
+1. Supabase opzetten (Rutger maakt het account, Claude legt uit).
+2. Tafel maken en meedoen met code, wachtruimte met namen.
+3. Samen een potje spelen met alleen mensen.
+4. Computers op lege plekken.
+5. Wegvallen en weer verbinden.
+6. Testen met de familie.
+
+## Later (nu NIET bouwen)
 
 ### Leerstand
 - Naar voren gehaald: zie "Leren klaverjassen" hierboven.
