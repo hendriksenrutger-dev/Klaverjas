@@ -763,6 +763,7 @@ export const VUISTREGELS = {
   tweedeHandLaag: true, // 17
   derdeHandHoog: true, // 18
   geenRoemWeg: true, // 21: geen roem afmaken op een slag van de tegenpartij
+  roemKlaarleggen: true, // Rutgers voorbeeld (Noord ♦7 bij ♦9): geen roem klaarleggen voor een tegenstander na je
   tienBeschermen: true, // 22: een tien niet bijspelen zolang de aas nog bij de tegenpartij kan zitten
   lageTroefBewaren: true, // 24: je laatste troef bewaren voor de laatste slagen
 };
@@ -858,6 +859,17 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
   if (regels.geenRoemWeg && !wint && !maatHeeft) {
     const meer = roemInSlag(na.map((x) => x.kaart), troef).totaal - roemInSlag(w.slag.map((x) => x.kaart), troef).totaal;
     if (meer > 0) straf++;
+  }
+  // Geen roem klaarleggen: speelt er na jou nog een tegenstander, leg dan geen kaart waarmee
+  // één onbekende kaart van hem roem maakt (zoals ♦7 bij ♦9: de ♦8 maakt een driekaart).
+  if (regels.roemKlaarleggen && !maatHeeft) {
+    const naJou = [1, 2, 3].slice(0, 3 - w.slag.length).map((i) => (w.speler + i) % 4);
+    if (naJou.some((p) => team(p) !== team(w.speler))) {
+      const zonder = w.slag.map((x) => x.kaart);
+      const met = na.map((x) => x.kaart);
+      const basis = roemInSlag(met, troef).totaal;
+      if (onbekend.some((u) => roemInSlag([...met, u], troef).totaal - basis > roemInSlag([...zonder, u], troef).totaal - roemInSlag(zonder, troef).totaal)) straf++;
+    }
   }
   // Een tien niet bijspelen zolang de aas nog bij de tegenpartij kan zitten.
   if (regels.tienBeschermen && k.kleur !== troef && k.rang === '10' && onbekend.some((c) => c.kleur === k.kleur && c.rang === 'A')) {

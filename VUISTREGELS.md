@@ -48,6 +48,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 19. ✅ Laatste in de slag: win met de laagste kaart die genoeg is. (Sinds Rutgers potje met ♦9 ook als vaste vuistregel, omdat de berekening soms geen verschil zag.)
 20. ✅ Gooi geen kaart weg die nog een slag kan worden (vrije kaart, of heer naast je eigen aas).
 21. 🆕 Geef bij het bijspelen geen roem weg: maak geen reeks of stuk af op een slag van de tegenpartij.
+21b. ✅ (Rutgers voorbeeld: Noord ♦7 bij de ♦9 van West, Oost maakte er met ♦8 een driekaart van) Leg geen roem klaar: speelt er na jou nog een tegenstander, leg dan geen kaart waarmee één kaart van hem roem maakt.
 22. 🆕 Bescherm een tien: speel een tien niet bij zolang de aas van die kleur nog bij de tegenpartij kan zitten, tenzij je moet.
 
 ## F. Troef
