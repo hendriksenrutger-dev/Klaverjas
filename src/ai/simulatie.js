@@ -22,8 +22,8 @@ import { uitslag } from '../regels/potje.js';
 // Ook op makkelijk seinen de computerspelers, zodat Rutger als maat de seinen kan lezen.
 export const NIVEAUS = {
   makkelijk: { simulaties: 5, strategie: 'simpel', eindspel: 0, seinGeven: true, seinLezen: false },
-  normaal: { simulaties: 100, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true },
-  sterk: { simulaties: 300, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true },
+  normaal: { simulaties: 100, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true, exactVanaf: 5, exactTop: 3, exactSims: 24 },
+  sterk: { simulaties: 300, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true, exactVanaf: 5, exactTop: 4, exactSims: 40 },
 };
 
 // ---------- Seinen (Rutgers afspraken, zie CLAUDE.md) ----------
@@ -673,16 +673,25 @@ export function draaiGewicht(handen, w) {
 
 // ---------- Kaart kiezen ----------
 // bekendeHanden: alleen voor metingen (een AI die alle kaarten ziet), nooit in het spel.
-export function kiesKaart(w, {
+// Standaardinstellingen van de computer (zie NIVEAUS voor de niveaus).
+function opties(o = {}) {
+  const {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
   draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, troefUitMarge = TROEF_UIT_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
-} = {}) {
-  const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
-  if (geldig.length === 1) return { kaart: geldig[0], scores: null };
+  exactVanaf = 0, exactTop = 3, exactSims = 40,
+  } = o;
+  return { simulaties, rng, strategie, eindspel, seinGeven, seinLezen, seinFactor, bekendeHanden, trekken, trekBonus, seinStraf, seinStrafBekennen,
+    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims };
+}
+
+// Rekent voor de gegeven kaarten de gewogen totalen uit over 'simulaties' verdelingen
+// (exact doorgerekend of met de snelle speelstijl). Los te gebruiken, zodat meerdere workers
+// tegelijk kunnen rekenen.
+export function rekenTotalen(w, o, geldig, simulaties, exact) {
+  const { rng, strategie, seinLezen, seinFactor, bekendeHanden, trekken, draaiInfo, tienLezen, tienFactor, slimOpties } = opties(o);
   const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie, trekken, opties: slimOpties };
-  const exact = 8 - w.slagen.length <= eindspel;
   const onbekend = onbekendeKaarten(w);
   const uit = uitsluitingen(w, onbekend);
   const seinen = seinLezen && !bekendeHanden ? seinenVanAnderen(w, onbekend) : [];
@@ -732,7 +741,12 @@ export function kiesKaart(w, {
       totalen[i] += gewicht * verschil(u, w.speler);
     }
   }
-  const gemiddeld = totalen.map((t) => t / gewichtSom);
+  return { totalen, gewichtSom };
+}
+
+// Voorkeuren bovenop de berekening: zelf seinen en troef trekken.
+function correcties(w, o, geldig, onbekend) {
+  const { seinGeven, trekBonus, seinStraf, seinStrafBekennen } = o;
   // Zelf seinen: een waar sein krijgt een kleine voorkeur, een vals sein een afkeer.
   const gespeeld = new Set([...w.slagen.flatMap((s) => s.kaarten), ...w.slag].map((x) => kaartId(x.kaart)));
   const seinCorrectie = geldig.map((k) => {
@@ -758,6 +772,62 @@ export function kiesKaart(w, {
       });
     }
   }
+  return { seinCorrectie, trekCorrectie };
+}
+
+// Eerst grof, dan exact (optie A, op Rutgers verzoek): zijn er nog 'exactVanaf' slagen of minder te
+// spelen, dan worden de 'exactTop' beste kaarten van de gewone berekening exact doorgerekend in
+// 'exactSims' verdelingen. De andere kaarten schuiven mee met het gemiddelde verschil.
+export function exactNodig(w, o) {
+  const x = opties(o);
+  const resten = 8 - w.slagen.length;
+  return !x.bekendeHanden && x.exactTop > 0 && resten > x.eindspel && resten <= x.exactVanaf;
+}
+
+export function kortelijst(w, o, geldig, gemiddeld) {
+  const x = opties(o);
+  const { seinCorrectie, trekCorrectie } = correcties(w, x, geldig, onbekendeKaarten(w));
+  const totaal = (i) => gemiddeld[i] + seinCorrectie[i] + trekCorrectie[i];
+  const volgorde = geldig.map((_, i) => i).sort((a, b) => totaal(b) - totaal(a));
+  const kort = volgorde.filter((i) => totaal(volgorde[0]) - totaal(i) <= 40).slice(0, x.exactTop);
+  // Kaarten die een strenge regel voorschrijft (doortrekken) altijd exact meenemen: juist daar
+  // vergist de snelle speelstijl zich.
+  if (x.vuistregels && x.trekMarge > 0) {
+    for (const t of trekKaarten(w)) {
+      const i = geldig.findIndex((k) => zelfdeKaart(k, t));
+      if (i >= 0 && !kort.includes(i)) kort.push(i);
+    }
+  }
+  return kort;
+}
+
+export function verfijn(gemiddeld, kort, exactGem) {
+  const verschil = kort.reduce((s, i, j) => s + exactGem[j] - gemiddeld[i], 0) / kort.length;
+  const nieuw = gemiddeld.map((g) => g + verschil);
+  kort.forEach((i, j) => { nieuw[i] = exactGem[j]; });
+  return nieuw;
+}
+
+export function kiesKaart(w, o = {}) {
+  const x = opties(o);
+  const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
+  if (geldig.length === 1) return { kaart: geldig[0], scores: null };
+  const exact = 8 - w.slagen.length <= x.eindspel;
+  const r = rekenTotalen(w, x, geldig, x.simulaties, exact);
+  let gemiddeld = r.totalen.map((t) => t / r.gewichtSom);
+  if (exactNodig(w, x)) {
+    const kort = kortelijst(w, x, geldig, gemiddeld);
+    const e = rekenTotalen(w, x, kort.map((i) => geldig[i]), x.exactSims, true);
+    gemiddeld = verfijn(gemiddeld, kort, e.totalen.map((t) => t / e.gewichtSom));
+  }
+  return beslis(w, x, geldig, gemiddeld);
+}
+
+// De keuze zelf: berekening plus voorkeuren, vuistregels en de strenge regels.
+export function beslis(w, o, geldig, gemiddeld) {
+  const { vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, gedektRegel, vuistregelSet } = opties(o);
+  const onbekend = onbekendeKaarten(w);
+  const { seinCorrectie, trekCorrectie } = correcties(w, opties(o), geldig, onbekend);
   const totaal = (i) => gemiddeld[i] + seinCorrectie[i] + trekCorrectie[i];
   let best = 0;
   for (let i = 1; i < geldig.length; i++) {

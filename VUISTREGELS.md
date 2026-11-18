@@ -19,7 +19,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 ## B. Uitkomen als spelende partij
 
 3. ✅ Trek troef als je sterk in troef bent: haal de troeven bij de tegenpartij weg.
-3b. ✅ Doortrekken (Rutger: standaardstrategie, na Noords ♠7 terwijl hij met ♦A de laatste troef ♦7 eruit kon halen): als spelende partij met een troef die boven alle troeven buiten je hand zit, trek je door zolang er nog troef bij een ander kan zitten. Streng: alleen als een andere kaart minstens 40 punten beter scoort, wijkt de computer af. Gaat voor regel 24 (laatste troef bewaren).
+3b. ✅ Doortrekken (Rutger: standaardstrategie, na Noords ♠7 terwijl hij met ♦A de laatste troef ♦7 eruit kon halen): als spelende partij met een troef die boven alle troeven buiten je hand zit, trek je door zolang er nog troef bij een ander kan zitten. Streng: alleen als een andere kaart minstens 40 punten beter scoort, wijkt de computer af. Gaat voor regel 24 (laatste troef bewaren). Ook met een troef die de slag verliest (Rutger): als je minstens zoveel troef hebt als er nog buiten je hand is en je nog 3 of meer mooie kaarten (azen, tienen, vrije kaarten) in een andere kleur hebt, trek je door met je laagste troef.
 4. 🆕 Trek niet door als de tegenpartij geen troef meer kan hebben (tel de troeven).
 4b. ✅ (Rutgers voorbeeld: West trok met ♠7 terwijl alleen ♠8 nog buiten zat) Trek je troef en heb je een troef die boven alle troeven buiten je hand zit, trek dan daarmee.
 5. 🆕 Na het troeftrekken eerst je vrije azen en tienen binnenhalen.
@@ -28,7 +28,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 
 ## C. Uitkomen als tegenpartij
 
-8. ✅ Niet met troef uitkomen.
+8. ✅ Niet met troef uitkomen. (Sinds Rutgers opmerking streng: alleen als elke andere kaart minstens 40 punten slechter is.)
 9. 🆕 Uitkomen met een aas in een bijkleur is goed (geen plicht: Rutger vond ♠A of ♦8 allebei goed); voor de spelende partij: na het troeftrekken vrije azen en tienen innen (regel 5).
 10. 🆕 Speel de kleur van je maat (sein of eerder gespeeld) na.
 11. 🆕 Kom niet uit met een kale tien (een tien zonder de aas, terwijl de aas nog in het spel is).
