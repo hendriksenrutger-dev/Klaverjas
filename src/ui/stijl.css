@@ -549,3 +549,13 @@ button { font: inherit; }
 
 .stat-logboek { font-size: 14px; opacity: .8; margin: 8px 0 0; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .knop.klein { min-height: 44px; padding: 4px 14px; font-size: 14px; }
+
+/* Alle slagen in één venster: 4 per rij */
+.slagen-raster { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 14px; margin-top: 8px; }
+.slag-blok { border: 1px solid rgba(0,0,0,.1); border-radius: 12px; padding: 8px 8px 6px; background: rgba(255,255,255,.5); }
+.slag-blok .slag-kop { font-size: 14px; margin-bottom: 6px; text-align: center; white-space: nowrap; }
+.slag-blok.wij .slag-kop span { color: #8a6a14; font-weight: 700; }
+.slag-blok .slag-kaarten { display: flex; justify-content: center; gap: 4px; --kh: min(9.5vh, 84px); }
+.slag-blok .met-naam { font-size: 11px; gap: 3px; font-weight: 600; }
+.slag-blok .vgl { font-size: 11px; }
+.slag-blok .vgl small { font-size: 10px; }
