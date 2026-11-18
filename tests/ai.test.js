@@ -706,3 +706,15 @@ describe('doortrekken met een verliezende troef en niet troef uitkomen als tegen
   });
 });
 
+describe('aas voor tien op een slag van je maat (Rutger)', async () => {
+  const { aasVoorTien } = await import('../src/ai/simulatie.js');
+  test('maat heeft de slag: aas in plaats van tien; tegenpartij heeft de slag: niet', () => {
+    // Troef klaveren. West (1) komt uit met hA; Oost (3, maat van West) gooit af.
+    const geldig = Ks('s10 sA');
+    const w = { troef: 'klaveren', speler: 3, slag: [{ speler: 1, kaart: K('hA') }, { speler: 2, kaart: K('h8') }] };
+    assert.deepEqual(aasVoorTien(w, K('s10'), geldig), K('sA'));
+    const w2 = { ...w, slag: [{ speler: 2, kaart: K('hA') }] };
+    assert.equal(aasVoorTien(w2, K('s10'), geldig), null);
+  });
+});
+
