@@ -24,6 +24,7 @@ const A = {
   alleenBijgooien: { ...basis, regels: { uitkomen: false, bijgooien: true, troefGevraagd: false } },
   alleenTroef: { ...basis, regels: { uitkomen: false, bijgooien: false, troefGevraagd: true } },
   geenVuistregels: { ...basis, vuist: false },
+  zonderSpek: { ...basis, spekMarge: 0 },
   zonderTrekHoog: { ...basis, regels: { ...(await import('../src/ai/simulatie.js')).VUISTREGELS, trekHoog: false } },
   beide: { ...basis, slim: { gedekt: true, maatNeemt: true } },
 }[welke];
