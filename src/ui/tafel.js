@@ -384,21 +384,24 @@ function vergelijkBlok(spel) {
     <p class="vergelijk-uitleg">Een schatting vooraf, met wat jij toen wist; niet wat het achteraf opleverde. De computer kan zich ook vergissen.</p></div>`;
 }
 
-function slagenOverzicht(spel) {
+// Alle slagen van het potje in één oogopslag (op Rutgers verzoek): 4 per rij, zonder scrollen.
+function slagenVenster(spel) {
   const slagen = spel.potje.slagen;
-  if (!slagen.length) return '';
-  const rijen = slagen.map((s, i) => {
+  const blokken = slagen.map((s, i) => {
     const wij = team(s.winnaar) === 0;
     const roem = s.roem.totaal ? ` + ${s.roem.totaal} roem` : '';
-    return `<div class="slag-rij">
-      <div class="slag-info"><b>Slag ${i + 1}</b><span class="${wij ? 'wij' : ''}">${wij ? 'Wij' : 'Zij'}</span> · ${s.punten} punten${roem}</div>
+    return `<div class="slag-blok ${wij ? 'wij' : ''}">
+      <div class="slag-kop"><b>Slag ${i + 1}</b> · <span>${wij ? 'Wij' : 'Zij'}</span> · ${s.punten}${roem}</div>
       <div class="slag-kaarten">${s.kaarten.map((x) => `<div class="met-naam ${x.speler === s.winnaar ? 'winnaar' : ''}">${kaartHtml(x.kaart)}<div>${naam(x.speler)}</div>${x.speler === 0 ? vergelijkLabel(spel, i) : ''}</div>`).join('')}</div>
     </div>`;
   }).join('');
   const uitleg = spel.instellingen.vergelijk
     ? '<p class="vergelijk-uitleg">Onder jouw kaart: ✓ dezelfde kaart als de computer, ≈ een andere kaart die (bijna) even goed is, of de kaart van de computer met hoeveel die gemiddeld beter of minder was.</p>'
     : '';
-  return `<details class="slagen-overzicht"><summary>Bekijk alle slagen</summary><div class="slagen-lijst">${uitleg}${rijen}</div></details>`;
+  return venster(`<h2>Alle slagen</h2>
+    <p class="sub">Troef ${KLEURNAAM[spel.potje.troef].toLowerCase()} · de gouden rand is de winnaar van de slag</p>
+    <div class="slagen-raster">${blokken}</div>${uitleg}
+    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Terug</button></div>`, true, 'slagen');
 }
 
 // Alle handen zoals ze bij het begin van het potje gedeeld waren, rond de tafel.
@@ -448,11 +451,10 @@ function uitslagVenster(spel) {
       <tr><td>Zij</td><td>${u.punten[1]}</td><td>${u.roem[1]}</td><td>${u.totaal[1]}</td></tr>
     </table>
     ${vergelijkBlok(spel)}
-    ${slagenOverzicht(spel)}
     <p class="stand">Stand na ${spel.partij.potjes.length} van ${AANTAL_POTJES}: Wij <b>${t[0]}</b> · Zij <b>${t[1]}</b></p>
     ${spel.leren ? leerRegel(spel) : ''}
     ${klaar ? `<p class="eindstand">${t[0] > t[1] ? 'Wij winnen de partij!' : t[0] < t[1] ? 'Zij winnen de partij.' : 'Gelijkspel.'}</p>` : ''}
-    <div class="venster-knoppen">${spel.handen ? '<button class="knop" data-actie="open" data-venster="handen">Alle handen</button>' : ''}${klaar
+    <div class="venster-knoppen">${spel.potje?.slagen?.length ? '<button class="knop" data-actie="open" data-venster="slagen">Alle slagen</button>' : ''}${spel.handen ? '<button class="knop" data-actie="open" data-venster="handen">Alle handen</button>' : ''}${klaar
       ? '<button class="knop" data-actie="naarStart">Beginscherm</button><button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button>'
       : '<button class="knop goud" data-actie="volgendPotje">Volgend potje</button>'}</div>`, false, `uitslag-${spel.partij.potjes.length}`);
 }
@@ -466,6 +468,7 @@ function vensters(spel) {
 
 function vensterHtml(spel) {
   if (spel.fase === 'potjeKlaar' || spel.fase === 'partijKlaar') {
+    if (spel.venster === 'slagen' && spel.potje?.slagen?.length) return slagenVenster(spel);
     return spel.venster === 'handen' && spel.handen ? handenVenster(spel) : uitslagVenster(spel);
   }
   switch (spel.venster) {
