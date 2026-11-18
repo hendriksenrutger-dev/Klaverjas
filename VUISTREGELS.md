@@ -20,7 +20,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 
 3. ✅ Trek troef als je sterk in troef bent: haal de troeven bij de tegenpartij weg.
 3b. ✅ Doortrekken (Rutger: standaardstrategie, na Noords ♠7 terwijl hij met ♦A de laatste troef ♦7 eruit kon halen): als spelende partij met een troef die boven alle troeven buiten je hand zit, trek je door zolang er nog troef bij een ander kan zitten. Streng: alleen als een andere kaart minstens 40 punten beter scoort, wijkt de computer af. Gaat voor regel 24 (laatste troef bewaren). Ook met een troef die de slag verliest (Rutger): als je minstens zoveel troef hebt als er nog buiten je hand is en je nog 3 of meer mooie kaarten (azen, tienen, vrije kaarten) in een andere kleur hebt, trek je door met je laagste troef.
-4. 🆕 Trek niet door als de tegenpartij geen troef meer kan hebben (tel de troeven).
+4. 🆕 Trek niet door als de tegenpartij geen troef meer kan hebben (tel de troeven). (Sinds Rutgers voorbeeld met Noords ♠V streng: alleen als elke andere kaart minstens 40 punten slechter is. Bewaar zo'n vrije troef voor later, met een beetje geluk de laatste slag.)
 4b. ✅ (Rutgers voorbeeld: West trok met ♠7 terwijl alleen ♠8 nog buiten zat) Trek je troef en heb je een troef die boven alle troeven buiten je hand zit, trek dan daarmee.
 5. 🆕 Na het troeftrekken eerst je vrije azen en tienen binnenhalen.
 6. 🆕 Speel de kleur na waarin je maat geseind heeft.
