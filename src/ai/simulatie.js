@@ -100,6 +100,29 @@ export function seinenVanAnderen(w, onbekend = onbekendeKaarten(w)) {
   return lijst;
 }
 
+// Tien-uitkomst lezen (Rutger: niemand komt uit met een tien als hij de aas niet heeft).
+// Komt een ander uit met een tien (geen troef) terwijl de aas van die kleur nog onbekend is,
+// dan heeft hij die aas waarschijnlijk. Verdelingen waarin dat niet zo is, tellen minder mee.
+export const TIEN_FACTOR = 4; // eigen ontwerpkeuze, bij te stellen
+
+export function tienUitkomsten(w, onbekend = onbekendeKaarten(w)) {
+  const open = new Set(onbekend.map(kaartId));
+  const lijst = [];
+  for (const kaarten of [...w.slagen.map((s) => s.kaarten), w.slag]) {
+    const eerste = kaarten[0];
+    if (!eerste || eerste.speler === w.speler || eerste.kaart.rang !== '10' || eerste.kaart.kleur === w.troef) continue;
+    const aas = { kleur: eerste.kaart.kleur, rang: 'A' };
+    if (open.has(kaartId(aas))) lijst.push({ speler: eerste.speler, kaart: aas });
+  }
+  return lijst;
+}
+
+export function tienGewicht(handen, lijst, factor = TIEN_FACTOR) {
+  let g = 1;
+  for (const t of lijst) if (!handen[t.speler].some((c) => c.kleur === t.kaart.kleur && c.rang === 'A')) g /= factor;
+  return g;
+}
+
 // Kaarten die een speler vanaf een bepaald moment nog gespeeld heeft (om zijn hand van toen terug te rekenen).
 function laterGespeeld(w, speler, voor) {
   const res = [];
@@ -606,7 +629,7 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -615,13 +638,15 @@ export function kiesKaart(w, {
   const onbekend = onbekendeKaarten(w);
   const uit = uitsluitingen(w, onbekend);
   const seinen = seinLezen && !bekendeHanden ? seinenVanAnderen(w, onbekend) : [];
+  const tienen = tienLezen && !bekendeHanden ? tienUitkomsten(w, onbekend) : [];
   const totalen = new Array(geldig.length).fill(0);
   let gewichtSom = 0;
   const beurtNa = (w.speler + 1) % 4;
   for (let n = 0; n < simulaties; n++) {
     const handen = bekendeHanden ? bekendeHanden.map((h) => h.slice()) : trekVerdeling(w, uit, onbekend, rng);
     const gewicht = (seinen.length ? seinGewicht(handen, seinen, seinFactor, w) : 1)
-      * (draaiInfo && !bekendeHanden ? draaiGewicht(handen, w) : 1);
+      * (draaiInfo && !bekendeHanden ? draaiGewicht(handen, w) : 1)
+      * (tienen.length ? tienGewicht(handen, tienen, tienFactor) : 1);
     gewichtSom += gewicht;
     for (let i = 0; i < geldig.length; i++) {
       const kopie = handen.map((h) => h.slice());
