@@ -30,6 +30,7 @@ Nieuw: `duelKaart` (gebruikt door `ontwikkeling/bovengrens.mjs`).
 | Zonder tien-uitkomst lezen | 4 × 400 | +0,3 | ± 0,6 (gecombineerd) |
 | Snelle speelstijl zonder "vrije kaart bewaren" | 4 × 400 | −1,2 | ± 2,3 (gecombineerd) |
 | Zonder "geen roem klaarleggen" | 4 × 400 | −0,3 | ± 0,8 (gecombineerd) |
+| Zonder "niet uitkomen met een tien zonder de aas" (marge 20) | 4 × 400 | +0,4 | ± 0,7 (gecombineerd) |
 
 ## Conclusies
 
