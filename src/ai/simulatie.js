@@ -102,6 +102,19 @@ export function isTroefUitTegen(w, k) {
   return w.slag.length === 0 && team(w.speler) !== w.spelendTeam && k.kleur === w.troef;
 }
 
+// Aas en tien van dezelfde kleur, op een slag die naar ons gaat: speel de aas, niet de tien
+// (Rutger). De tien wordt dan de hoogste kaart, het levert een punt meer op en het is een eerlijk
+// sein ("ik heb ook de tien"). Geeft de tien in plaats van de aas, of omgekeerd.
+export function aasVoorTien(w, k, geldig) {
+  if (!w.slag.length || k.rang !== '10' || k.kleur === w.troef) return null;
+  const aas = geldig.find((c) => c.kleur === k.kleur && c.rang === 'A');
+  if (!aas) return null;
+  const metAas = huidigeWinnaar([...w.slag, { speler: w.speler, kaart: aas }], w.troef).speler;
+  const metTien = huidigeWinnaar([...w.slag, { speler: w.speler, kaart: k }], w.troef).speler;
+  const roem = (c) => roemInSlag([...w.slag.map((x) => x.kaart), c], w.troef).totaal;
+  return team(metAas) === team(w.speler) && team(metTien) === team(w.speler) && roem(aas) >= roem(k) ? aas : null;
+}
+
 // Is kaart k hier spekken?
 export function isSpek(w, k) {
   if (!w.slag.length || punten(k, w.troef) < 10) return false;
@@ -879,6 +892,11 @@ export function beslis(w, o, geldig, gemiddeld) {
       if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
     }
     if (alt >= 0) best = alt;
+  }
+  // Aas en tien van dezelfde kleur op een slag van ons: de aas (Rutger).
+  if (vuistregels) {
+    const aas = aasVoorTien(w, geldig[best], geldig);
+    if (aas) best = geldig.findIndex((c) => zelfdeKaart(c, aas));
   }
   return {
     kaart: geldig[best],
