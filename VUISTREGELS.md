@@ -40,6 +40,7 @@ Vuistregels beslissen alleen als kaarten in de berekening bijna even goed scoren
 ## E. Bijspelen
 
 14. ✅ (nieuw sinds vandaag) Punten bijgooien alleen als je maat de slag al heeft.
+14b. ✅ Niet spekken (Rutger, na Noords ♠A op ♣10 van West): een aas of tien bijgooien op een slag die je maat niet heeft en die je er zelf niet mee wint, alleen als elke andere kaart minstens 20 punten slechter scoort.
 15. ✅ Heeft je maat de slag: geef punten (een tien of heer erbij); dat doet de berekening.
 16. 🆕 Troef niet over je maat heen als die de slag al heeft (Amsterdams; je hoeft niet).
 17. 🆕 Tweede hand laag: kom je als tweede, speel dan laag, tenzij je de slag zeker kunt nemen.

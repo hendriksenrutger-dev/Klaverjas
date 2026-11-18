@@ -52,6 +52,18 @@ export const TREK_BONUS = 10;
 // Vuistregels: scoren kaarten binnen deze marge (in verschilpunten wij − zij), dan beslist
 // een menselijke vuistregel in plaats van het toeval van de simulatie. Eigen ontwerpkeuze.
 export const VUISTREGEL_MARGE = 8;
+// Spekken (een aas of tien bijgooien op een slag die je maat niet heeft en die je er zelf niet
+// mee wint): Rutger wil dat strenger. Alleen als elke andere kaart minstens zoveel punten slechter
+// scoort, mag het toch. Eigen ontwerpkeuze, bij te stellen.
+export const SPEK_MARGE = 20;
+
+// Is kaart k hier spekken?
+export function isSpek(w, k) {
+  if (!w.slag.length || punten(k, w.troef) < 10) return false;
+  if (team(huidigeWinnaar(w.slag, w.troef).speler) === team(w.speler)) return false;
+  const na = [...w.slag, { speler: w.speler, kaart: k }];
+  return huidigeWinnaar(na, w.troef).speler !== w.speler;
+}
 
 const KLEINTJES = new Set(['7', '8', '9']);
 
@@ -594,7 +606,7 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -685,6 +697,15 @@ export function kiesKaart(w, {
       if (totaal(best) - totaal(i) > marge) continue;
       if (regel[i] < regel[best] || (regel[i] === regel[best] && totaal(i) > totaal(best))) best = i;
     }
+  }
+  // Niet spekken, tenzij elke andere kaart duidelijk slechter is.
+  if (vuistregels && spekMarge > 0 && isSpek(w, geldig[best])) {
+    let alt = -1;
+    for (let i = 0; i < geldig.length; i++) {
+      if (isSpek(w, geldig[i]) || totaal(best) - totaal(i) > spekMarge) continue;
+      if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
+    }
+    if (alt >= 0) best = alt;
   }
   return {
     kaart: geldig[best],

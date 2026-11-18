@@ -609,3 +609,17 @@ describe('vuistregels uit VUISTREGELS.md', async () => {
     assert.equal(vuistregelStraf(w, K('s8'), onb, false, alleenRegel('lageTroefBewaren')), 0);
   });
 });
+
+describe('spekken (Rutgers regel)', async () => {
+  const { isSpek } = await import('../src/ai/simulatie.js');
+  const w = (slag, speler) => ({ troef: 'harten', slag: slag.map(([s, c]) => ({ speler: s, kaart: K(c) })), speler });
+  test('aas bijgooien op een slag van de tegenpartij is spekken', () => {
+    assert.equal(isSpek(w([[1, 'k10']], 2), K('sA')), true);
+    assert.equal(isSpek(w([[1, 'k10']], 2), K('s10')), true);
+  });
+  test('geen spekken: lage kaart, maat heeft de slag, of je wint zelf', () => {
+    assert.equal(isSpek(w([[1, 'k10']], 2), K('sH')), false);
+    assert.equal(isSpek(w([[0, 'kA'], [1, 'k7']], 2), K('sA')), false);
+    assert.equal(isSpek(w([[1, 'k10']], 2), K('kA')), false);
+  });
+});
