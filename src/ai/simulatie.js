@@ -66,6 +66,15 @@ export function isTienUitkomst(w, k, onbekend = onbekendeKaarten(w)) {
     && onbekend.some((c) => c.kleur === k.kleur && c.rang === 'A');
 }
 
+// Geeft kaart k roem weg op een slag die niet naar ons gaat (na deze kaart)? Zo'n kaart is geen
+// goed alternatief voor spekken (Rutgers voorbeeld: Noord ♦B bij ♦V ♦H gaf 20 roem in plaats van ♠10).
+export function geeftRoemWeg(w, k) {
+  if (!w.slag.length) return false;
+  const na = [...w.slag, { speler: w.speler, kaart: k }];
+  if (team(huidigeWinnaar(na, w.troef).speler) === team(w.speler)) return false;
+  return roemInSlag(na.map((x) => x.kaart), w.troef).totaal > roemInSlag(w.slag.map((x) => x.kaart), w.troef).totaal;
+}
+
 // Is kaart k hier spekken?
 export function isSpek(w, k) {
   if (!w.slag.length || punten(k, w.troef) < 10) return false;
@@ -739,7 +748,7 @@ export function kiesKaart(w, {
   if (vuistregels && spekMarge > 0 && isSpek(w, geldig[best])) {
     let alt = -1;
     for (let i = 0; i < geldig.length; i++) {
-      if (isSpek(w, geldig[i]) || totaal(best) - totaal(i) > spekMarge) continue;
+      if (isSpek(w, geldig[i]) || geeftRoemWeg(w, geldig[i]) || totaal(best) - totaal(i) > spekMarge) continue;
       if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
     }
     if (alt >= 0) best = alt;
