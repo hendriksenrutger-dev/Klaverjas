@@ -653,3 +653,14 @@ describe('tien-uitkomst lezen', async () => {
   });
 });
 
+describe('niet uitkomen met een tien zonder de aas (Rutgers regel)', async () => {
+  const { isTienUitkomst, kiesKaart } = await import('../src/ai/simulatie.js');
+  test('gedekte tien zonder aas: niet uitkomen; met eigen aas of troef: wel', () => {
+    const w = { troef: 'harten', speler: 2, hand: Ks('k10 kH k7'), slagen: [], slag: [] };
+    assert.equal(isTienUitkomst(w, K('k10')), true);
+    assert.equal(isTienUitkomst(w, K('k7')), false);
+    assert.equal(isTienUitkomst({ ...w, hand: Ks('k10 kA') }, K('k10')), false);
+    assert.equal(isTienUitkomst({ ...w, hand: Ks('h10 h7') }, K('h10')), false);
+  });
+});
+
