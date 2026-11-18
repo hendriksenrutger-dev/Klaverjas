@@ -557,6 +557,17 @@ describe('vuistregels uit VUISTREGELS.md', async () => {
     assert.equal(vuistregelStraf(w2, K('h7'), onbekendVan([...hand2, ...gespeeld]), false, alleenRegel('trekHoog')), 0);
   });
 
+  test('geen roem klaarleggen (Rutgers voorbeeld: Noord ♦7 bij ♦9)', () => {
+    // Troef harten. West (1) komt uit met h9; Noord (2) heeft hA hH h7, Oost speelt nog.
+    const hand = Ks('hA hH h7 s9');
+    const slag = [{ speler: 1, kaart: K('h9') }];
+    const onb = onbekendVan([...hand, K('h9'), K('hB')]);
+    const w = basis({ speler: 2, spelendTeam: 1, hand, slag });
+    assert.equal(vuistregelStraf(w, K('h7'), onb, false, alleenRegel('roemKlaarleggen')), 1); // h8 maakt 7-8-9
+    assert.equal(vuistregelStraf(w, K('hH'), onb, false, alleenRegel('roemKlaarleggen')), 1); // hV maakt stuk
+    assert.equal(vuistregelStraf(w, K('hA'), onb, false, alleenRegel('roemKlaarleggen')), 0);
+  });
+
   test('5: na het troeftrekken je vrije aas innen', () => {
     const hand = Ks('hB kA k7 s8');
     const gespeeld = Ks('h7 h8 h9 h10 hV hH hA');
