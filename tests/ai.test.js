@@ -664,3 +664,12 @@ describe('niet uitkomen met een tien zonder de aas (Rutgers regel)', async () =>
   });
 });
 
+describe('spekken: roem weggeven is geen alternatief (Rutgers voorbeeld ♦B)', async () => {
+  const { kiesKaart, geeftRoemWeg } = await import('../src/ai/simulatie.js');
+  test('♦B bij ♦V ♦H op een slag van de tegenpartij geeft roem weg', () => {
+    const w = { troef: 'klaveren', speler: 2, slag: [{ speler: 3, kaart: K('kV') }, { speler: 0, kaart: K('rV') }, { speler: 1, kaart: K('rH') }] };
+    assert.equal(geeftRoemWeg(w, K('rB')), true);
+    assert.equal(geeftRoemWeg(w, K('s10')), false);
+  });
+});
+
