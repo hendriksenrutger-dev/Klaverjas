@@ -27,6 +27,7 @@ const A = {
   zonderSpek: { ...basis, spekMarge: 0 },
   zonderTienUit: { ...basis, tienUitMarge: 0 },
   zonderDoortrekken: { ...basis, trekMarge: 0 },
+  zonderTroefUit: { ...basis, troefUitMarge: 0 },
   zonderTien: { ...basis, tien: false },
   zonderRoemKlaar: { ...basis, regels: { ...(await import('../src/ai/simulatie.js')).VUISTREGELS, roemKlaarleggen: false } },
   zonderBaasHouden: { ...basis, slim: { gedekt: false, maatNeemt: false, baasHouden: false } },

@@ -687,3 +687,22 @@ describe('doortrekken (Rutgers standaardstrategie)', async () => {
   });
 });
 
+describe('doortrekken met een verliezende troef en niet troef uitkomen als tegenpartij', async () => {
+  const { trekKaarten, isTroefUitTegen } = await import('../src/ai/simulatie.js');
+  const gespeeld = Ks('rB r9 rA r10');
+  const slagen = [{ kaarten: gespeeld.map((kaart, i) => ({ speler: i % 4, kaart })) }];
+  test('evenveel troef als buiten en 3 mooie kaarten: met de laagste troef doortrekken', () => {
+    // Buiten: rH rV r8 r7 min eigen; Noord heeft r8 r7 (2), buiten nog rH rV (2). Mooie kaarten: sA s10 hA.
+    const w = { troef: 'ruiten', speler: 2, spelendTeam: 0, hand: Ks('r8 r7 sA s10 hA'), slagen, slag: [] };
+    assert.deepEqual(trekKaarten(w).map((k) => k.rang), ['7']);
+    assert.deepEqual(trekKaarten({ ...w, hand: Ks('r8 r7 sA s9 h8') }), []);
+    assert.deepEqual(trekKaarten({ ...w, hand: Ks('r7 sA s10 hA') }), []);
+  });
+  test('tegenpartij komt niet met troef uit', () => {
+    const w = { troef: 'ruiten', speler: 1, spelendTeam: 0, hand: Ks('r8 sA'), slagen, slag: [] };
+    assert.equal(isTroefUitTegen(w, K('r8')), true);
+    assert.equal(isTroefUitTegen(w, K('sA')), false);
+    assert.equal(isTroefUitTegen({ ...w, spelendTeam: 1 }, K('r8')), false);
+  });
+});
+

@@ -83,7 +83,23 @@ export function trekKaarten(w, onbekend = onbekendeKaarten(w)) {
   if (w.slag.length || team(w.speler) !== w.spelendTeam) return [];
   const elders = onbekend.filter((c) => c.kleur === w.troef);
   if (!elders.length) return [];
-  return w.hand.filter((c) => c.kleur === w.troef && elders.every((o) => sterkte(c, w.troef) > sterkte(o, w.troef)));
+  const mijn = w.hand.filter((c) => c.kleur === w.troef);
+  const baas = mijn.filter((c) => elders.every((o) => sterkte(c, w.troef) > sterkte(o, w.troef)));
+  if (baas.length) return baas;
+  // Ook doortrekken als je de slag verliest (Rutger): je hebt minstens zoveel troef als er nog
+  // buiten je hand is, en je hebt nog 3 of meer mooie kaarten in een andere kleur (azen, tienen of
+  // vrije kaarten) die je niet ingetroefd wilt zien. Dan met je laagste troef.
+  const mooi = w.hand.filter((c) => c.kleur !== w.troef && (c.rang === 'A' || c.rang === '10' || isVrijeKaart(c, onbekend, w.troef)));
+  if (mijn.length && mijn.length >= elders.length && mooi.length >= 3) {
+    return [mijn.reduce((a, b) => (sterkte(b, w.troef) < sterkte(a, w.troef) ? b : a))];
+  }
+  return [];
+}
+
+// Als tegenpartij kom je niet met troef uit (Rutger: dat moet je niet doen). Streng, net als spekken.
+export const TROEF_UIT_MARGE = 40;
+export function isTroefUitTegen(w, k) {
+  return w.slag.length === 0 && team(w.speler) !== w.spelendTeam && k.kleur === w.troef;
 }
 
 // Is kaart k hier spekken?
@@ -661,7 +677,7 @@ export function kiesKaart(w, {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, troefUitMarge = TROEF_UIT_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
 } = {}) {
   const geldig = geldigeKaarten(w.hand, w.slag, w.troef, w.systeem);
   if (geldig.length === 1) return { kaart: geldig[0], scores: null };
@@ -775,6 +791,15 @@ export function kiesKaart(w, {
       }
       if (alt >= 0) best = alt;
     }
+  }
+  // Tegenpartij: niet met troef uitkomen, tenzij elke andere kaart duidelijk slechter is.
+  if (vuistregels && troefUitMarge > 0 && isTroefUitTegen(w, geldig[best])) {
+    let alt = -1;
+    for (let i = 0; i < geldig.length; i++) {
+      if (isTroefUitTegen(w, geldig[i]) || totaal(best) - totaal(i) > troefUitMarge) continue;
+      if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
+    }
+    if (alt >= 0) best = alt;
   }
   // Niet uitkomen met een tien zonder de aas, tenzij elke andere kaart duidelijk slechter is.
   if (vuistregels && tienUitMarge > 0 && isTienUitkomst(w, geldig[best], onbekend)) {
