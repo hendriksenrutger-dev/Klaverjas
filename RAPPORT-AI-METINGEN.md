@@ -26,6 +26,7 @@ Nieuw: `duelKaart` (gebruikt door `ontwikkeling/bovengrens.mjs`).
 | Zonder de drie nieuwe regels (uitkomen, bijgooien, troef gevraagd) | 4 × 400 | +0,7 | ± 2 (gecombineerd) |
 | Zonder de twaalf regels uit VUISTREGELS.md | 4 × 400 | −0,7 | ± 1,3 (gecombineerd) |
 | Zonder de regel "troef trekken met een troef die zeker wint" | 4 × 400 | −0,3 | ± 0,5 (gecombineerd) |
+| Zonder de spekregel (marge 20) | 4 × 400 | +0,8 | ± 0,5 (gecombineerd) |
 
 ## Conclusies
 
