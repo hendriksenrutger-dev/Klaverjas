@@ -23,7 +23,8 @@
   --laken-3: #164f33;
   --hand-ruimte: calc(var(--hk) + 14px);
   /* Midden van de slag: onder de rij van Noord; de bovenste kaart begint 66px onder de balk. */
-  --midden-y: calc(var(--balk-h) + 66px + var(--kh) + 6px);
+  --noord-h: 66px; /* hoogte van de rij van Noord */
+  --midden-y: calc(var(--balk-h) + var(--noord-h) + var(--kh) + 6px);
   --cijfers: 'Playfair Display', Georgia, serif;
 }
 .score-getal, .potjenr, .dit-potje td, .uitslag td, .stand b, .gespeeld .cel, .avatar, .eindstand, .venster h2 { font-variant-numeric: lining-nums tabular-nums; }
@@ -584,3 +585,93 @@ button { font: inherit; }
 .online-stoel.links { left: 0; top: 50%; transform: translateY(-50%); }
 .online-stoel.rechts { right: 0; top: 50%; transform: translateY(-50%); }
 .online-midden { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; background: rgba(251,248,241,.92); color: var(--zwart); font-weight: 700; border: 2px solid var(--goud); }
+
+/* ---------- Telefoon liggend (lage schermen, op Rutgers verzoek) ----------
+   Alleen bij een schermhoogte onder 500 beeldpunten; op de tablet verandert niets.
+   Verticale indeling: balk · Noord · slag (2 kaarthoogtes) · hint · hand. */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --balk-h: 40px;
+    --noord-h: 40px;
+    --hk: min(calc((100vw - 32px - 7 * 6px) / 8 / 0.694), 24dvh);
+    --kh: max(40px, calc((100dvh - var(--balk-h) - var(--noord-h) - 6px - 30px - var(--hk) * 1.13 - 14px) / 2));
+    --hand-ruimte: calc(var(--hk) + 6px);
+  }
+  .balk { gap: 6px; padding: 0 6px; }
+  .knop.ikoon { width: 36px; height: 36px; min-height: 36px; min-width: 36px; border-radius: 10px; }
+  .knop.ikoon svg { width: 22px; height: 22px; }
+  .score { gap: 14px; }
+  .score-label { font-size: 11px; }
+  .score-getal { font-size: 22px; }
+  .potjenr { font-size: 15px; padding: 0 10px; }
+  .troeflabel { font-size: 13px; padding: 3px 10px 3px 3px; gap: 6px; }
+  .troeflabel.stil { padding: 5px 10px; }
+  .troefrond { width: 26px; height: 26px; }
+  .troefrond .sym { width: 16px; height: 16px; }
+  .dit-potje { top: calc(var(--balk-h) + 4px); left: 6px; padding: 3px 8px 2px; min-width: 0; border-radius: 10px; }
+  .dit-potje h3 { font-size: 9px; }
+  .dit-potje th { font-size: 9px; padding: 0 0 0 8px; }
+  .dit-potje td { font-size: 14px; padding: 0 0 0 8px; }
+  .dit-potje td:first-child { font-size: 12px; }
+  .speler { gap: 4px; }
+  .speler.noord { top: calc(var(--balk-h) + 2px); }
+  .speler.west { left: 6px; top: calc(var(--midden-y) - 6px); }
+  .speler.oost { right: 6px; top: calc(var(--midden-y) - 6px); }
+  .avatar { width: 34px; height: 34px; font-size: 17px; border-width: 1.5px; }
+  .naam { font-size: 14px; }
+  .rol { display: none; }
+  .label { font-size: 11px; padding: 1px 6px; }
+  .ruggen .kaart { --kh: 20px; margin-left: -10px; }
+  .troef-groot { display: none; } /* de troef staat al in de bovenbalk */
+  .jouw-kaart { font-size: 11px; }
+  .hint { font-size: 14px; padding: 4px 14px; bottom: calc(var(--hand-ruimte) + var(--hk) * 0.13 + 2px); max-width: calc(100vw - 260px); }
+  .hand { bottom: 4px; gap: 6px; }
+  .knoppen-rechts { right: 6px; bottom: 8px; gap: 4px; flex-direction: column; align-items: flex-end; } /* naast de hand */
+  .knoppen-rechts .knop { min-height: 36px; min-width: 36px; padding: 0 10px; font-size: 13px; border-radius: 10px; }
+  .knop { min-height: 40px; min-width: 40px; padding: 0 14px; font-size: 15px; border-radius: 11px; }
+  .knop.goud { min-height: 42px; padding: 0 20px; font-size: 16px; }
+  .draai-tekst { font-size: 15px; }
+  .draai-knoppen { gap: 8px; }
+  .troef-kiezen .troefknop { min-width: 44px; min-height: 44px; }
+  .troef-kiezen .troefknop .sym { width: 24px; height: 24px; }
+  .bubbel { font-size: 14px; padding: 5px 12px; border-radius: 16px; }
+  .bubbel.speelt { font-size: 15px; }
+  .bubbel-sym { width: 20px; height: 20px; }
+  .bubbel-sym .sym { width: 13px; height: 13px; }
+  .bubbel-plek.noord { transform: translate(-50%, calc(-50% - var(--kh) * 0.62 - 6px)); }
+  .bubbel-plek.zuid { transform: translate(-50%, calc(-50% + var(--kh) * 0.62 + 10px)); }
+  .roem { font-size: 15px; padding: 4px 12px; }
+  .roem .woord { font-size: 13px; }
+  .hulp-paneel { font-size: 13px; }
+  /* Vensters: kleiner en zo nodig scrollen */
+  .venster { padding: 12px 16px 14px; min-width: 0; max-height: 94dvh; border-radius: 14px; }
+  .venster h2 { font-size: 24px; margin: 0 0 4px; }
+  .venster .sub { font-size: 14px; margin: 0 0 6px; }
+  .rij-kaarten { --kh: 70px; gap: 8px; margin: 6px 0 4px; }
+  .slagen-raster { gap: 6px 8px; }
+  .slag-blok { padding: 4px 4px 3px; }
+  .slag-blok .slag-kaarten { --kh: 40px; gap: 2px; }
+  .slag-blok .slag-kop { font-size: 11px; margin-bottom: 3px; }
+  .hand-kaarten { --kh: 44px; }
+  /* Beginscherm */
+  .start { gap: 24px; padding: 8px 16px; }
+  .start h1 { font-size: 34px; margin-bottom: 6px; }
+  .start-kolom { min-width: 260px; }
+  .start-knoppen { gap: 6px; }
+  .start-knop { min-height: 40px; font-size: 16px; padding: 4px 18px; }
+  .start-knop-sub { font-size: 12px; }
+  .start-rij { gap: 6px; }
+  /* Online */
+  .online { padding: 8px 16px; gap: 6px; }
+  .online h1 { font-size: 28px; }
+  .online h2 { font-size: 16px; margin: 0; }
+  .online .licht { font-size: 13px; }
+  .online-veld { font-size: 13px; gap: 3px; }
+  .online-veld input { min-height: 38px; font-size: 16px; }
+  .online-blok { padding: 8px; gap: 6px; }
+  .online-tafel { height: 170px; }
+  .online-stoel { min-width: 120px; padding: 4px 8px; gap: 1px; }
+  .online-stoel b { font-size: 14px; }
+  .online-stoel span { font-size: 11px; }
+  .online-midden { width: 60px; height: 60px; font-size: 12px; }
+}
