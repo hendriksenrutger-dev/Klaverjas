@@ -227,6 +227,7 @@ Besluiten met Rutger:
 - **Plek in Supabase:** het bestaande project "app maker databases" (Rutgers keuze, gratis abonnement vol). Alles van klaverjassen staat in een eigen schema `klaverjas` (niet direct bereikbaar) en in functies `public.klaverjas_*`; de andere apps worden niet aangeraakt.
 - **Geen Supabase-login** (eigen ontwerpkeuze, nodig omdat een anonieme login de boodschappen- en receptentabellen van Rutgers andere apps zou openzetten): elke speler krijgt een geheime sleutel die op zijn apparaat blijft (`klaverjas_online`). De database-opzet staat in `supabase/*.sql`.
 - **Live bijwerken:** Supabase Realtime (openbaar kanaal `klaverjas-CODE`, alleen een seintje), met daarnaast elke 4 seconden zelf kijken.
+- **Het spel** (stap 3 en 4 samen gebouwd, omdat Rutger met twee apparaten test): serverfunctie `klaverjas` (`supabase/functions/klaverjas/index.ts`, uitrollen met `ontwikkeling/uitrollen.sh`) bewaart de staat in `klaverjas.spellen`, controleert elke zet met `src/online/motor.js` (dezelfde spelregels) en geeft elke speler alleen zijn eigen zicht. De app tekent dat op de gewone speeltafel met jou onderaan (`src/online/tafel.js`). De computers op lege plekken rekent het apparaat van de maker uit, op het niveau uit zijn instellingen; staat dat apparaat uit, dan wacht het spel.
 
 Bouwvolgorde (na elke stap testen en akkoord van Rutger):
 1. Supabase opzetten (Rutger maakt het account, Claude legt uit).

@@ -1,13 +1,14 @@
 // Spelverloop: koppelt de spelregels aan het scherm en de computerspelers.
 
 import * as R from '../regels/index.js';
-import { vraagKaart, vraagDraai, vraagVerplicht, analyseerKaart, analyseerDraai, analyseerVerplicht } from '../ai/client.js';
+import { vraagKaart, vraagDraai, vraagVerplicht, analyseerKaart, analyseerDraai, analyseerVerplicht, vraagKaartUitWaarneming } from '../ai/client.js';
 import { beoordeelKaart, legeVergelijking, telOp, GELIJKWAARDIG } from '../ai/vergelijk.js';
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
 import { laadPlaatjes } from './plaatjes.js';
 import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek, laadVoortgang, bewaarVoortgang, laadLogboek, bewaarLogboek, laadOnline, bewaarOnline } from './opslag.js';
-import { rpc, luister } from '../online/verbinding.js';
+import { rpc, luister, server } from '../online/verbinding.js';
+import { tafelVoor, draaiVoor } from '../online/tafel.js';
 import { potjeRecord, voegToe, legLogboek, exportTekst } from './logboek.js';
 import { STAPPEN, LEER_REGELS, compleetVoortgang, telLeerPotje, hintUitleg, roemUitleg, seinUitleg, draaiUitleg } from './leren.js';
 import { LESSEN, beoordeel, lesKlaar, alleLessenKlaar } from './lessen.js';
@@ -156,7 +157,7 @@ const BEWAAR = ['partij', 'fase', 'handen', 'draaien', 'draaiKeuzes', 'potje', '
 function teken() {
   // Niet opnieuw tekenen terwijl er in een tekstveld getypt wordt.
   const typen = document.activeElement?.matches?.('input[data-naam], input[data-online]');
-  if (!typen) render(document.getElementById('app'), spel, acties);
+  if (!typen) render(document.getElementById('app'), spel.scherm === 'onlineTafel' ? onlineTafel() : spel, acties);
   spel.nieuweKaart = null; // volgende keer tekenen: niet opnieuw animeren
   // Opslaan pas na een animatie, zodat een vliegende kaart niet hapert.
   bewaarLater();
@@ -510,12 +511,14 @@ function eindPotje() {
 
 const acties = {
   kiesTroef(kleur) {
+    if (spel.scherm === 'onlineTafel') return onlineZet({ soort: 'troef', kleur });
     if (spel.fase === 'draaien' && spel.draaien.verplicht && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && R.KLEUREN.includes(kleur)) {
       vergelijkTroef(kleur);
       kiesTroef(JIJ, kleur);
     }
   },
   draai(keuze) {
+    if (spel.scherm === 'onlineTafel') return onlineZet({ soort: 'draai', keuze });
     if (spel.wachtOpAdvies) return;
     if (spel.fase === 'draaien' && !spel.draaien.verplicht && spel.draaien.beurt === JIJ && !spel.draaien.uitkomst && !spel.draaiMelding) {
       spel.tweedeKans = null;
@@ -537,6 +540,7 @@ const acties = {
     t.doe();
   },
   tikKaart(id) {
+    if (spel.scherm === 'onlineTafel') return onlineTik(id);
     if (spel.venster || spel.fase !== 'spelen' || spel.getoondeSlag || spel.potje.beurt !== JIJ) return;
     const hand = spel.potje.handen[JIJ];
     const kaart = hand.find((k) => R.kaartId(k) === id);
@@ -565,9 +569,11 @@ const acties = {
     }
   },
   volgendPotje() {
+    if (spel.scherm === 'onlineTafel') return onlineZet({ soort: 'volgende' });
     if (spel.fase === 'potjeKlaar') startRonde();
   },
   nieuwePartij() {
+    if (spel.scherm === 'onlineTafel') return onlineStartSpel();
     nieuwePartij();
   },
   // Beginscherm
@@ -632,6 +638,7 @@ const acties = {
     teken();
   },
   naarStart() {
+    if (spel.scherm === 'onlineTafel') { spel.scherm = 'start'; spel.venster = null; stopOnline(); return teken(); }
     bewaarNu();
     spel.scherm = 'start';
     spel.venster = null;
@@ -748,10 +755,12 @@ const acties = {
     }
   },
   open(naam) {
+    if (spel.scherm === 'onlineTafel') { spel.online.lokaal.venster = naam; return teken(); }
     spel.venster = naam;
     teken();
   },
   sluit() {
+    if (spel.scherm === 'onlineTafel') { spel.online.lokaal.venster = null; return teken(); }
     spel.venster = null;
     spel.wisVraag = false;
     teken();
@@ -787,13 +796,16 @@ const acties = {
     const bewaard = laadOnline();
     spel.scherm = 'online';
     spel.venster = null;
-    spel.online = { naam: bewaard.naam ?? '', code: code || '', beeld: null, token: null, fout: null, bezig: false };
+    spel.online = { naam: bewaard.naam ?? '', code: code || '', beeld: null, token: null, fout: null, bezig: false, spel: null, lokaal: {} };
     teken();
     // Zat je nog aan een tafel? Dan meteen terug naar die wachtruimte.
     if (bewaard.code && bewaard.token && (!code || code === bewaard.code)) {
       try {
         const beeld = await rpc('klaverjas_beeld', { p_code: bewaard.code, p_token: bewaard.token });
-        if (beeld?.ik !== null && beeld?.ik !== undefined) aanTafel(bewaard.code, bewaard.token, beeld);
+        if (beeld?.ik !== null && beeld?.ik !== undefined) {
+          aanTafel(bewaard.code, bewaard.token, beeld);
+          if (beeld.status === 'spelen') vernieuwSpel();
+        }
       } catch {
         bewaarOnline({ apparaat: bewaard.apparaat, naam: bewaard.naam });
       }
@@ -832,7 +844,7 @@ const acties = {
   async onlineStart() {
     const o = spel.online;
     await onlineDoe(async () => {
-      o.beeld = await rpc('klaverjas_start', { p_code: o.beeld.code, p_token: o.token });
+      await onlineStartSpel();
     });
   },
   async onlineVerlaat() {
@@ -874,6 +886,9 @@ let stopLuisteren = null;
 function stopOnline() {
   stopLuisteren?.();
   stopLuisteren = null;
+  for (const t of onlineTimers) clearTimeout(t);
+  onlineTimers = [];
+  computerBezig = null;
 }
 function onlineFout(tekst) {
   if (!spel.online) return;
@@ -914,15 +929,153 @@ function aanTafel(code, token, beeld) {
   stopLuisteren = luister(code, async (seintje) => {
     if (seintje?.weg) { weg('De maker heeft de tafel opgeheven.'); return teken(); }
     try {
+      if (spel.online?.spel || spel.online?.beeld?.status === 'spelen') return vernieuwSpel();
       const nieuw = await rpc('klaverjas_beeld', { p_code: code, p_token: token });
       if (spel.online?.token !== token) return;
       if (nieuw.versie !== spel.online.beeld?.versie) { spel.online.beeld = nieuw; teken(); }
+      if (nieuw.status === 'spelen') vernieuwSpel();
     } catch (fout) {
       if (/bestaat niet/.test(fout.message)) { weg('De tafel bestaat niet meer.'); teken(); }
     }
   });
   teken();
 }
+// ---------- Online: het spel zelf ----------
+const ONLINE_SLAG_PAUZE = 1200;
+const ONLINE_DRAAI_MELDING = 1800;
+let onlineTimers = [];
+let computerBezig = null;
+
+function onlineTafel() {
+  const o = spel.online;
+  return tafelVoor(o.spel, { ...o.lokaal, instellingen: spel.instellingen });
+}
+
+async function onlineStartSpel() {
+  const o = spel.online;
+  const antw = await server({ actie: 'start', code: o.beeld.code, token: o.token });
+  verwerkSpel(antw);
+}
+
+async function vernieuwSpel() {
+  const o = spel.online;
+  if (!o?.token) return;
+  try {
+    const antw = await server({ actie: 'zicht', code: o.beeld?.code ?? o.code, token: o.token });
+    if (spel.online !== o) return;
+    if (antw.zicht) verwerkSpel(antw);
+  } catch (fout) {
+    if (/bestaat niet|zit niet/.test(fout.message)) { weg('De tafel bestaat niet meer.'); spel.scherm = 'online'; teken(); }
+  }
+}
+
+// Nieuw antwoord van de server verwerken: alleen tekenen als er iets veranderd is, en de
+// overgangen zichtbaar maken (slag blijft even liggen, "Noord speelt", "Iedereen past").
+function verwerkSpel(antw) {
+  const o = spel.online;
+  const oud = o.spel;
+  if (oud?.zicht && antw.zicht.zetten === oud.zicht.zetten && antw.zicht.opnieuwGedeeld === oud.zicht.opnieuwGedeeld) {
+    o.spel = antw;
+    return planComputer();
+  }
+  o.spel = antw;
+  o.lokaal ??= {};
+  const l = o.lokaal;
+  const z = antw.zicht;
+  const zo = oud?.zicht;
+  if (spel.scherm !== 'onlineTafel') { spel.scherm = 'onlineTafel'; spel.venster = null; l.venster = null; }
+  l.gekozen = null;
+  // Nieuwe kaart op tafel: alleen die krijgt de animatie (en een tikje).
+  const nieuweSlag = zo?.potje && z.potje && z.partij.aantalPotjes === zo.partij.aantalPotjes && z.potje.slagen.length > zo.potje.slagen.length;
+  const opTafel = nieuweSlag ? z.potje.slagen.at(-1).kaarten : z.potje?.slag ?? [];
+  const gezien = new Set([...(zo?.potje?.slag ?? []), ...(o.lokaal.getoondeSlag ?? [])].map((x) => R.kaartId(x.kaart)));
+  const nieuw = opTafel.find((x) => !gezien.has(R.kaartId(x.kaart)));
+  l.nieuweKaart = nieuw ? R.kaartId(nieuw.kaart) : null;
+  if (nieuw) geluid.kaartNeer();
+  if (nieuweSlag) {
+    l.getoondeSlag = z.potje.slagen.at(-1).kaarten;
+    const roem = z.potje.slagen.at(-1).roem;
+    l.roemMelding = roem?.totaal ? roem : null;
+    na(ONLINE_SLAG_PAUZE, () => { l.getoondeSlag = null; l.roemMelding = null; teken(); });
+  } else if (!z.potje) l.getoondeSlag = null;
+  if (zo && zo.fase === 'draaien' && z.potje && z.laatsteDraai) {
+    l.draaiMelding = { soort: 'speelt', speler: z.laatsteDraai.speler, kleur: z.laatsteDraai.kleur };
+    na(ONLINE_DRAAI_MELDING, () => { l.draaiMelding = null; teken(); });
+  }
+  if (zo && z.opnieuwGedeeld > zo.opnieuwGedeeld) {
+    l.opnieuwDelen = true;
+    na(1500, () => { l.opnieuwDelen = false; teken(); });
+  }
+  teken();
+  planComputer();
+}
+
+function na(ms, f) {
+  onlineTimers.push(setTimeout(f, snel ? 0 : ms));
+}
+
+// De maker speelt de zetten van de computers op lege plekken.
+function planComputer() {
+  const o = spel.online;
+  const vraag = o?.spel?.computer;
+  if (!o?.spel?.maker || !vraag) return;
+  const sleutel = `${o.spel.zicht.zetten}-${vraag.plek}`;
+  if (computerBezig === sleutel) return;
+  computerBezig = sleutel;
+  const niveau = spel.instellingen.niveau;
+  const start = Date.now();
+  const wacht = vraag.soort === 'kaart' ? denktijd() + (o.lokaal?.getoondeSlag ? ONLINE_SLAG_PAUZE : 0) : denktijdDraai() + (o.lokaal?.draaiMelding ? ONLINE_DRAAI_MELDING : 0);
+  const keuze = vraag.soort === 'kaart'
+    ? vraagKaartUitWaarneming(vraag.waarneming, niveau).then((kaart) => ({ soort: 'kaart', kaart }))
+    : vraag.soort === 'draai'
+      ? vraagDraai(vraag.hand, vraag.kleur, vraag.opties, niveau).then((keuze) => ({ soort: 'draai', keuze }))
+      : vraagVerplicht(vraag.hand, vraag.opties, niveau).then((kleur) => ({ soort: 'troef', kleur }));
+  keuze.then(async (zet) => {
+    await new Promise((ok) => setTimeout(ok, Math.max(0, wacht - (Date.now() - start))));
+    if (spel.online !== o || computerBezig !== sleutel) return;
+    try {
+      verwerkSpel(await server({ actie: 'zet', code: o.beeld.code, token: o.token, zet, als: vraag.plek }));
+    } catch (fout) {
+      console.warn('Computerzet:', fout);
+      computerBezig = null;
+      vernieuwSpel();
+    }
+  });
+}
+
+async function onlineZet(zet) {
+  const o = spel.online;
+  if (!o?.spel || o.bezig) return;
+  o.bezig = true;
+  try {
+    verwerkSpel(await server({ actie: 'zet', code: o.beeld.code, token: o.token, zet }));
+  } catch (fout) {
+    o.lokaal.venster = null;
+    alert(fout.message);
+    vernieuwSpel();
+  }
+  o.bezig = false;
+}
+
+function onlineTik(id) {
+  const o = spel.online;
+  const tafel = onlineTafel();
+  if (tafel.venster || tafel.fase !== 'spelen' || tafel.getoondeSlag || tafel.potje.beurt !== 0) return;
+  const kaart = tafel.potje.handen[0].find((k) => R.kaartId(k) === id);
+  if (!kaart) return;
+  const mag = R.geldigVoor(tafel.potje, 0).some((k) => R.kaartId(k) === id);
+  if (!mag && tafel.potje.verzaakbescherming) {
+    document.querySelector(`.hand [data-kaart="${id}"]`)?.animate(
+      [{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }],
+      { duration: 260 },
+    );
+    return;
+  }
+  if (o.lokaal.gekozen === id) { o.lokaal.gekozen = null; return onlineZet({ soort: 'kaart', kaart }); }
+  o.lokaal.gekozen = id;
+  teken();
+}
+
 function weg(melding = null) {
   stopOnline();
   const o = spel.online;

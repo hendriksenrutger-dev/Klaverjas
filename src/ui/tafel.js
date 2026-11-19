@@ -89,7 +89,7 @@ function spelerHtml(spel, i) {
       <div class="naam">${n}${labels.join('')}</div>
       ${aanBeurt && i !== 0 && spel.fase === 'spelen'
         ? '<div class="rol denkt">denkt na<span class="puntjes"><i>.</i><i>.</i><i>.</i></span></div>'
-        : s.rol ? `<div class="rol">${s.rol}</div>` : ''}
+        : (spel.rollen?.[i] ?? s.rol) ? `<div class="rol">${spel.rollen?.[i] ?? s.rol}</div>` : ''}
       ${ruggen}
     </div>
   </div>`;
