@@ -159,6 +159,7 @@ function teken() {
   const typen = document.activeElement?.matches?.('input[data-naam], input[data-online]');
   if (!typen) render(document.getElementById('app'), spel.scherm === 'onlineTafel' ? onlineTafel() : spel, acties);
   spel.nieuweKaart = null; // volgende keer tekenen: niet opnieuw animeren
+  if (spel.online?.lokaal && !typen) spel.online.lokaal.nieuweKaart = null; // online net zo
   // Opslaan pas na een animatie, zodat een vliegende kaart niet hapert.
   bewaarLater();
 }
