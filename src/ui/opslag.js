@@ -101,3 +101,12 @@ export function laadLogboek() {
 export function bewaarLogboek(logboek) {
   schrijf('klaverjas_logboek', { logboek });
 }
+
+// Online spelen: je naam en de tafel waar je aan zit (code en geheime sleutel).
+export function laadOnline() {
+  return lees('klaverjas_online')?.online ?? {};
+}
+
+export function bewaarOnline(online) {
+  schrijf('klaverjas_online', { online });
+}
