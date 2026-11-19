@@ -1043,7 +1043,10 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
   }
   // Geen roem klaarleggen: speelt er na jou nog een tegenstander, leg dan geen kaart waarmee
   // één onbekende kaart van hem roem maakt (zoals ♦7 bij ♦9: de ♦8 maakt een driekaart).
-  if (regels.roemKlaarleggen && !maatHeeft) {
+  // Niet als jouw kaart de slag zeker wint: dan is die roem juist voor jullie (Rutgers voorbeeld:
+  // Noord ♣B bij ♣V ♣A, de ♣H van Oost maakt 70 roem voor Noord).
+  const zeker = wint && onbekend.every((u) => huidigeWinnaar([...na, { speler: -1, kaart: u }], troef).speler === w.speler);
+  if (regels.roemKlaarleggen && !maatHeeft && !zeker) {
     const naJou = [1, 2, 3].slice(0, 3 - w.slag.length).map((i) => (w.speler + i) % 4);
     if (naJou.some((p) => team(p) !== team(w.speler))) {
       const zonder = w.slag.map((x) => x.kaart);
