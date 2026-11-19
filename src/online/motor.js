@@ -118,3 +118,21 @@ export function computerVraag(staat, plek) {
     ? { plek, soort: 'draai', hand: staat.handen[plek].slice(), kleur: staat.draaien.kaart.kleur, opties }
     : { plek, soort: 'troef', hand: staat.handen[plek].slice(), opties };
 }
+
+// ---------- Wegvallen ----------
+// Een speler die langer dan AFWEZIG_NA seconden niet bij de server is geweest, telt als weg:
+// is hij aan de beurt, dan speelt de computer voor hem tot hij terug is.
+export const AFWEZIG_NA = 30;
+
+// Wie rekent de zetten van de computers uit? De maker als hij er is, anders de eerste
+// speler (laagste plek) die er nog is. mensen: [{ plek, maker, afwezig }].
+export function rekenaar(mensen) {
+  const er = mensen.filter((m) => !m.afwezig);
+  return (er.find((m) => m.maker) ?? er.sort((a, b) => a.plek - b.plek)[0])?.plek ?? null;
+}
+
+// Speelt de computer voor deze plek? (lege plek, of de speler is even weg)
+export function computerPlek(mensen, plek) {
+  const m = mensen.find((x) => x.plek === plek);
+  return !m || m.afwezig;
+}

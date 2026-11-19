@@ -65,3 +65,22 @@ describe('online tafel: jij zit altijd onderaan', async () => {
     assert.ok(tafel.potje.handen[1].every((k) => k.verborgen));
   });
 });
+
+describe('wegvallen', () => {
+  test('de maker rekent; is hij weg, dan de eerste speler die er nog is', () => {
+    const mensen = [{ plek: 0, maker: true, afwezig: false }, { plek: 2, maker: false, afwezig: false }, { plek: 3, maker: false, afwezig: false }];
+    assert.equal(M.rekenaar(mensen), 0);
+    mensen[0].afwezig = true;
+    assert.equal(M.rekenaar(mensen), 2);
+    mensen[1].afwezig = true;
+    assert.equal(M.rekenaar(mensen), 3);
+    mensen[2].afwezig = true;
+    assert.equal(M.rekenaar(mensen), null);
+  });
+  test('de computer speelt op lege plekken en voor wie even weg is', () => {
+    const mensen = [{ plek: 0, maker: true, afwezig: false }, { plek: 2, maker: false, afwezig: true }];
+    assert.equal(M.computerPlek(mensen, 1), true);
+    assert.equal(M.computerPlek(mensen, 2), true);
+    assert.equal(M.computerPlek(mensen, 0), false);
+  });
+});

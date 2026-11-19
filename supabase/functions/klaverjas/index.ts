@@ -31,9 +31,12 @@ async function verwerk({ actie, code, token, zet, als }: any) {
     const [ik] = await tx`select plek, maker from klaverjas.plekken where code = ${code} and token = ${String(token ?? '')}`;
     if (!ik) throw new Error('Je zit niet aan deze tafel');
     await tx`update klaverjas.plekken set gezien = now() where code = ${code} and token = ${String(token)}`;
-    const mensen = await tx`select plek, naam, maker from klaverjas.plekken where code = ${code}`;
+    const mensen = (await tx`select plek, naam, maker, gezien < now() - make_interval(secs => ${M.AFWEZIG_NA}) as afwezig
+                             from klaverjas.plekken where code = ${code}`).map((m) => ({ ...m }));
     const namen: (string | null)[] = [null, null, null, null];
-    for (const m of mensen) namen[m.plek] = m.naam;
+    const afwezig = [false, false, false, false];
+    for (const m of mensen) { namen[m.plek] = m.naam; afwezig[m.plek] = m.afwezig; }
+    const reken = M.rekenaar(mensen);
     const [rij] = await tx`select staat from klaverjas.spellen where code = ${code}`;
     let staat = rij?.staat ?? null;
 
@@ -49,9 +52,10 @@ async function verwerk({ actie, code, token, zet, als }: any) {
       if (!staat) throw new Error('Het spel is nog niet begonnen');
       let plek = ik.plek;
       if (als !== undefined && als !== null) {
-        // De maker speelt de zetten van de computers op lege plekken.
-        if (!ik.maker) throw new Error('Alleen de maker speelt voor de computers');
-        if (namen[als] !== null) throw new Error('Op die plek zit een speler');
+        // De rekenaar (de maker, of als die weg is een andere speler) speelt de zetten van de
+        // computers: op lege plekken en voor wie even weg is.
+        if (reken !== ik.plek) throw new Error('Jij speelt nu niet voor de computers');
+        if (!M.computerPlek(mensen, Number(als))) throw new Error('Op die plek speelt iemand zelf');
         plek = Number(als);
       }
       staat = M.doe(staat, plek, zet);
@@ -60,12 +64,12 @@ async function verwerk({ actie, code, token, zet, als }: any) {
     } else if (actie !== 'zicht') {
       throw new Error('Onbekende actie');
     }
-    if (!staat) return { status: tafel.status, namen, ik: ik.plek, maker: ik.maker };
+    if (!staat) return { status: tafel.status, namen, afwezig, ik: ik.plek, maker: ik.maker };
 
-    // Voor de maker: moet een computer nu iets doen? Dan alleen wat die computer mag weten.
+    // Voor de rekenaar: moet een computer nu iets doen? Dan alleen wat die computer mag weten.
     let computer = null;
     const z = M.aanZet(staat);
-    if (ik.maker && z && namen[z.plek] === null) computer = M.computerVraag(staat, z.plek);
-    return { status: tafel.status, namen, ik: ik.plek, maker: ik.maker, zicht: M.zicht(staat, ik.plek), computer };
+    if (reken === ik.plek && z && z.plek !== ik.plek && M.computerPlek(mensen, z.plek)) computer = M.computerVraag(staat, z.plek);
+    return { status: tafel.status, namen, afwezig, ik: ik.plek, maker: ik.maker, zicht: M.zicht(staat, ik.plek), computer };
   });
 }
