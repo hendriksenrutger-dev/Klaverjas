@@ -795,7 +795,7 @@ const acties = {
         const beeld = await rpc('klaverjas_beeld', { p_code: bewaard.code, p_token: bewaard.token });
         if (beeld?.ik !== null && beeld?.ik !== undefined) aanTafel(bewaard.code, bewaard.token, beeld);
       } catch {
-        bewaarOnline({ naam: bewaard.naam });
+        bewaarOnline({ apparaat: bewaard.apparaat, naam: bewaard.naam });
       }
     }
   },
@@ -810,7 +810,7 @@ const acties = {
     const i = spel.instellingen;
     const regels = { systeem: i.systeem, troefkeuze: i.troefkeuze, verzaakbescherming: i.verzaakbescherming, rondesVoorOpnieuwDelen: i.rondesVoorOpnieuwDelen };
     await onlineDoe(async () => {
-      const r = await rpc('klaverjas_maak', { p_naam: o.naam, p_regels: regels });
+      const r = await rpc('klaverjas_maak', { p_naam: o.naam, p_regels: regels, p_apparaat: apparaat() });
       aanTafel(r.beeld.code, r.token, r.beeld);
     });
   },
@@ -819,7 +819,7 @@ const acties = {
     if (!o.naam) return onlineFout('Vul eerst je naam in.');
     if (o.code.length !== 4) return onlineFout('De code bestaat uit 4 tekens.');
     await onlineDoe(async () => {
-      const r = await rpc('klaverjas_meedoen', { p_code: o.code, p_naam: o.naam });
+      const r = await rpc('klaverjas_meedoen', { p_code: o.code, p_naam: o.naam, p_apparaat: apparaat() });
       aanTafel(r.beeld.code, r.token, r.beeld);
     });
   },
@@ -880,9 +880,19 @@ function onlineFout(tekst) {
   spel.online.fout = tekst;
   teken();
 }
+// Eigen kenmerk van dit apparaat, zodat het maar één keer aan dezelfde tafel kan zitten.
+function apparaat() {
+  const b = laadOnline();
+  if (b.apparaat) return b.apparaat;
+  const id = Array.from(crypto.getRandomValues(new Uint8Array(12)), (x) => x.toString(16).padStart(2, '0')).join('');
+  bewaarOnline({ ...b, apparaat: id });
+  return id;
+}
 async function onlineDoe(f) {
   const o = spel.online;
   if (!o || o.bezig) return;
+  // Toetsenbord dicht: anders blijft het scherm staan (er wordt niet getekend tijdens het typen).
+  document.activeElement?.blur?.();
   o.bezig = true;
   o.fout = null;
   teken();
@@ -899,7 +909,7 @@ function aanTafel(code, token, beeld) {
   o.code = code;
   o.token = token;
   o.beeld = beeld;
-  bewaarOnline({ naam: o.naam, code, token });
+  bewaarOnline({ ...laadOnline(), naam: o.naam, code, token });
   stopOnline();
   stopLuisteren = luister(code, async (seintje) => {
     if (seintje?.weg) { weg('De maker heeft de tafel opgeheven.'); return teken(); }
@@ -916,7 +926,7 @@ function aanTafel(code, token, beeld) {
 function weg(melding = null) {
   stopOnline();
   const o = spel.online;
-  bewaarOnline({ naam: o?.naam ?? '' });
+  bewaarOnline({ apparaat: laadOnline().apparaat, naam: o?.naam ?? '' });
   if (o) { o.beeld = null; o.token = null; o.fout = melding; }
 }
 

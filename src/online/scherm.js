@@ -39,26 +39,29 @@ function wachtScherm(o) {
   const ik = b.ik;
   const bezet = new Map(b.plekken.map((p) => [p.plek, p]));
   const makerNaam = b.plekken.find((p) => p.maker)?.naam ?? 'de maker';
-  // Jij zit altijd onderaan; de anderen rond de tafel zoals aan een echte tafel.
+  // In de wachtruimte staat de tafel vast voor iedereen (Zuid onder, Noord boven), zodat je ziet
+  // waar je heen gaat als je een andere plek kiest. Noord-Zuid en Oost-West spelen samen.
   const positie = ['onder', 'links', 'boven', 'rechts'];
+  const team = (plek) => (plek % 2 === 0 ? 'ns' : 'ow');
   const stoel = (plek) => {
     const p = bezet.get(plek);
-    const wij = (plek - ik + 4) % 2 === 0;
-    const pos = positie[(plek - ik + 4) % 4];
+    const pos = positie[plek];
+    const kop = `<span class="online-plek">${PLEKNAAM[plek]}</span>`;
     if (p) {
-      return `<div class="online-stoel ${pos} ${plek === ik ? 'ik' : ''}">
-        <b>${veilig(p.naam)}</b>
-        <span>${PLEKNAAM[plek]} · ${plek === ik ? 'jij' : wij ? 'jouw maat' : 'tegenstander'}${p.maker ? ' · maker' : ''}</span></div>`;
+      return `<div class="online-stoel ${pos} ${team(plek)} ${plek === ik ? 'ik' : ''}">${kop}
+        <b>${veilig(p.naam)}${plek === ik ? ' <em>jij</em>' : ''}</b>
+        <span>${p.maker ? 'maker van de tafel' : '&nbsp;'}</span></div>`;
     }
-    return `<div class="online-stoel ${pos} vrij">
-      <b>Computer</b><span>${PLEKNAAM[plek]} · ${wij ? 'jouw maat' : 'tegenstander'}</span>
-      ${b.status === 'wachten' ? `<button class="knop licht klein" data-actie="onlinePlek" data-plek="${plek}">Hier zitten</button>` : ''}</div>`;
+    return `<div class="online-stoel ${pos} ${team(plek)} vrij">${kop}
+      <b>Computer</b>
+      ${b.status === 'wachten' ? `<button class="knop licht klein" data-actie="onlinePlek" data-plek="${plek}">Hier gaan zitten</button>` : '<span>&nbsp;</span>'}</div>`;
   };
+  const mijnTeam = team(ik) === 'ns' ? 'Noord en Zuid' : 'Oost en West';
   const gestart = b.status !== 'wachten';
   return `<main class="online">
     <h1>Tafel <span class="online-code">${veilig(b.code)}</span></h1>
     <p class="licht">${regelTekst(b.regels)}</p>
-    ${gestart ? '' : `<div class="venster-knoppen"><button class="knop licht" data-actie="onlineDeel">Link delen</button></div>`}
+    ${gestart ? '' : `<p class="online-uitleg">Tik op een vrije plek om daar te gaan zitten. <b class="team-ns">Noord en Zuid</b> spelen tegen <b class="team-ow">Oost en West</b>; jij speelt nu met ${mijnTeam}.</p>`}
     <div class="online-tafel">
       ${[0, 1, 2, 3].map(stoel).join('')}
       <div class="online-midden">${gestart ? 'Gestart' : `${b.plekken.length} van 4`}</div>
@@ -71,6 +74,7 @@ function wachtScherm(o) {
     ${o.fout ? `<p class="online-fout">${veilig(o.fout)}</p>` : ''}
     <div class="venster-knoppen">
       <button class="knop" data-actie="onlineVerlaat">${b.maker && !gestart ? 'Tafel opheffen' : 'Verlaten'}</button>
+      ${gestart ? '' : '<button class="knop licht" data-actie="onlineDeel">Link delen</button>'}
       ${b.maker && !gestart ? `<button class="knop goud" data-actie="onlineStart" ${o.bezig ? 'disabled' : ''}>Start</button>` : ''}
     </div>
   </main>`;
