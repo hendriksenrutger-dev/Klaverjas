@@ -568,6 +568,15 @@ describe('vuistregels uit VUISTREGELS.md', async () => {
     assert.equal(vuistregelStraf(w, K('hA'), onb, false, alleenRegel('roemKlaarleggen')), 0);
   });
 
+  test('roem klaarleggen mag als je de slag zeker wint (Rutgers voorbeeld: Noord ♣B bij ♣V ♣A)', () => {
+    // Troef klaveren. Zuid kV, West kA; Noord heeft kB k9 k10 k8, Oost speelt nog (kH onbekend).
+    const hand = Ks('kB k9 k10 k8 hA');
+    const slag = [{ speler: 0, kaart: K('kV') }, { speler: 1, kaart: K('kA') }];
+    const onb = onbekendVan([...hand, K('kV'), K('kA')]);
+    const w = basis({ speler: 2, spelendTeam: 0, hand, slag, troef: 'klaveren' });
+    assert.equal(vuistregelStraf(w, K('kB'), onb, false, alleenRegel('roemKlaarleggen')), 0);
+  });
+
   test('5: na het troeftrekken je vrije aas innen', () => {
     const hand = Ks('hB kA k7 s8');
     const gespeeld = Ks('h7 h8 h9 h10 hV hH hA');
