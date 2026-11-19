@@ -8,6 +8,7 @@ import readline from 'node:readline';
 import { kenmerken, AANTAL_KENMERKEN, maakNet, vooruit, netNaarJson, kleurVolgorde, kaartIndex } from '../../src/ai/netwerk.js';
 
 const [, , bestand, uit, rondesArg = '15', vormArg = '128,64'] = process.argv;
+const MET_SLIM = process.env.SLIM === '1'; // kiesSlims keuze als extra invoer
 const T = 4; // temperatuur van de doelverdeling, in punten
 const kaart = (id) => { const [kleur, rang] = id.split('-'); return { kleur, rang }; };
 
@@ -22,7 +23,8 @@ for await (const regel of rl) {
   const slagen = r.sl.map(([winnaar, punten, roem]) => ({ winnaar, punten, roem: { totaal: roem } }));
   const ctx = { troef: r.t, systeem: r.sy, spelendTeam: r.sp };
   const v = kleurVolgorde(r.t);
-  X.push(kenmerken(handen, slag, slagen, r.b, ctx));
+  const basis = kenmerken(handen, slag, slagen, r.b, ctx);
+  if (MET_SLIM) { const x = new Float32Array(AANTAL_KENMERKEN + 32); x.set(basis); x[AANTAL_KENMERKEN + kaartIndex(kaart(r.slim), v)] = 1; X.push(x); } else X.push(basis);
   const mask = new Float32Array(32).fill(0), waarde = new Float32Array(32).fill(-1e9);
   let max = -Infinity;
   for (const [id, w] of r.w) { const i = kaartIndex(kaart(id), v); mask[i] = 1; waarde[i] = w; if (w > max) max = w; }
@@ -37,7 +39,7 @@ const nTest = Math.floor(N * 0.1);
 console.log('standen', N, 'test', nTest);
 
 // ---------- Netwerk en Adam ----------
-const vorm = [AANTAL_KENMERKEN, ...vormArg.split(',').map(Number), 32];
+const vorm = [AANTAL_KENMERKEN + (MET_SLIM ? 32 : 0), ...vormArg.split(',').map(Number), 32];
 let zaad = 7;
 const rng = () => ((zaad = (zaad * 1103515245 + 12345) >>> 0) / 2 ** 32);
 const net = maakNet(vorm, rng);
@@ -128,5 +130,5 @@ for (let r = 0; r < rondes; r++) {
   const m = meet(0, nTest);
   console.log(`ronde ${r + 1}: verlies ${(v / nb).toFixed(3)} · netwerk ${m.net} · kiesSlim ${m.slim}`);
 }
-fs.writeFileSync(uit, JSON.stringify({ vorm, gemaakt: new Date().toISOString(), standen: N, ...netNaarJson(net) }));
+fs.writeFileSync(uit, JSON.stringify({ vorm, metSlim: MET_SLIM, gemaakt: new Date().toISOString(), standen: N, ...netNaarJson(net) }));
 console.log('opgeslagen', uit, `${Math.round(fs.statSync(uit).size / 1024)} kB`);
