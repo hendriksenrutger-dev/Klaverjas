@@ -64,3 +64,20 @@ export function luister(code, opSeintje) {
     try { ws?.close(); } catch { /* al dicht */ }
   };
 }
+
+// Roept de serverfunctie aan (het spel zelf): { actie: 'zicht' | 'start' | 'zet', code, token, zet?, als? }.
+export async function server(body) {
+  let antwoord;
+  try {
+    antwoord = await fetch(`${SUPABASE_URL}/functions/v1/klaverjas`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_SLEUTEL, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error('Geen verbinding met internet');
+  }
+  const data = await antwoord.json().catch(() => null);
+  if (!antwoord.ok || data?.fout) throw new Error(data?.fout || 'Er ging iets mis met de verbinding');
+  return data;
+}

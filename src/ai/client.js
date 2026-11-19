@@ -83,6 +83,11 @@ export function vraagKaart(potje, speler, niveau = 'normaal') {
   return kiesKaartSamen(data.waarneming, data.niveau).then((r) => r.kaart);
 }
 
+// Online: de computer op een lege plek kiest een kaart vanuit wat hij weet (van de server).
+export function vraagKaartUitWaarneming(w, niveau = 'normaal') {
+  return kiesKaartSamen(w, NIVEAUS[niveau] ?? NIVEAUS.normaal).then((r) => r.kaart);
+}
+
 export function vraagDraai(hand, kleur, opties, niveau = 'normaal') {
   opties = { ...opties, strategie: (NIVEAUS[niveau] ?? NIVEAUS.normaal).strategie };
   return vraag('draai', { hand, kleur, opties }, () => kiesDraai(hand, kleur, opties)).then((r) => r.keuze);
