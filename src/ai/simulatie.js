@@ -614,6 +614,34 @@ function zoek(handen, slag, slagen, beurt, ctx, mijnTeam, alfa, beta) {
   return best;
 }
 
+// Exacte waarde (open kaarten) van elke geldige kaart voor de speler die aan de beurt is.
+// Gebruikt om oefenmateriaal voor het netwerk te maken (ontwikkeling/netwerk/).
+export function kaartWaarden(handen, slag, slagen, beurt, ctx) {
+  const h = handen.map((x) => x.slice());
+  const s = slag.slice();
+  const sl = slagen.slice();
+  const mijn = team(beurt);
+  return geldigeKaarten(h[beurt], s, ctx.troef, ctx.systeem).map((k) => {
+    const i = h[beurt].indexOf(k);
+    h[beurt].splice(i, 1);
+    s.push({ speler: beurt, kaart: k });
+    let v;
+    if (s.length < 4) v = zoek(h, s, sl, (beurt + 1) % 4, ctx, mijn, -Infinity, Infinity);
+    else {
+      const winnaar = huidigeWinnaar(s, ctx.troef).speler;
+      const kaarten = s.map((x) => x.kaart);
+      sl.push({ kaarten: s.slice(), winnaar, punten: slagPunten(kaarten, ctx.troef) + (sl.length === 7 ? PUNTEN_LAATSTE_SLAG : 0), roem: roemInSlag(kaarten, ctx.troef) });
+      const oud = s.splice(0, 4);
+      v = zoek(h, s, sl, winnaar, ctx, mijn, -Infinity, Infinity);
+      s.push(...oud);
+      sl.pop();
+    }
+    s.pop();
+    h[beurt].splice(i, 0, k);
+    return { kaart: k, waarde: v };
+  });
+}
+
 export function eindspelWaarde(handen, slag, slagen, beurt, ctx, mijnTeam) {
   return zoek(handen.map((h) => h.slice()), slag.slice(), slagen.slice(), beurt, ctx, mijnTeam, -Infinity, Infinity);
 }
