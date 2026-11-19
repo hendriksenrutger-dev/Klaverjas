@@ -61,7 +61,7 @@ function wachtScherm(o) {
   return `<main class="online">
     <h1>Tafel <span class="online-code">${veilig(b.code)}</span></h1>
     <p class="licht">${regelTekst(b.regels)}</p>
-    ${gestart ? '' : `<p class="online-uitleg">Tik op een vrije plek om daar te gaan zitten. Wie tegenover elkaar zit, speelt samen: <b class="team-ns">Noord en Zuid</b> tegen <b class="team-ow">Oost en West</b>. Jij speelt nu met ${mijnTeam}.</p>`}
+    ${gestart ? '' : `<p class="online-uitleg">Tik op een vrije plek om daar te gaan zitten. <b class="team-ns">Noord en Zuid</b> spelen tegen <b class="team-ow">Oost en West</b>; jij speelt nu met ${mijnTeam}.</p>`}
     <div class="online-tafel">
       ${[0, 1, 2, 3].map(stoel).join('')}
       <div class="online-midden">${gestart ? 'Gestart' : `${b.plekken.length} van 4`}</div>
