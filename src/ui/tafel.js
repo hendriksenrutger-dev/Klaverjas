@@ -7,6 +7,7 @@ import { redenTekst } from '../regels/geldig.js';
 import { AANTAL_POTJES, potjeNummer } from '../regels/partij.js';
 import { kaartHtml, rugHtml, symbool, symboolSprite, kaartNaam, ROOD, SYMBOOL } from './kaart.js';
 import { patchHtml } from './patch.js';
+import { laadOnline } from './opslag.js';
 import { vulPlaatjes } from './plaatjes.js';
 import { STAPPEN, POTJES_PER_STAP, EERSTE_STAP, LAATSTE_STAP } from './leren.js';
 import { LESSEN, AANTAL_LESSEN, kaarten as lesKaarten } from './lessen.js';
@@ -652,6 +653,7 @@ function beginscherm(spel) {
   const info = gewoon
     ? { potje: Math.min(potjeNummer(spel.partij), AANTAL_POTJES), totaal: spel.partij.totaal }
     : spel.bewaard;
+  const onlineCode = laadOnline().token ? laadOnline().code : null;
   const waaier = [
     { kleur: 'klaveren', rang: 'B' }, { kleur: 'harten', rang: 'A' },
     { kleur: 'schoppen', rang: 'H' }, { kleur: 'ruiten', rang: 'V' },
@@ -665,7 +667,8 @@ function beginscherm(spel) {
           ${loopt ? `<button class="knop goud start-knop" data-actie="verderSpelen">Verder spelen
             <span class="start-knop-sub">Potje ${info.potje} van ${AANTAL_POTJES} · Wij ${info.totaal[0]} – Zij ${info.totaal[1]}</span></button>` : ''}
           <button class="knop ${loopt ? 'licht' : 'goud'} start-knop" data-actie="nieuwePartijVraag">Nieuwe partij</button>
-          <button class="knop licht start-knop" data-actie="onlineOpen">Online spelen</button>
+          <button class="knop licht start-knop" data-actie="onlineOpen">Online spelen${onlineCode ? `
+            <span class="start-knop-sub">Terug naar tafel ${onlineCode}</span>` : ''}</button>
           <button class="knop licht start-knop" data-actie="open" data-venster="leren">Leren klaverjassen</button>
           <div class="start-rij">
             <button class="knop licht start-knop" data-actie="open" data-venster="statistiek">Statistieken</button>

@@ -183,7 +183,12 @@ function stopLopend() {
 }
 // App gaat naar de achtergrond of sluit: meteen opslaan.
 addEventListener('pagehide', bewaarNu);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') bewaarNu(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') bewaarNu();
+  // Terug in de app (scherm weer aan): online meteen de tafel bijwerken.
+  else if (spel.online?.spel) vernieuwSpel();
+});
+window.addEventListener('online', () => { if (spel.online?.spel) vernieuwSpel(); });
 
 // Regels-instellingen voor een (nieuwe) partij.
 function regelInstellingen() {
@@ -964,10 +969,21 @@ async function vernieuwSpel() {
   try {
     const antw = await server({ actie: 'zicht', code: o.beeld?.code ?? o.code, token: o.token });
     if (spel.online !== o) return;
+    zetVerbinding(true);
     if (antw.zicht) verwerkSpel(antw);
   } catch (fout) {
     if (/bestaat niet|zit niet/.test(fout.message)) { weg('De tafel bestaat niet meer.'); spel.scherm = 'online'; teken(); }
+    else if (/verbinding|internet|fetch/i.test(fout.message)) zetVerbinding(false);
   }
+}
+
+// Melding onder de tafel zolang de verbinding weg is. Intussen blijft de app elke 4 seconden kijken;
+// na 30 seconden speelt de computer tijdelijk jouw plek, tot je er weer bent.
+function zetVerbinding(goed) {
+  const l = spel.online?.lokaal;
+  if (!l || l.verbindingWeg === !goed) return;
+  l.verbindingWeg = !goed;
+  if (spel.scherm === 'onlineTafel') teken();
 }
 
 // Nieuw antwoord van de server verwerken: alleen tekenen als er iets veranderd is, en de
@@ -1015,11 +1031,12 @@ function na(ms, f) {
   onlineTimers.push(setTimeout(f, snel ? 0 : ms));
 }
 
-// De maker speelt de zetten van de computers op lege plekken.
+// De maker speelt de zetten van de computers op lege plekken en voor wie even weg is. Is de
+// maker zelf weg, dan doet een andere speler het (de server bepaalt wie en stuurt dan de vraag).
 function planComputer() {
   const o = spel.online;
   const vraag = o?.spel?.computer;
-  if (!o?.spel?.maker || !vraag) return;
+  if (!vraag) return;
   const sleutel = `${o.spel.zicht.zetten}-${vraag.plek}`;
   if (computerBezig === sleutel) return;
   computerBezig = sleutel;
@@ -1052,7 +1069,8 @@ async function onlineZet(zet) {
     verwerkSpel(await server({ actie: 'zet', code: o.beeld.code, token: o.token, zet }));
   } catch (fout) {
     o.lokaal.venster = null;
-    alert(fout.message);
+    if (/internet/.test(fout.message)) zetVerbinding(false);
+    else alert(fout.message);
     vernieuwSpel();
   }
   o.bezig = false;

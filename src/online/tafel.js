@@ -16,6 +16,7 @@ export function draaiVoor(ik) {
 // (gekozen kaart, slag die nog even blijft liggen, meldingen).
 export function tafelVoor(antw, lokaal = {}) {
   const { zicht: z, namen, ik } = antw;
+  const afwezig = antw.afwezig ?? [false, false, false, false];
   const { r, t, tm, slag, terug } = draaiVoor(ik);
   const aantallen = [0, 1, 2, 3].map((i) => z.aantallen[terug(i)]);
   const verborgen = (n) => Array.from({ length: n }, () => ({ kleur: 'schoppen', rang: '7', verborgen: true }));
@@ -47,7 +48,8 @@ export function tafelVoor(antw, lokaal = {}) {
   };
   const echteNamen = [0, 1, 2, 3].map((i) => namen[terug(i)]);
   const naamLijst = echteNamen.map((n, i) => n ?? `${PLEKNAAM[terug(i)]}`);
-  const rollen = echteNamen.map((n, i) => (i === 0 ? '' : `${i === 2 ? 'Jouw maat' : 'Tegenstander'}${n ? '' : ' · computer'}`));
+  // Wie even weg is (geen verbinding), speelt tijdelijk als computer.
+  const rollen = echteNamen.map((n, i) => (i === 0 ? '' : `${i === 2 ? 'Jouw maat' : 'Tegenstander'}${!n ? ' · computer' : afwezig[terug(i)] ? ' · even weg, computer speelt' : ''}`));
 
   // Tijdelijke meldingen van de app: "Noord speelt · troef harten" en "Iedereen past".
   let fase = z.fase;
@@ -81,7 +83,7 @@ export function tafelVoor(antw, lokaal = {}) {
     analyses: [],
     vergelijking: null,
     leren: null,
-    hulpMelding: null,
+    hulpMelding: lokaal.verbindingWeg ? 'Geen verbinding. De app probeert het opnieuw…' : null,
     tweedeKans: null,
   };
 }
