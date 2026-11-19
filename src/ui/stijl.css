@@ -574,17 +574,24 @@ button { font: inherit; }
 .online-fout { color: #ffd2c8; background: rgba(120,20,10,.45); border-radius: 10px; padding: 8px 12px; margin: 0 auto; }
 .online-melding { background: rgba(232,200,115,.2); border: 1px solid var(--goud); border-radius: 12px; padding: 10px 14px; margin: 0 auto; }
 .online-code { color: var(--goud); letter-spacing: .12em; }
-.online-tafel { position: relative; height: 300px; max-width: 620px; width: 100%; margin: 0 auto; }
+.online-tafel { position: relative; flex-shrink: 0; height: 350px; max-width: 620px; width: 100%; margin: 0 auto; }
 .online-stoel { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 150px; padding: 10px 12px; border-radius: 14px; background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.18); }
 .online-stoel b { font-size: 19px; }
 .online-stoel span { font-size: 13px; opacity: .8; }
-.online-stoel.ik { border-color: var(--goud); }
+.online-stoel.ik { border: 2px solid var(--goud); box-shadow: 0 0 0 4px rgba(232,200,115,.25); }
+.online-stoel.ns { background: rgba(232,200,115,.16); }
+.online-stoel.ow { background: rgba(120,170,230,.16); }
+.online-plek { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+.online-stoel b em { font-style: normal; font-size: 12px; background: var(--goud); color: var(--zwart); border-radius: 8px; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
+.online-uitleg { max-width: 640px; margin: 0 auto; font-size: 15px; opacity: .9; }
+.team-ns { color: var(--goud); }
+.team-ow { color: #a9cdf5; }
 .online-stoel.vrij b { opacity: .7; font-weight: 600; }
 .online-stoel.onder { left: 50%; bottom: 0; transform: translateX(-50%); }
 .online-stoel.boven { left: 50%; top: 0; transform: translateX(-50%); }
 .online-stoel.links { left: 0; top: 50%; transform: translateY(-50%); }
 .online-stoel.rechts { right: 0; top: 50%; transform: translateY(-50%); }
-.online-midden { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; background: rgba(251,248,241,.92); color: var(--zwart); font-weight: 700; border: 2px solid var(--goud); }
+.online-midden { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 78px; height: 78px; border-radius: 50%; display: grid; place-items: center; background: rgba(251,248,241,.92); color: var(--zwart); font-weight: 700; border: 2px solid var(--goud); }
 
 /* ---------- Telefoon liggend (lage schermen, op Rutgers verzoek) ----------
    Alleen bij een schermhoogte onder 500 beeldpunten; op de tablet verandert niets.
@@ -662,16 +669,20 @@ button { font: inherit; }
   .start-knop-sub { font-size: 12px; }
   .start-rij { gap: 6px; }
   /* Online */
-  .online { padding: 8px 16px; gap: 6px; }
+  .online { position: absolute; inset: 0; overflow-y: auto; justify-content: flex-start; padding: 6px 16px 10px; gap: 4px; }
+  .online .venster-knoppen { margin-top: 0; gap: 8px; }
   .online h1 { font-size: 28px; }
   .online h2 { font-size: 16px; margin: 0; }
   .online .licht { font-size: 13px; }
   .online-veld { font-size: 13px; gap: 3px; }
   .online-veld input { min-height: 38px; font-size: 16px; }
   .online-blok { padding: 8px; gap: 6px; }
-  .online-tafel { height: 170px; }
-  .online-stoel { min-width: 120px; padding: 4px 8px; gap: 1px; }
+  .online-tafel { height: 168px; max-width: 560px; }
+  .online-stoel { min-width: 116px; padding: 2px 8px 4px; gap: 0; border-radius: 10px; }
   .online-stoel b { font-size: 14px; }
   .online-stoel span { font-size: 11px; }
-  .online-midden { width: 60px; height: 60px; font-size: 12px; }
+  .online-midden { display: none; }
+  .online-stoel .knop.klein { min-height: 30px; font-size: 12px; padding: 0 10px; }
+  .online-uitleg { font-size: 12px; }
+  .online-plek { font-size: 10px; }
 }
