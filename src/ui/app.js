@@ -644,7 +644,15 @@ const acties = {
     teken();
   },
   naarStart() {
-    if (spel.scherm === 'onlineTafel') { spel.scherm = 'start'; spel.venster = null; stopOnline(); return teken(); }
+    if (spel.scherm === 'onlineTafel') {
+      // Het huisje vraagt eerst: even weg, of echt stoppen.
+      if (spel.online.lokaal.venster !== 'onlineStop') { spel.online.lokaal.venster = 'onlineStop'; return teken(); }
+      spel.online.lokaal.venster = null;
+      spel.scherm = 'start';
+      spel.venster = null;
+      stopOnline();
+      return teken();
+    }
     bewaarNu();
     spel.scherm = 'start';
     spel.venster = null;
@@ -859,6 +867,17 @@ const acties = {
     weg();
     teken();
   },
+  // Tijdens het spel: de maker heft de tafel op, een ander verlaat hem (de computer neemt zijn plek).
+  async onlineStop() {
+    const o = spel.online;
+    if (!o?.token) return;
+    try { await rpc('klaverjas_verlaat', { p_code: o.beeld?.code ?? o.code, p_token: o.token }); } catch { /* weg is weg */ }
+    weg();
+    spel.online = null;
+    spel.scherm = 'start';
+    spel.venster = null;
+    teken();
+  },
   onlineTerug() {
     // De tafel blijft bestaan; via "Online spelen" kom je terug in de wachtruimte.
     stopOnline();
@@ -933,7 +952,7 @@ function aanTafel(code, token, beeld) {
   bewaarOnline({ ...laadOnline(), naam: o.naam, code, token });
   stopOnline();
   stopLuisteren = luister(code, async (seintje) => {
-    if (seintje?.weg) { weg('De maker heeft de tafel opgeheven.'); return teken(); }
+    if (seintje?.weg) return tafelOpgeheven();
     try {
       if (spel.online?.spel || spel.online?.beeld?.status === 'spelen') return vernieuwSpel();
       const nieuw = await rpc('klaverjas_beeld', { p_code: code, p_token: token });
@@ -941,7 +960,7 @@ function aanTafel(code, token, beeld) {
       if (nieuw.versie !== spel.online.beeld?.versie) { spel.online.beeld = nieuw; teken(); }
       if (nieuw.status === 'spelen') vernieuwSpel();
     } catch (fout) {
-      if (/bestaat niet/.test(fout.message)) { weg('De tafel bestaat niet meer.'); teken(); }
+      if (/bestaat niet/.test(fout.message)) tafelOpgeheven();
     }
   });
   teken();
@@ -972,7 +991,7 @@ async function vernieuwSpel() {
     zetVerbinding(true);
     if (antw.zicht) verwerkSpel(antw);
   } catch (fout) {
-    if (/bestaat niet|zit niet/.test(fout.message)) { weg('De tafel bestaat niet meer.'); spel.scherm = 'online'; teken(); }
+    if (/bestaat niet|zit niet/.test(fout.message)) tafelOpgeheven();
     else if (/verbinding|internet|fetch/i.test(fout.message)) zetVerbinding(false);
   }
 }
@@ -1092,6 +1111,19 @@ function onlineTik(id) {
   }
   if (o.lokaal.gekozen === id) { o.lokaal.gekozen = null; return onlineZet({ soort: 'kaart', kaart }); }
   o.lokaal.gekozen = id;
+  teken();
+}
+
+// De maker heeft de tafel opgeheven (of hij bestaat niet meer): melding op het online-scherm.
+function tafelOpgeheven() {
+  const o = spel.online;
+  if (!o?.token) return;
+  const maker = o.beeld?.plekken?.find((p) => p.maker)?.naam;
+  const bezig = o.spel || spel.scherm === 'onlineTafel';
+  weg(maker && !o.beeld?.maker ? `${maker} heeft ${bezig ? 'het spel gestopt' : 'de tafel opgeheven'}.` : 'De tafel bestaat niet meer.');
+  o.spel = null;
+  o.lokaal = {};
+  if (spel.scherm === 'onlineTafel') spel.scherm = 'online';
   teken();
 }
 
