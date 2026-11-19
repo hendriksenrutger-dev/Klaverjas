@@ -301,6 +301,19 @@ function nieuwBevestigVenster() {
     <button class="knop goud" data-actie="nieuwePartij">Nieuwe partij</button></div>`, true, 'nieuwBevestig');
 }
 
+// Online: het huisje. Even weg (de tafel blijft) of echt stoppen.
+function onlineStopVenster(spel) {
+  const maker = spel.onlineMaker;
+  return venster(`<h2>${maker ? 'Spel stoppen?' : 'Tafel verlaten?'}</h2>
+    <p class="sub">${maker
+      ? 'Stop je het spel, dan wordt de tafel opgeheven voor iedereen.'
+      : 'Verlaat je de tafel, dan speelt de computer je plek de rest van de partij.'}<br>
+      Even naar het beginscherm kan ook: dan blijft de tafel bestaan en speelt de computer tot je terug bent.</p>
+    <div class="venster-knoppen"><button class="knop" data-actie="sluit">Annuleren</button>
+    <button class="knop licht" data-actie="naarStart">Naar beginscherm</button>
+    <button class="knop rood-knop" data-actie="onlineStop">${maker ? 'Spel stoppen' : 'Tafel verlaten'}</button></div>`, true, 'onlineStop');
+}
+
 function keuzeRij(label, sleutel, huidig, opties, uitleg = '') {
   return `<div class="instelling">
     <div class="instelling-label">${label}${uitleg ? `<span class="instelling-uitleg">${uitleg}</span>` : ''}</div>
@@ -469,6 +482,7 @@ function vensters(spel) {
 }
 
 function vensterHtml(spel) {
+  if (spel.venster === 'onlineStop') return onlineStopVenster(spel);
   if (spel.fase === 'potjeKlaar' || spel.fase === 'partijKlaar') {
     if (spel.venster === 'slagen' && spel.potje?.slagen?.length) return slagenVenster(spel);
     return spel.venster === 'handen' && spel.handen ? handenVenster(spel) : uitslagVenster(spel);

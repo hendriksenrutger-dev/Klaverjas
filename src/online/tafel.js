@@ -63,6 +63,7 @@ export function tafelVoor(antw, lokaal = {}) {
   return {
     scherm: 'tafel',
     online: true,
+    onlineMaker: Boolean(antw.maker),
     fase,
     partij: { totaal: t(z.partij.totaal), potjes: Array(z.partij.aantalPotjes).fill(null), deler: r(z.partij.deler), instellingen: z.partij.instellingen },
     draaien: draaiMelding ? { ...draaien, uitkomst: { soort: 'spelen', speler: draaiMelding.speler, troef: draaiMelding.kleur } } : draaien,
