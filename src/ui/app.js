@@ -6,7 +6,8 @@ import { beoordeelKaart, legeVergelijking, telOp, GELIJKWAARDIG } from '../ai/ve
 import { render } from './tafel.js';
 import * as geluid from './geluid.js';
 import { laadPlaatjes } from './plaatjes.js';
-import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek, laadVoortgang, bewaarVoortgang, laadLogboek, bewaarLogboek } from './opslag.js';
+import { laadInstellingen, bewaarInstellingen, laadPartij, bewaarPartij, laadStatistiek, bewaarStatistiek, laadVoortgang, bewaarVoortgang, laadLogboek, bewaarLogboek, laadOnline, bewaarOnline } from './opslag.js';
+import { rpc, luister } from '../online/verbinding.js';
 import { potjeRecord, voegToe, legLogboek, exportTekst } from './logboek.js';
 import { STAPPEN, LEER_REGELS, compleetVoortgang, telLeerPotje, hintUitleg, roemUitleg, seinUitleg, draaiUitleg } from './leren.js';
 import { LESSEN, beoordeel, lesKlaar, alleLessenKlaar } from './lessen.js';
@@ -154,7 +155,7 @@ const BEWAAR = ['partij', 'fase', 'handen', 'draaien', 'draaiKeuzes', 'potje', '
 
 function teken() {
   // Niet opnieuw tekenen terwijl er in een tekstveld getypt wordt.
-  const typen = document.activeElement?.matches?.('input[data-naam]');
+  const typen = document.activeElement?.matches?.('input[data-naam], input[data-online]');
   if (!typen) render(document.getElementById('app'), spel, acties);
   spel.nieuweKaart = null; // volgende keer tekenen: niet opnieuw animeren
   // Opslaan pas na een animatie, zodat een vliegende kaart niet hapert.
@@ -780,6 +781,83 @@ const acties = {
     if (spel.potje && !spel.leren && sleutel === 'verzaakbescherming') spel.potje = { ...spel.potje, verzaakbescherming: i.verzaakbescherming };
     teken();
   },
+  // ---------- Online spelen (stap 2: tafel maken, meedoen, wachtruimte) ----------
+  async onlineOpen(code = '') {
+    stopLopend();
+    const bewaard = laadOnline();
+    spel.scherm = 'online';
+    spel.venster = null;
+    spel.online = { naam: bewaard.naam ?? '', code: code || '', beeld: null, token: null, fout: null, bezig: false };
+    teken();
+    // Zat je nog aan een tafel? Dan meteen terug naar die wachtruimte.
+    if (bewaard.code && bewaard.token && (!code || code === bewaard.code)) {
+      try {
+        const beeld = await rpc('klaverjas_beeld', { p_code: bewaard.code, p_token: bewaard.token });
+        if (beeld?.ik !== null && beeld?.ik !== undefined) aanTafel(bewaard.code, bewaard.token, beeld);
+      } catch {
+        bewaarOnline({ naam: bewaard.naam });
+      }
+    }
+  },
+  onlineVeld(veld, waarde) {
+    if (!spel.online) return;
+    if (veld === 'naam') spel.online.naam = String(waarde).trim().slice(0, 16);
+    if (veld === 'code') spel.online.code = String(waarde).trim().toUpperCase().slice(0, 4);
+  },
+  async onlineMaak() {
+    const o = spel.online;
+    if (!o.naam) return onlineFout('Vul eerst je naam in.');
+    const i = spel.instellingen;
+    const regels = { systeem: i.systeem, troefkeuze: i.troefkeuze, verzaakbescherming: i.verzaakbescherming, rondesVoorOpnieuwDelen: i.rondesVoorOpnieuwDelen };
+    await onlineDoe(async () => {
+      const r = await rpc('klaverjas_maak', { p_naam: o.naam, p_regels: regels });
+      aanTafel(r.beeld.code, r.token, r.beeld);
+    });
+  },
+  async onlineMeedoen() {
+    const o = spel.online;
+    if (!o.naam) return onlineFout('Vul eerst je naam in.');
+    if (o.code.length !== 4) return onlineFout('De code bestaat uit 4 tekens.');
+    await onlineDoe(async () => {
+      const r = await rpc('klaverjas_meedoen', { p_code: o.code, p_naam: o.naam });
+      aanTafel(r.beeld.code, r.token, r.beeld);
+    });
+  },
+  async onlinePlek(plek) {
+    const o = spel.online;
+    await onlineDoe(async () => {
+      o.beeld = await rpc('klaverjas_kies_plek', { p_code: o.beeld.code, p_token: o.token, p_plek: plek });
+    });
+  },
+  async onlineStart() {
+    const o = spel.online;
+    await onlineDoe(async () => {
+      o.beeld = await rpc('klaverjas_start', { p_code: o.beeld.code, p_token: o.token });
+    });
+  },
+  async onlineVerlaat() {
+    const o = spel.online;
+    try { await rpc('klaverjas_verlaat', { p_code: o.beeld.code, p_token: o.token }); } catch { /* weg is weg */ }
+    weg();
+    teken();
+  },
+  onlineTerug() {
+    // De tafel blijft bestaan; via "Online spelen" kom je terug in de wachtruimte.
+    stopOnline();
+    spel.online = null;
+    spel.scherm = 'start';
+    teken();
+  },
+  async onlineDeel() {
+    const code = spel.online?.beeld?.code;
+    if (!code) return;
+    const link = `${location.origin}${location.pathname}?tafel=${code}`;
+    const tekst = `Kom klaverjassen! Tafel ${code}: ${link}`;
+    try {
+      if (navigator.share) await navigator.share({ title: 'Klaverjassen', text: tekst, url: link });
+      else { await navigator.clipboard.writeText(link); onlineFout('De link is gekopieerd.'); }
+    } catch { /* delen geannuleerd */ }
+  },
   naam(index, tekst) {
     if (![1, 2, 3].includes(index)) return;
     const namen = [...spel.instellingen.namen];
@@ -790,6 +868,57 @@ const acties = {
     teken();
   },
 };
+
+// ---------- Online: hulpfuncties ----------
+let stopLuisteren = null;
+function stopOnline() {
+  stopLuisteren?.();
+  stopLuisteren = null;
+}
+function onlineFout(tekst) {
+  if (!spel.online) return;
+  spel.online.fout = tekst;
+  teken();
+}
+async function onlineDoe(f) {
+  const o = spel.online;
+  if (!o || o.bezig) return;
+  o.bezig = true;
+  o.fout = null;
+  teken();
+  try {
+    await f();
+  } catch (fout) {
+    o.fout = fout.message;
+  }
+  o.bezig = false;
+  teken();
+}
+function aanTafel(code, token, beeld) {
+  const o = spel.online;
+  o.code = code;
+  o.token = token;
+  o.beeld = beeld;
+  bewaarOnline({ naam: o.naam, code, token });
+  stopOnline();
+  stopLuisteren = luister(code, async (seintje) => {
+    if (seintje?.weg) { weg('De maker heeft de tafel opgeheven.'); return teken(); }
+    try {
+      const nieuw = await rpc('klaverjas_beeld', { p_code: code, p_token: token });
+      if (spel.online?.token !== token) return;
+      if (nieuw.versie !== spel.online.beeld?.versie) { spel.online.beeld = nieuw; teken(); }
+    } catch (fout) {
+      if (/bestaat niet/.test(fout.message)) { weg('De tafel bestaat niet meer.'); teken(); }
+    }
+  });
+  teken();
+}
+function weg(melding = null) {
+  stopOnline();
+  const o = spel.online;
+  bewaarOnline({ naam: o?.naam ?? '' });
+  if (o) { o.beeld = null; o.token = null; o.fout = melding; }
+}
 
 function heeftLopendePartij() {
   if (spel.partij && !spel.leren) return spel.fase !== 'partijKlaar';
@@ -871,6 +1000,10 @@ window.klaverjas = { spel, acties, regels: R };
 // Beginscherm tonen; de partij gaat pas verder na "Verder spelen".
 spel.bewaard = bewaardeSamenvatting();
 teken();
+
+// Geopend via een uitnodigingslink (?tafel=ABCD): meteen naar online spelen.
+const uitnodiging = new URLSearchParams(location.search).get('tafel');
+if (uitnodiging) acties.onlineOpen(uitnodiging.toUpperCase().slice(0, 4));
 
 // Offline spelen en installeren op het startscherm.
 if ('serviceWorker' in navigator && !snel) {

@@ -223,6 +223,9 @@ Besluiten met Rutger:
 - **Apparaten:** de familie gebruikt Android, net als Rutger. Liggend, zoals nu.
 - Wegvallen: de tafel wacht even, daarna neemt de computer de plek tijdelijk over.
 - **Solo spelen blijft volledig offline.**
+- **Plek in Supabase:** het bestaande project "app maker databases" (Rutgers keuze, gratis abonnement vol). Alles van klaverjassen staat in een eigen schema `klaverjas` (niet direct bereikbaar) en in functies `public.klaverjas_*`; de andere apps worden niet aangeraakt.
+- **Geen Supabase-login** (eigen ontwerpkeuze, nodig omdat een anonieme login de boodschappen- en receptentabellen van Rutgers andere apps zou openzetten): elke speler krijgt een geheime sleutel die op zijn apparaat blijft (`klaverjas_online`). De database-opzet staat in `supabase/*.sql`.
+- **Live bijwerken:** Supabase Realtime (openbaar kanaal `klaverjas-CODE`, alleen een seintje), met daarnaast elke 4 seconden zelf kijken.
 
 Bouwvolgorde (na elke stap testen en akkoord van Rutger):
 1. Supabase opzetten (Rutger maakt het account, Claude legt uit).

@@ -1,4 +1,5 @@
 // Tekent de speeltafel volgens het ontwerp.
+import { onlineScherm } from '../online/scherm.js';
 
 import { kaartId, team } from '../regels/kaarten.js';
 import { stand } from '../regels/potje.js';
@@ -664,6 +665,7 @@ function beginscherm(spel) {
           ${loopt ? `<button class="knop goud start-knop" data-actie="verderSpelen">Verder spelen
             <span class="start-knop-sub">Potje ${info.potje} van ${AANTAL_POTJES} · Wij ${info.totaal[0]} – Zij ${info.totaal[1]}</span></button>` : ''}
           <button class="knop ${loopt ? 'licht' : 'goud'} start-knop" data-actie="nieuwePartijVraag">Nieuwe partij</button>
+          <button class="knop licht start-knop" data-actie="onlineOpen">Online spelen</button>
           <button class="knop licht start-knop" data-actie="open" data-venster="leren">Leren klaverjassen</button>
           <div class="start-rij">
             <button class="knop licht start-knop" data-actie="open" data-venster="statistiek">Statistieken</button>
@@ -691,6 +693,13 @@ export function render(el, spel, acties) {
     zorgVoorSprite();
     patchHtml(el, `${beginscherm(spel)}${spel.venster === 'instellingen' ? instellingenVenster(spel) : spel.venster === 'nieuwBevestig' ? nieuwBevestigVenster() : spel.venster === 'statistiek' ? statistiekVenster(spel) : spel.venster === 'leren' ? lerenVenster(spel) : spel.venster === 'lessen' ? lessenVenster(spel) : ''}`);
     vulPlaatjes(el);
+    koppel(el, acties);
+    return;
+  }
+  if (spel.scherm === 'online' && spel.online) {
+    zorgVoorSprite();
+    const i = spel.instellingen;
+    patchHtml(el, onlineScherm(spel.online, { systeem: i.systeem, troefkeuze: i.troefkeuze, verzaakbescherming: i.verzaakbescherming }));
     koppel(el, acties);
     return;
   }
@@ -788,6 +797,9 @@ function koppel(el, acties) {
       // Klik binnen een venster sluit het niet, behalve op een knop.
       if (knop.classList.contains('venster-achter') && e.target.closest('[data-binnen]')) return;
       const { actie } = knop.dataset;
+      // Online: eerst de ingevulde velden doorgeven.
+      if (actie.startsWith('online')) for (const v of el.querySelectorAll('[data-online]')) acties.onlineVeld(v.dataset.online, v.value);
+      if (actie === 'onlinePlek') return acties.onlinePlek(Number(knop.dataset.plek));
       if (actie === 'draai') acties.draai(knop.dataset.keuze);
       else if (actie === 'kiesTroef') acties.kiesTroef(knop.dataset.kleur);
       else if (actie === 'statSysteem') acties.statSysteem(knop.dataset.waarde);
@@ -804,7 +816,11 @@ function koppel(el, acties) {
       if (veld) acties.naam(Number(veld.dataset.naam), veld.value);
     });
     el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && e.target.matches('[data-naam]')) e.target.blur();
+      if (e.key === 'Enter' && e.target.matches('[data-online="code"]')) {
+        for (const v of el.querySelectorAll('[data-online]')) acties.onlineVeld(v.dataset.online, v.value);
+        return acties.onlineMeedoen();
+      }
+      if (e.key === 'Enter' && e.target.matches('[data-naam], [data-online]')) e.target.blur();
     });
   }
 }
