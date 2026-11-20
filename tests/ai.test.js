@@ -803,3 +803,50 @@ describe('vuistregels: kaarten die zeker bij je maat zitten zijn geen gevaar', (
     assert.equal(metRegel - zonderRegel, 0);
   });
 });
+
+describe('vuistregels: kaarten van de maat (vervolg, één voorbeeld per regel)', () => {
+  // Slag 1: Zuid kwam uit met ♥7; West en Oost hadden geen harten (en troefden niet).
+  // Alle onbekende harten (♥9 ♥10 ♥B ♥V ♥H ♥A, voor zover niet in Zuids hand) zitten dus bij Noord.
+  const slag1 = { kaarten: [{ speler: 0, kaart: K('h7') }, { speler: 1, kaart: K('k7') }, { speler: 2, kaart: K('h8') }, { speler: 3, kaart: K('r7') }], winnaar: 2, punten: 0, roem: { totaal: 0 } };
+  const w = (o) => ({ speler: 0, troef: 'schoppen', spelendTeam: 0, systeem: 'amsterdams', slagen: [slag1], slag: [], aantallen: [7, 7, 7, 7], uitkomer: 0, kiezer: 0, ...o });
+  const extra = async (ww, k, regel) => {
+    const A = await import('../src/ai/simulatie.js');
+    return A.vuistregelStraf(ww, k, undefined, false, { [regel]: true }) - A.vuistregelStraf(ww, k, undefined, false, {});
+  };
+
+  test('roem klaarleggen: de kaart die roem zou maken zit zeker bij de maat', async () => {
+    // Slag 2: Zuid trok troef met ♠A; West en Oost bekenden niet: alle overige troef zit bij Noord.
+    // Slag 3: Oost komt uit met ♦8, Zuid heeft geen ruiten en troeft in met ♠V. De ♠H (stuk) kan
+    // alleen bij Noord zitten en West kan niet overtroeven: geen gevaar, de slag is zeker voor ons.
+    const slag2 = { kaarten: [{ speler: 0, kaart: K('sA') }, { speler: 1, kaart: K('k10') }, { speler: 2, kaart: K('s7') }, { speler: 3, kaart: K('r10') }], winnaar: 0, punten: 31, roem: { totaal: 0 } };
+    const ww = w({ hand: Ks('sV s8 k8 h9 hB'), slagen: [slag1, slag2], slag: [{ speler: 3, kaart: K('r8') }], aantallen: [5, 6, 6, 5] });
+    assert.equal(await extra(ww, K('sV'), 'roemKlaarleggen'), 0);
+  });
+
+  test('vrije kaart afgooien: hogere kaart zit zeker bij de maat, dus je kaart wordt nog een slag', async () => {
+    // Oost komt uit met ♦A (West speelt nog), Zuid heeft geen ruiten en kiest wat hij afgooit.
+    // ♥H: alleen de ♥A is hoger en die zit zeker bij Noord. Weggooien op een slag van de tegenpartij is dan zonde.
+    const A = await import('../src/ai/simulatie.js');
+    const ww = w({ hand: Ks('hH s7 k8 k9 s8 kV'), slag: [{ speler: 3, kaart: K('rA') }], aantallen: [6, 7, 7, 6] });
+    assert.ok(A.vuistregelStraf(ww, K('hH'), undefined, false, {}) > A.vuistregelStraf(ww, K('k8'), undefined, false, {}));
+  });
+
+  test('innen: alleen de maat kan nog troef hebben, dus je vrije aas innen', async () => {
+    // Slag 2: Zuid trok troef met ♠A; West en Oost bekenden niet: alle overige troef zit bij Noord.
+    const slag2 = { kaarten: [{ speler: 0, kaart: K('sA') }, { speler: 1, kaart: K('k10') }, { speler: 2, kaart: K('s7') }, { speler: 3, kaart: K('r10') }], winnaar: 0, punten: 31, roem: { totaal: 0 } };
+    const ww = w({ hand: Ks('kA s8 r9 h9 hB k9'), slagen: [slag1, slag2], aantallen: [6, 6, 6, 6] });
+    assert.equal(await extra(ww, K('kA'), 'innen'), 0);
+    assert.equal(await extra(ww, K('r9'), 'innen'), 1); // eerst de vrije ♣A binnenhalen
+  });
+
+  test('troef gevraagd: hogere troef zit zeker bij de maat, dus je troef kan nog een slag worden', async () => {
+    // Zelfde slag 2. Nu komt Oost uit met... hij heeft geen troef; daarom vraagt Noord troef: ♠10, Oost gooit ♦9 af.
+    // Zuid heeft ♠V en ♠8; de hogere troeven buiten (♠B ♠9 ♠H) zitten zeker bij Noord.
+    const slag2 = { kaarten: [{ speler: 0, kaart: K('sA') }, { speler: 1, kaart: K('k10') }, { speler: 2, kaart: K('s7') }, { speler: 3, kaart: K('r10') }], winnaar: 0, punten: 31, roem: { totaal: 0 } };
+    const ww = w({ hand: Ks('sV s8 r9 h9 hB'), slagen: [slag1, slag2], slag: [{ speler: 2, kaart: K('s10') }, { speler: 3, kaart: K('r9') }], aantallen: [5, 6, 5, 5] });
+    // De ♠V krijgt twee strafpunten: hij kan nog een slag worden (de hogere troef zit bij je maat) én
+    // hij is duurder dan de ♠8. Met de oude regel telde de troef van Noord als gevaar: één strafpunt.
+    assert.equal(await extra(ww, K('sV'), 'troefGevraagd'), 2);
+    assert.equal(await extra(ww, K('s8'), 'troefGevraagd'), 1); // ook de ♠8 kan nog een slag worden (West en Oost hebben geen troef)
+  });
+});

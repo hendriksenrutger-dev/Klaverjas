@@ -635,7 +635,7 @@ button { font: inherit; }
   .jouw-kaart { font-size: 11px; }
   .hint { font-size: 14px; padding: 4px 14px; bottom: calc(var(--hand-ruimte) + var(--hk) * 0.13 + 2px); max-width: calc(100vw - 260px); }
   .hand { bottom: 4px; gap: 6px; }
-  .knoppen-rechts { right: 6px; bottom: 8px; gap: 4px; flex-direction: column; align-items: flex-end; } /* naast de hand */
+  .knoppen-rechts { right: 6px; bottom: 8px; gap: 4px; flex-direction: column; align-items: flex-end; z-index: 12; } /* naast de hand, en erboven: anders vangt het vlak van de hand de tik */
   .knoppen-rechts .knop { min-height: 36px; min-width: 36px; padding: 0 10px; font-size: 13px; border-radius: 10px; }
   .knop { min-height: 40px; min-width: 40px; padding: 0 14px; font-size: 15px; border-radius: 11px; }
   .knop.goud { min-height: 42px; padding: 0 20px; font-size: 16px; }
