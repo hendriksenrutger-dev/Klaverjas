@@ -15,6 +15,7 @@ import { huidigeWinnaar, slaatOver, slagPunten, punten, sterkte, PUNTEN_LAATSTE_
 import { roemInSlag } from '../regels/roem.js';
 import { uitslag } from '../regels/potje.js';
 import { kiesNet } from './netwerk.js';
+import { geleerdVerschil } from './draaigeleerd.js';
 
 // Moeilijkheidsniveaus. Eigen voorstel, nog af te stemmen met Rutger (zie RAPPORT-FASE-4.md).
 // simulaties: aantal kaartverdelingen per zet; strategie: hoe de simulaties worden uitgespeeld;
@@ -1166,6 +1167,7 @@ export function kiesVerplicht(hand, opties = {}) {
 export function kiesDraai(hand, kleur, {
   speler, deler, systeem = 'amsterdams', simulaties = DRAAI_SIMULATIES, drempel = DRAAI_DREMPEL, rng = Math.random, strategie = 'slim', trekken = true,
   gepast = [], pasLezen = false, // gemeten: levert niets op (zie CLAUDE.md), daarom uit
+  geleerd = strategie === 'slim', // geleerd spelen/passen (draaigeleerd.js); makkelijk houdt de drempel
 } = {}) {
   const ids = new Set(hand.map(kaartId));
   const rest = maakDeck().filter((k) => !ids.has(kaartId(k)));
@@ -1183,5 +1185,9 @@ export function kiesDraai(hand, kleur, {
     som += g * verschil(speelUit(handen, [], [], (deler + 1) % 4, ctx, rng), speler);
   }
   const gemiddeld = som / gewichten;
+  if (geleerd) {
+    const verwacht = geleerdVerschil(hand, kleur, gemiddeld, speler, deler, gepast);
+    return { keuze: verwacht > 0 ? 'spelen' : 'passen', gemiddeld, verwacht };
+  }
   return { keuze: gemiddeld > drempel ? 'spelen' : 'passen', gemiddeld };
 }

@@ -6,9 +6,17 @@ const R = await import('../src/regels/index.js');
 const A = await import('../src/ai/simulatie.js');
 const W = await import('../src/ai/willekeurig.js');
 
+const { kenmerkenDraai } = await import('./draaileren/kenmerken.mjs');
+// Geleerd spelen/passen (ontwikkeling/draaileren): schatting g plus handkenmerken → spelen − passen.
+function geleerdDraai(w, hand, kleur, speler, deler, d, rng) {
+  const g = A.kiesDraai(hand, kleur, { speler, deler, rng }).gemiddeld;
+  const x = kenmerkenDraai({ hand: hand.map(R.kaartId), troef: kleur, plek: (speler - deler + 4) % 4, ronde: d?.rondes ?? 0, gepast: d?.gepast ?? [], g });
+  return w.reduce((s, wi, i) => s + wi * x[i], 0) > 0 ? 'spelen' : 'passen';
+}
+
 function speler(cfg, rng) {
   return {
-    draai: (hand, kleur, speler, deler, d = null) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, gepast: d ? R.eerderePassen(d) : [], pasLezen: cfg.pasLezen ?? false, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim', trekken: cfg.draaiTrekken ?? cfg.trekken }).keuze,
+    draai: (hand, kleur, speler, deler, d = null) => cfg.random ? W.kiesDraai(rng) : cfg.geleerd ? geleerdDraai(cfg.geleerd, hand, kleur, speler, deler, d, rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, gepast: d ? R.eerderePassen(d) : [], pasLezen: cfg.pasLezen ?? false, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim', trekken: cfg.draaiTrekken ?? cfg.trekken, geleerd: cfg.draaiGeleerd ?? false }).keuze,
     kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, draaiInfo: cfg.draaiInfo ?? true, vuistregels: cfg.vuist ?? true, slimOpties: cfg.slim ?? A.SLIM_OPTIES, gedektRegel: cfg.gedektRegel ?? true, vuistregelSet: cfg.regels ?? A.VUISTREGELS, marge: cfg.marge ?? A.VUISTREGEL_MARGE, spekMarge: cfg.spekMarge ?? A.SPEK_MARGE, tienUitMarge: cfg.tienUitMarge ?? A.TIEN_UIT_MARGE, trekMarge: cfg.trekMarge ?? A.TREK_MARGE, troefUitMarge: cfg.troefUitMarge ?? A.TROEF_UIT_MARGE, troefBewaarMarge: cfg.troefBewaarMarge ?? A.TROEF_BEWAAR_MARGE, exactVanaf: cfg.exactVanaf ?? 0, exactTop: cfg.exactTop ?? 4, exactSims: cfg.exactSims ?? 40, tienLezen: cfg.tien ?? true, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null, netwerk: cfg.net ?? null, netVanaf: cfg.netVanaf ?? 0 }).kaart,
   };
 }
