@@ -763,3 +763,18 @@ describe('passen lezen bij het draaien', () => {
     assert.equal(pasGewicht(sterk, [[0, 'harten']], 0), 1); // eigen passen telt niet
   });
 });
+
+describe('troef die alleen bij je maat zit', () => {
+  test('niet doortrekken en troef bewaren (Rutgers voorbeeld Noord ♠10, maat heeft ♠V)', async () => {
+    const { nieuwPotje, speelKaart } = await import('../src/regels/potje.js');
+    const A = await import('../src/ai/simulatie.js');
+    const handen = [Ks('r9 rH sB sA hB hH sV h10'), Ks('rA rB s9 k9 h7 hV k8 kV'), Ks('r8 r10 s7 s8 h9 hA s10 kB'), Ks('rV r7 sH h8 k7 kH kA k10')];
+    let p = nieuwPotje({ handen, troef: 'schoppen', spelendTeam: 0, uitkomer: 1, kiezer: 0 });
+    const slagen = [['1 rA', '2 r8', '3 rV', '0 r9'], ['1 rB', '2 r10', '3 r7', '0 rH'], ['2 s7', '3 sH', '0 sB', '1 s9'],
+      ['0 sA', '1 k9', '2 s8', '3 h8'], ['0 hB', '1 h7', '2 h9', '3 k7'], ['0 hH', '1 hV', '2 hA', '3 kH']];
+    for (const s of slagen) for (const x of s) { const [sp, k] = x.split(' '); p = speelKaart(p, +sp, K(k)); }
+    const w = A.waarneming(p, 2);
+    assert.deepEqual(A.trekKaarten(w), []); // West en Oost troefden niet: de ♠V zit bij Zuid
+    assert.ok(A.isTroefZonderNut(w, K('s10')));
+  });
+});

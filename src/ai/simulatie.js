@@ -24,7 +24,7 @@ import { kiesNet } from './netwerk.js';
 export const NIVEAUS = {
   makkelijk: { simulaties: 5, strategie: 'simpel', eindspel: 0, seinGeven: true, seinLezen: false },
   normaal: { simulaties: 100, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true, exactVanaf: 5, exactTop: 3, exactSims: 24 },
-  sterk: { simulaties: 300, draaiSims: 300, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true, exactVanaf: 5, exactTop: 4, exactSims: 40 },
+  sterk: { simulaties: 300, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true, exactVanaf: 5, exactTop: 4, exactSims: 40 },
 };
 
 // ---------- Seinen (Rutgers afspraken, zie CLAUDE.md) ----------
@@ -80,9 +80,16 @@ export function geeftRoemWeg(w, k) {
 // ander zitten en heb je een troef die boven alle troeven buiten je hand zit, trek dan met die troef.
 // Even streng als spekken, met een ruimere marge: soms wijk je af, maar alleen als het duidelijk beter is.
 export const TREK_MARGE = 40;
+// Onbekende troeven die nog bij de tegenpartij kunnen zitten. Troef die alleen nog bij je maat kan
+// zitten, hoef je niet te trekken (Rutgers voorbeeld Noord ♠10: dan trek je je maats ♠V weg).
+export function troefBijTegenpartij(w, onbekend = onbekendeKaarten(w)) {
+  const uit = uitsluitingen(w, onbekend);
+  const tegen = [0, 1, 2, 3].filter((p) => team(p) !== team(w.speler));
+  return onbekend.filter((c) => c.kleur === w.troef && tegen.some((p) => !uit[p].has(kaartId(c))));
+}
 export function trekKaarten(w, onbekend = onbekendeKaarten(w)) {
   if (w.slag.length || team(w.speler) !== w.spelendTeam) return [];
-  const elders = onbekend.filter((c) => c.kleur === w.troef);
+  const elders = troefBijTegenpartij(w, onbekend);
   if (!elders.length) return [];
   const mijn = w.hand.filter((c) => c.kleur === w.troef);
   const baas = mijn.filter((c) => elders.every((o) => sterkte(c, w.troef) > sterkte(o, w.troef)));
@@ -116,11 +123,12 @@ export function aasVoorTien(w, k, geldig) {
   return team(metAas) === team(w.speler) && team(metTien) === team(w.speler) && roem(aas) >= roem(k) ? aas : null;
 }
 
-// Geen troef uitkomen als niemand anders nog troef kan hebben (Rutger: bewaar die vrije troef, dan
-// haal je er later een slag mee, met een beetje geluk de laatste). Streng, net als doortrekken.
+// Geen troef uitkomen als de tegenpartij geen troef meer kan hebben (Rutger: bewaar die vrije troef,
+// dan haal je er later een slag mee, met een beetje geluk de laatste; en zit de rest bij je maat, dan
+// trek je die maar weg). Streng, net als doortrekken.
 export const TROEF_BEWAAR_MARGE = 40;
 export function isTroefZonderNut(w, k, onbekend = onbekendeKaarten(w)) {
-  return w.slag.length === 0 && k.kleur === w.troef && !onbekend.some((c) => c.kleur === w.troef)
+  return w.slag.length === 0 && k.kleur === w.troef && !troefBijTegenpartij(w, onbekend).length
     && w.hand.some((c) => c.kleur !== w.troef);
 }
 
@@ -1134,7 +1142,7 @@ export function kiesVerplicht(hand, opties = {}) {
 // verwachte verschil (wij − zij) boven de drempel ligt.
 export function kiesDraai(hand, kleur, {
   speler, deler, systeem = 'amsterdams', simulaties = DRAAI_SIMULATIES, drempel = DRAAI_DREMPEL, rng = Math.random, strategie = 'slim', trekken = true,
-  gepast = [], pasLezen = true,
+  gepast = [], pasLezen = false, // gemeten: levert niets op (zie CLAUDE.md), daarom uit
 } = {}) {
   const ids = new Set(hand.map(kaartId));
   const rest = maakDeck().filter((k) => !ids.has(kaartId(k)));

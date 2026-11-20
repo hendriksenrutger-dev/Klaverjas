@@ -4,7 +4,7 @@ import { duel } from './duel.mjs';
 const [, , welke, n = '200', z = '1'] = process.argv;
 const basis = { sims: 40, draaiStrategie: 'slim' };
 const V = {
-  pas: [{ ...basis }, { ...basis, pasLezen: false }],
+  pas: [{ ...basis, pasLezen: true }, { ...basis }],
   d0: [{ ...basis, drempel: 0 }, { ...basis }],
   d5: [{ ...basis, drempel: 5 }, { ...basis }],
   d15: [{ ...basis, drempel: 15 }, { ...basis }],
