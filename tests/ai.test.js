@@ -778,3 +778,28 @@ describe('troef die alleen bij je maat zit', () => {
     assert.ok(A.isTroefZonderNut(w, K('s10')));
   });
 });
+
+describe('vuistregels: kaarten die zeker bij je maat zitten zijn geen gevaar', () => {
+  // Slag 1: Zuid kwam uit met ♥7, West en Oost hadden geen harten. De ♥A kan dus alleen bij Noord zitten.
+  const slag1 = { kaarten: [{ speler: 0, kaart: K('h7') }, { speler: 1, kaart: K('k7') }, { speler: 2, kaart: K('h8') }, { speler: 3, kaart: K('r7') }], winnaar: 2, punten: 0, roem: { totaal: 0 } };
+  const w = (o) => ({ speler: 0, troef: 'schoppen', spelendTeam: 0, systeem: 'amsterdams', slagen: [slag1], slag: [], aantallen: [7, 7, 7, 7], uitkomer: 0, kiezer: 0, ...o });
+
+  test('tien uitkomen: geen regel als de aas zeker bij je maat zit', async () => {
+    const A = await import('../src/ai/simulatie.js');
+    const met = w({ hand: Ks('h10 s7 k8 r8 k9 r9 s8') });
+    assert.equal(A.isTienUitkomst(met, K('h10')), false);
+    assert.equal(A.vuistregelStraf(met, K('h10'), undefined, false, { kaleTien: true }), 0);
+    // Zonder die kennis (niemand liet harten zien) blijft de regel gelden.
+    const zonder = w({ hand: Ks('h10 s7 k8 r8 k9 r9 s8'), slagen: [], aantallen: [7, 8, 8, 8] });
+    assert.equal(A.isTienUitkomst(zonder, K('h10')), true);
+  });
+
+  test('tien beschermen: bijspelen mag als de aas zeker bij je maat zit', async () => {
+    const A = await import('../src/ai/simulatie.js');
+    // Noord komt uit met ♣A, Oost bekent; Zuid heeft geen klaveren en gooit af (West speelt nog).
+    const bij = w({ speler: 0, hand: Ks('h10 s7 r8 r9 s8 h9'), slag: [{ speler: 2, kaart: K('kA') }, { speler: 3, kaart: K('k8') }], aantallen: [6, 7, 6, 6] });
+    const metRegel = A.vuistregelStraf(bij, K('h10'), undefined, false, { tienBeschermen: true });
+    const zonderRegel = A.vuistregelStraf(bij, K('h10'), undefined, false, {});
+    assert.equal(metRegel - zonderRegel, 0);
+  });
+});
