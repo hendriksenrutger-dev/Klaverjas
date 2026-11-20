@@ -740,3 +740,26 @@ describe('vrije troef bewaren (Rutgers voorbeeld Noord ♠V)', async () => {
   });
 });
 
+
+describe('passen lezen bij het draaien', () => {
+  test('eerderePassen: rondgepaste kleuren voor iedereen, huidige kleur tot wie aan de beurt is', async () => {
+    const { nieuwDraaien, beslis, eerderePassen } = await import('../src/regels/draaien.js');
+    const { maakDeck } = await import('../src/regels/kaarten.js');
+    const stapel = maakDeck(); // klaveren eerst
+    let d = nieuwDraaien({ stapel, deler: 0 });
+    for (let i = 0; i < 4; i++) d = beslis(d, d.beurt, 'passen');
+    d = beslis(d, d.beurt, 'passen'); // speler 1 past op de tweede kleur
+    const p = eerderePassen(d);
+    assert.equal(p.length, 5);
+    assert.deepEqual(p[4], [1, d.kaart.kleur]);
+    assert.ok(p.slice(0, 4).every(([, k]) => k === 'klaveren'));
+  });
+
+  test('pasGewicht: een sterke troefhand bij wie paste telt minder mee', async () => {
+    const { pasGewicht } = await import('../src/ai/simulatie.js');
+    const zwak = [[], Ks('h7 s8 s9 k7 k8 r7 r8 r9'), [], []];
+    const sterk = [[], Ks('hB h9 hA h10 s8 k7 r7 r8'), [], []];
+    assert.ok(pasGewicht(zwak, [[1, 'harten']], 0) > 10 * pasGewicht(sterk, [[1, 'harten']], 0));
+    assert.equal(pasGewicht(sterk, [[0, 'harten']], 0), 1); // eigen passen telt niet
+  });
+});

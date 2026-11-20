@@ -24,7 +24,7 @@ import { kiesNet } from './netwerk.js';
 export const NIVEAUS = {
   makkelijk: { simulaties: 5, strategie: 'simpel', eindspel: 0, seinGeven: true, seinLezen: false },
   normaal: { simulaties: 100, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true, exactVanaf: 5, exactTop: 3, exactSims: 24 },
-  sterk: { simulaties: 300, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true, exactVanaf: 5, exactTop: 4, exactSims: 40 },
+  sterk: { simulaties: 300, draaiSims: 300, strategie: 'slim', eindspel: 3, seinGeven: true, seinLezen: true, exactVanaf: 5, exactTop: 4, exactSims: 40 },
 };
 
 // ---------- Seinen (Rutgers afspraken, zie CLAUDE.md) ----------
@@ -242,6 +242,13 @@ export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, fact
 // Eigen keuze, na testen bij te stellen.
 export const DRAAI_DREMPEL = 10;
 export const DRAAI_SIMULATIES = 150;
+// Passen lezen: wie al gepast heeft op een kleur, heeft daarin waarschijnlijk geen sterke troef.
+// Een verdeling telt zwaarder naarmate die passen er beter bij passen (kans op passen volgens SPEELKANS).
+export function pasGewicht(handen, gepast, speler) {
+  let g = 1;
+  for (const [p, kleur] of gepast) if (p !== speler) g *= 1 - (SPEELKANS[kenmerk(handen[p], kleur)] ?? 0.5);
+  return g;
+}
 
 // ---------- Waarneming: alleen wat de speler mag weten ----------
 export function waarneming(potje, speler) {
@@ -1127,19 +1134,23 @@ export function kiesVerplicht(hand, opties = {}) {
 // verwachte verschil (wij − zij) boven de drempel ligt.
 export function kiesDraai(hand, kleur, {
   speler, deler, systeem = 'amsterdams', simulaties = DRAAI_SIMULATIES, drempel = DRAAI_DREMPEL, rng = Math.random, strategie = 'slim', trekken = true,
+  gepast = [], pasLezen = true,
 } = {}) {
   const ids = new Set(hand.map(kaartId));
   const rest = maakDeck().filter((k) => !ids.has(kaartId(k)));
   const ctx = { troef: kleur, systeem, spelendTeam: team(speler), strategie, trekken };
-  let som = 0;
+  let som = 0, gewichten = 0;
+  const lees = pasLezen && gepast.some(([p]) => p !== speler);
   for (let n = 0; n < simulaties; n++) {
     const geschud = schudIn(rest.slice(), rng);
     const handen = [[], [], [], []];
     handen[speler] = hand.slice();
     let pos = 0;
     for (let p = 0; p < 4; p++) if (p !== speler) handen[p] = geschud.slice(pos, (pos += 8));
-    som += verschil(speelUit(handen, [], [], (deler + 1) % 4, ctx, rng), speler);
+    const g = lees ? pasGewicht(handen, gepast, speler) : 1;
+    gewichten += g;
+    som += g * verschil(speelUit(handen, [], [], (deler + 1) % 4, ctx, rng), speler);
   }
-  const gemiddeld = som / simulaties;
+  const gemiddeld = som / gewichten;
   return { keuze: gemiddeld > drempel ? 'spelen' : 'passen', gemiddeld };
 }

@@ -81,7 +81,7 @@ function adviesVoor() {
   const d = spel.draaien;
   if (spel.fase === 'draaien' && !d.verplicht && d.beurt === JIJ && !d.uitkomst && !spel.draaiMelding) {
     if (advies?.sleutel !== d) {
-      advies = { sleutel: d, belofte: analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }).catch(() => null) };
+      advies = { sleutel: d, belofte: analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem, gepast: R.eerderePassen(d) }).catch(() => null) };
     }
     return advies;
   }
@@ -323,7 +323,7 @@ function volgende() {
     const s = spel.draaien.beurt;
     const d = spel.draaien;
     computerZet(
-      () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }, niveau()),
+      () => vraagDraai(spel.handen[s], d.kaart.kleur, { speler: s, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem, gepast: R.eerderePassen(d) }, niveau()),
       (keuze) => draai(s, keuze),
       denktijdDraai(),
     );
@@ -431,7 +431,7 @@ function vergelijkDraai(keuze) {
   const sessie = analyseSessie;
   const basis = { soort: 'draai', potje: spel.partij.potjes.length, kleur: d.kaart.kleur, jij: keuze };
   spel.analyseBezig++;
-  analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem })
+  analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem, gepast: R.eerderePassen(d) })
     .then((computer) => verwerkAnalyse(sessie, { ...basis, computer }))
     .catch(() => verwerkAnalyse(sessie, null));
 }
@@ -758,7 +758,7 @@ const acties = {
       const d = spel.draaien;
       spel.hintBezig = true;
       teken();
-      analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem }).then((keuze) => {
+      analyseerDraai(spel.handen[JIJ], d.kaart.kleur, { speler: JIJ, deler: spel.partij.deler, systeem: spel.partij.instellingen.systeem, gepast: R.eerderePassen(d) }).then((keuze) => {
         spel.hintBezig = false;
         if (spel.draaien !== d) return teken();
         spel.hulpMelding = keuze === 'spelen'

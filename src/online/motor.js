@@ -113,7 +113,7 @@ export function computerVraag(staat, plek) {
       },
     };
   }
-  const opties = { speler: plek, deler: staat.partij.deler, systeem: staat.partij.instellingen.systeem };
+  const opties = { speler: plek, deler: staat.partij.deler, systeem: staat.partij.instellingen.systeem, gepast: R.eerderePassen(staat.draaien) };
   return z.soort === 'draai'
     ? { plek, soort: 'draai', hand: staat.handen[plek].slice(), kleur: staat.draaien.kaart.kleur, opties }
     : { plek, soort: 'troef', hand: staat.handen[plek].slice(), opties };
