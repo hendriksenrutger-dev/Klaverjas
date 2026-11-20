@@ -58,13 +58,15 @@ export const VUISTREGEL_MARGE = 8;
 // scoort, mag het toch. Eigen ontwerpkeuze, bij te stellen.
 export const SPEK_MARGE = 20;
 
-// Niet uitkomen met een tien als de aas van die kleur nog bij een ander zit, ook niet als hij
+// Niet uitkomen met een tien als de aas van die kleur nog bij de tegenpartij kan zitten, ook niet als hij
 // gedekt is (Rutger: houd hem achter, dan wordt hij misschien nog een slag of spek je hem bij je maat).
+// Zit de aas zeker bij je maat, dan geldt de regel niet en beslist de simulatie (Rutger: je maat
+// hoeft de aas niet bij te leggen, dat is een keuze).
 // Even streng als spekken. De kale-tienregel blijft daarnaast gewoon gelden.
 export const TIEN_UIT_MARGE = 20;
 export function isTienUitkomst(w, k, onbekend = onbekendeKaarten(w)) {
   return w.slag.length === 0 && k.rang === '10' && k.kleur !== w.troef
-    && onbekend.some((c) => c.kleur === k.kleur && c.rang === 'A');
+    && bijTegenpartij(w, onbekend).some((c) => c.kleur === k.kleur && c.rang === 'A');
 }
 
 // Geeft kaart k roem weg op een slag die niet naar ons gaat (na deze kaart)? Zo'n kaart is geen
@@ -82,10 +84,20 @@ export function geeftRoemWeg(w, k) {
 export const TREK_MARGE = 40;
 // Onbekende troeven die nog bij de tegenpartij kunnen zitten. Troef die alleen nog bij je maat kan
 // zitten, hoef je niet te trekken (Rutgers voorbeeld Noord ♠10: dan trek je je maats ♠V weg).
-export function troefBijTegenpartij(w, onbekend = onbekendeKaarten(w)) {
+// Algemener: alle onbekende kaarten die nog bij de tegenpartij kunnen zitten. De vuistregels gebruiken
+// dit voor gevaar van de tegenpartij; een kaart die zeker bij je maat zit, is geen gevaar.
+const tegenCache = new WeakMap();
+export function bijTegenpartij(w, onbekend = onbekendeKaarten(w)) {
+  const c = tegenCache.get(w);
+  if (c && c.onbekend === onbekend) return c.kaarten;
   const uit = uitsluitingen(w, onbekend);
   const tegen = [0, 1, 2, 3].filter((p) => team(p) !== team(w.speler));
-  return onbekend.filter((c) => c.kleur === w.troef && tegen.some((p) => !uit[p].has(kaartId(c))));
+  const kaarten = onbekend.filter((k) => tegen.some((p) => !uit[p].has(kaartId(k))));
+  tegenCache.set(w, { onbekend, kaarten });
+  return kaarten;
+}
+export function troefBijTegenpartij(w, onbekend = onbekendeKaarten(w)) {
+  return bijTegenpartij(w, onbekend).filter((c) => c.kleur === w.troef);
 }
 export function trekKaarten(w, onbekend = onbekendeKaarten(w)) {
   if (w.slag.length || team(w.speler) !== w.spelendTeam) return [];
@@ -97,7 +109,7 @@ export function trekKaarten(w, onbekend = onbekendeKaarten(w)) {
   // Ook doortrekken als je de slag verliest (Rutger): je hebt minstens zoveel troef als er nog
   // buiten je hand is, en je hebt nog 3 of meer mooie kaarten in een andere kleur (azen, tienen of
   // vrije kaarten) die je niet ingetroefd wilt zien. Dan met je laagste troef.
-  const mooi = w.hand.filter((c) => c.kleur !== w.troef && (c.rang === 'A' || c.rang === '10' || isVrijeKaart(c, onbekend, w.troef)));
+  const mooi = w.hand.filter((c) => c.kleur !== w.troef && (c.rang === 'A' || c.rang === '10' || isVrijeKaart(c, bijTegenpartij(w, onbekend), w.troef)));
   if (mijn.length && mijn.length >= elders.length && mooi.length >= 3) {
     return [mijn.reduce((a, b) => (sterkte(b, w.troef) < sterkte(a, w.troef) ? b : a))];
   }
@@ -1017,6 +1029,8 @@ function roemGevaar(k, onbekend, troef) {
 export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRegel = false, regels = VUISTREGELS) {
   const troef = w.troef;
   const hoger = (c) => c.kleur === k.kleur && sterkte(c, troef) > sterkte(k, troef);
+  // Kaarten die nog bij de tegenpartij kunnen zitten (niet: kaarten die zeker bij je maat zitten).
+  const tegen = bijTegenpartij(w, onbekend);
   if (w.slag.length === 0) {
     let straf = team(w.speler) !== w.spelendTeam && k.kleur === troef ? 1 : 0;
     if (regels.uitkomen && k.kleur !== troef) {
@@ -1032,27 +1046,27 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
         if (laagste.rang !== k.rang) straf++;
       }
     }
-    const geenTroefElders = !onbekend.some((c) => c.kleur === troef);
+    const geenTroefElders = !tegen.some((c) => c.kleur === troef);
     const eigenTroef = w.hand.some((c) => c.kleur === troef);
     if (regels.trekNiet && k.kleur === troef && geenTroefElders) straf++;
     // Troef trekken: heb je een troef boven alle troeven die nog buiten zijn, trek dan daarmee.
     if (regels.trekHoog && k.kleur === troef && !geenTroefElders) {
-      const boven = (c) => onbekend.every((o) => o.kleur !== troef || sterkte(c, troef) > sterkte(o, troef));
+      const boven = (c) => tegen.every((o) => o.kleur !== troef || sterkte(c, troef) > sterkte(o, troef));
       if (!boven(k) && w.hand.some((c) => c.kleur === troef && boven(c))) straf++;
     }
     // Vrije azen en tienen innen als spelende partij, na het troeftrekken. (Als tegenpartij is een
     // aas uitkomen goed, maar geen plicht: Rutger vond ♠A of ♦8 allebei goed.)
     const tegenpartij = team(w.speler) !== w.spelendTeam;
-    const vrij = w.hand.filter((c) => c.kleur !== troef && punten(c, troef) >= 10 && isVrijeKaart(c, onbekend, troef));
+    const vrij = w.hand.filter((c) => c.kleur !== troef && punten(c, troef) >= 10 && isVrijeKaart(c, tegen, troef));
     if (regels.innen && vrij.length && !tegenpartij && (geenTroefElders || !eigenTroef)
-      && !(k.kleur !== troef && isVrijeKaart(k, onbekend, troef))) straf++;
+      && !(k.kleur !== troef && isVrijeKaart(k, tegen, troef))) straf++;
     // De kleur van je maat naspelen.
     if (regels.maatKleur) {
       const mk = maatKleuren(w, onbekend);
       if (mk.size && w.hand.some((c) => mk.has(c.kleur)) && !mk.has(k.kleur)) straf++;
     }
     // Niet uitkomen met een kale tien (de aas zit nog bij een ander).
-    if (regels.kaleTien && k.kleur !== troef && k.rang === '10' && onbekend.some((c) => c.kleur === k.kleur && c.rang === 'A')) straf++;
+    if (regels.kaleTien && k.kleur !== troef && k.rang === '10' && tegen.some((c) => c.kleur === k.kleur && c.rang === 'A')) straf++;
     // Je laatste troef bewaren voor de laatste slagen.
     if (regels.lageTroefBewaren && k.kleur === troef && w.slagen.length < 6 && w.hand.filter((c) => c.kleur === troef).length === 1
       && !trekKaarten(w, onbekend).some((t) => zelfdeKaart(t, k))) straf++; // doortrekken gaat voor
@@ -1072,14 +1086,14 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
   // Niet over je maat heen troeven.
   if (regels.nietOverMaat && maatHeeft && k.kleur === troef && gevraagd !== troef) straf++;
   // Tweede hand laag: niet hoger dan nodig in de gevraagde kleur, tenzij de slag dan zeker is.
-  if (regels.tweedeHandLaag && w.slag.length === 1 && k.kleur === gevraagd && gevraagd !== troef && !isVrijeKaart(k, onbekend, troef)) {
+  if (regels.tweedeHandLaag && w.slag.length === 1 && k.kleur === gevraagd && gevraagd !== troef && !isVrijeKaart(k, tegen, troef)) {
     const lager = geldig.some((c) => c.kleur === gevraagd && sterkte(c, troef) < sterkte(k, troef));
     if (lager) straf++;
   }
   // Derde hand hoog: kan de laatste speler (tegenpartij) de slag nog nemen, speel dan je vrije kaart.
-  if (regels.derdeHandHoog && w.slag.length === 2 && gevraagd !== troef && !(k.kleur === gevraagd && isVrijeKaart(k, onbekend, troef))) {
-    const baasKaart = geldig.find((c) => c.kleur === gevraagd && isVrijeKaart(c, onbekend, troef) && slaatOver(c, voor.kaart, gevraagd, troef));
-    if (baasKaart && voor.kaart.kleur === gevraagd && !isVrijeKaart(voor.kaart, onbekend, troef)) straf++;
+  if (regels.derdeHandHoog && w.slag.length === 2 && gevraagd !== troef && !(k.kleur === gevraagd && isVrijeKaart(k, tegen, troef))) {
+    const baasKaart = geldig.find((c) => c.kleur === gevraagd && isVrijeKaart(c, tegen, troef) && slaatOver(c, voor.kaart, gevraagd, troef));
+    if (baasKaart && voor.kaart.kleur === gevraagd && !isVrijeKaart(voor.kaart, tegen, troef)) straf++;
   }
   // Geen roem afmaken op een slag die de tegenpartij heeft.
   if (regels.geenRoemWeg && !wint && !maatHeeft) {
@@ -1090,18 +1104,18 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
   // één onbekende kaart van hem roem maakt (zoals ♦7 bij ♦9: de ♦8 maakt een driekaart).
   // Niet als jouw kaart de slag zeker wint: dan is die roem juist voor jullie (Rutgers voorbeeld:
   // Noord ♣B bij ♣V ♣A, de ♣H van Oost maakt 70 roem voor Noord).
-  const zeker = wint && onbekend.every((u) => huidigeWinnaar([...na, { speler: -1, kaart: u }], troef).speler === w.speler);
+  const zeker = wint && tegen.every((u) => huidigeWinnaar([...na, { speler: -1, kaart: u }], troef).speler === w.speler);
   if (regels.roemKlaarleggen && !maatHeeft && !zeker) {
     const naJou = [1, 2, 3].slice(0, 3 - w.slag.length).map((i) => (w.speler + i) % 4);
     if (naJou.some((p) => team(p) !== team(w.speler))) {
       const zonder = w.slag.map((x) => x.kaart);
       const met = na.map((x) => x.kaart);
       const basis = roemInSlag(met, troef).totaal;
-      if (onbekend.some((u) => roemInSlag([...met, u], troef).totaal - basis > roemInSlag([...zonder, u], troef).totaal - roemInSlag(zonder, troef).totaal)) straf++;
+      if (tegen.some((u) => roemInSlag([...met, u], troef).totaal - basis > roemInSlag([...zonder, u], troef).totaal - roemInSlag(zonder, troef).totaal)) straf++;
     }
   }
   // Een tien niet bijspelen zolang de aas nog bij de tegenpartij kan zitten.
-  if (regels.tienBeschermen && k.kleur !== troef && k.rang === '10' && onbekend.some((c) => c.kleur === k.kleur && c.rang === 'A')) {
+  if (regels.tienBeschermen && k.kleur !== troef && k.rang === '10' && tegen.some((c) => c.kleur === k.kleur && c.rang === 'A')) {
     if (!wint && !(maatHeeft && w.slag.length === 3)) straf++;
   }
   // Je laatste troef bewaren voor de laatste slagen (niet bij troef gevraagd: dan moet je).
@@ -1110,14 +1124,14 @@ export function vuistregelStraf(w, k, onbekend = onbekendeKaarten(w), gedektRege
   if (wint) return straf;
   if (k.kleur === troef) {
     if (regels.troefGevraagd && gevraagd === troef) {
-      const elders = onbekend.filter(hoger).length;
+      const elders = tegen.filter(hoger).length;
       if (elders <= w.hand.filter(hoger).length) straf++; // kan nog een slag worden
       const opties = geldigeKaarten(w.hand, w.slag, troef, w.systeem).filter((c) => c.kleur === troef);
       if (opties.some((c) => punten(c, troef) < punten(k, troef))) straf++;
     }
     return straf;
   }
-  const elders = onbekend.filter(hoger).length;
+  const elders = tegen.filter(hoger).length;
   // Gedekte kaart (zoals een heer naast je eigen aas), alleen bij afgooien. Gemeten: kost niets.
   const gedekt = gedektRegel && elders > 0 && elders <= w.hand.filter(hoger).length && k.kleur !== gevraagd;
   if ((elders === 0 || gedekt) && punten(k, troef) > 0) straf++;
