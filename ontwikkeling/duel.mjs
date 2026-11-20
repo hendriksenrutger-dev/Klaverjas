@@ -8,14 +8,14 @@ const W = await import('../src/ai/willekeurig.js');
 
 function speler(cfg, rng) {
   return {
-    draai: (hand, kleur, speler, deler) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim', trekken: cfg.draaiTrekken ?? cfg.trekken }).keuze,
-    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, draaiInfo: cfg.draaiInfo ?? true, vuistregels: cfg.vuist ?? true, slimOpties: cfg.slim ?? A.SLIM_OPTIES, gedektRegel: cfg.gedektRegel ?? true, vuistregelSet: cfg.regels ?? A.VUISTREGELS, marge: cfg.marge ?? A.VUISTREGEL_MARGE, spekMarge: cfg.spekMarge ?? A.SPEK_MARGE, tienUitMarge: cfg.tienUitMarge ?? A.TIEN_UIT_MARGE, trekMarge: cfg.trekMarge ?? A.TREK_MARGE, troefUitMarge: cfg.troefUitMarge ?? A.TROEF_UIT_MARGE, troefBewaarMarge: cfg.troefBewaarMarge ?? A.TROEF_BEWAAR_MARGE, exactVanaf: cfg.exactVanaf ?? 0, exactTop: cfg.exactTop ?? 4, exactSims: cfg.exactSims ?? 40, tienLezen: cfg.tien ?? true, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null }).kaart,
+    draai: (hand, kleur, speler, deler, d = null) => cfg.random ? W.kiesDraai(rng) : A.kiesDraai(hand, kleur, { speler, deler, rng, gepast: d ? R.eerderePassen(d) : [], pasLezen: cfg.pasLezen ?? false, drempel: cfg.drempel ?? A.DRAAI_DREMPEL, simulaties: cfg.draaiSims ?? A.DRAAI_SIMULATIES, strategie: cfg.draaiStrategie ?? cfg.strategie ?? 'slim', trekken: cfg.draaiTrekken ?? cfg.trekken }).keuze,
+    kaart: (potje, s) => cfg.random ? W.kiesKaart(R.geldigVoor(potje, s), rng) : A.kiesKaart(A.waarneming(potje, s), { simulaties: cfg.sims, rng, strategie: cfg.strategie ?? 'slim', trekken: cfg.trekken, trekBonus: cfg.trekBonus ?? A.TREK_BONUS, eindspel: cfg.eindspel ?? A.EINDSPEL_SLAGEN, seinGeven: cfg.geven ?? true, seinStraf: cfg.straf, seinStrafBekennen: cfg.strafBekennen, draaiInfo: cfg.draaiInfo ?? true, vuistregels: cfg.vuist ?? true, slimOpties: cfg.slim ?? A.SLIM_OPTIES, gedektRegel: cfg.gedektRegel ?? true, vuistregelSet: cfg.regels ?? A.VUISTREGELS, marge: cfg.marge ?? A.VUISTREGEL_MARGE, spekMarge: cfg.spekMarge ?? A.SPEK_MARGE, tienUitMarge: cfg.tienUitMarge ?? A.TIEN_UIT_MARGE, trekMarge: cfg.trekMarge ?? A.TREK_MARGE, troefUitMarge: cfg.troefUitMarge ?? A.TROEF_UIT_MARGE, troefBewaarMarge: cfg.troefBewaarMarge ?? A.TROEF_BEWAAR_MARGE, exactVanaf: cfg.exactVanaf ?? 0, exactTop: cfg.exactTop ?? 4, exactSims: cfg.exactSims ?? 40, tienLezen: cfg.tien ?? true, seinLezen: cfg.lezen ?? true, seinFactor: cfg.factor ?? A.SEIN_FACTOR, bekendeHanden: cfg.vals ? potje.handen : null, netwerk: cfg.net ?? null, netVanaf: cfg.netVanaf ?? 0 }).kaart,
   };
 }
 
 function speelDeling(spelers, handen, stapel, deler) {
   let d = R.nieuwDraaien({ stapel, deler, maxRondes: 2 });
-  while (!d.uitkomst) d = R.beslis(d, d.beurt, spelers[d.beurt].draai(handen[d.beurt], d.kaart.kleur, d.beurt, deler));
+  while (!d.uitkomst) d = R.beslis(d, d.beurt, spelers[d.beurt].draai(handen[d.beurt], d.kaart.kleur, d.beurt, deler, d));
   if (d.uitkomst.soort !== 'spelen') return null;
   let p = R.nieuwPotje({ handen, troef: d.uitkomst.troef, spelendTeam: d.uitkomst.team, uitkomer: (deler + 1) % 4, kiezer: d.uitkomst.speler });
   while (!p.klaar) p = R.speelKaart(p, p.beurt, spelers[p.beurt].kaart(p, p.beurt));
@@ -25,7 +25,9 @@ function speelDeling(spelers, handen, stapel, deler) {
 export function duel(cfgA, cfgB, delingen, zaad = 1) {
   const rng = R.maakRng(zaad);
   let verschil = 0, natA = 0, natB = 0, speeltA = 0, speeltB = 0, gespeeld = 0;
+  const perDeling = [];
   for (let n = 0; n < delingen; n++) {
+    let som = 0;
     const handen = R.deel(R.schud(R.maakDeck(), rng), n % 4);
     const stapel = R.schud(R.maakDeck(), rng);
     for (const omgekeerd of [false, true]) {
@@ -36,10 +38,14 @@ export function duel(cfgA, cfgB, delingen, zaad = 1) {
       gespeeld++;
       const tA = omgekeerd ? 1 : 0;
       verschil += r.u.totaal[tA] - r.u.totaal[1 - tA];
+      som += r.u.totaal[tA] - r.u.totaal[1 - tA];
       if (r.spelend === tA) { speeltA++; if (r.u.nat) natA++; } else { speeltB++; if (r.u.nat) natB++; }
     }
+    perDeling.push(som / 2); // per deling (twee potjes, ook als er rondgepast werd)
   }
-  return { gemVerschilPerPotje: +(verschil / gespeeld).toFixed(1), gespeeld, speeltA, natA, speeltB, natB };
+  const gem = perDeling.reduce((a, b) => a + b, 0) / perDeling.length;
+  const sd = Math.sqrt(perDeling.reduce((t, x) => t + (x - gem) ** 2, 0) / (perDeling.length - 1));
+  return { gemVerschilPerPotje: +(verschil / gespeeld).toFixed(1), perDeling: +gem.toFixed(2), foutmarge: +(2 * sd / Math.sqrt(perDeling.length)).toFixed(2), gespeeld, speeltA, natA, speeltB, natB };
 }
 
 // Duel met minder toeval: per deling wordt het contract (troef en spelende partij) één keer

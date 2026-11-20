@@ -89,7 +89,8 @@ export function vraagKaartUitWaarneming(w, niveau = 'normaal') {
 }
 
 export function vraagDraai(hand, kleur, opties, niveau = 'normaal') {
-  opties = { ...opties, strategie: (NIVEAUS[niveau] ?? NIVEAUS.normaal).strategie };
+  const nv = NIVEAUS[niveau] ?? NIVEAUS.normaal;
+  opties = { ...opties, strategie: nv.strategie, ...(nv.draaiSims ? { simulaties: nv.draaiSims } : {}) };
   return vraag('draai', { hand, kleur, opties }, () => kiesDraai(hand, kleur, opties)).then((r) => r.keuze);
 }
 
@@ -101,7 +102,7 @@ export function analyseerKaart(potje, speler) {
 }
 
 export function analyseerDraai(hand, kleur, opties) {
-  opties = { ...opties, strategie: NIVEAUS.sterk.strategie };
+  opties = { ...opties, strategie: NIVEAUS.sterk.strategie, simulaties: NIVEAUS.sterk.draaiSims };
   return vraagAchtergrond('draai', { hand, kleur, opties }, () => kiesDraai(hand, kleur, opties)).then((r) => r.keuze);
 }
 

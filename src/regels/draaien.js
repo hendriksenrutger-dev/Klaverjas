@@ -64,6 +64,16 @@ export function beslis(d, speler, keuze) {
   };
 }
 
+// Wie al gepast heeft, en op welke kleur: iedereen op de kleuren waarop rondgepast is, en op de
+// huidige kleur de spelers vóór wie nu aan de beurt is. De computer leidt daaruit af wie
+// waarschijnlijk weinig troef heeft.
+export function eerderePassen(d) {
+  const uit = [];
+  for (const kleur of d.gepast ?? []) for (let i = 1; i <= 4; i++) uit.push([(d.deler + i) % 4, kleur]);
+  if (d.kaart) for (let i = 0; i < (d.pasTeller ?? 0); i++) uit.push([(d.deler + 1 + i) % 4, d.kaart.kleur]);
+  return uit;
+}
+
 // Alle kaarten die tot nu toe gedraaid zijn (ook de overgeslagen).
 export function gedraaideKaarten(d) {
   return d.stapel.slice(0, d.positie + 1);

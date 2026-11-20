@@ -14,6 +14,7 @@ import { geldigeKaarten } from '../regels/geldig.js';
 import { huidigeWinnaar, slaatOver, slagPunten, punten, sterkte, PUNTEN_LAATSTE_SLAG } from '../regels/rangorde.js';
 import { roemInSlag } from '../regels/roem.js';
 import { uitslag } from '../regels/potje.js';
+import { kiesNet } from './netwerk.js';
 
 // Moeilijkheidsniveaus. Eigen voorstel, nog af te stemmen met Rutger (zie RAPPORT-FASE-4.md).
 // simulaties: aantal kaartverdelingen per zet; strategie: hoe de simulaties worden uitgespeeld;
@@ -79,9 +80,16 @@ export function geeftRoemWeg(w, k) {
 // ander zitten en heb je een troef die boven alle troeven buiten je hand zit, trek dan met die troef.
 // Even streng als spekken, met een ruimere marge: soms wijk je af, maar alleen als het duidelijk beter is.
 export const TREK_MARGE = 40;
+// Onbekende troeven die nog bij de tegenpartij kunnen zitten. Troef die alleen nog bij je maat kan
+// zitten, hoef je niet te trekken (Rutgers voorbeeld Noord ♠10: dan trek je je maats ♠V weg).
+export function troefBijTegenpartij(w, onbekend = onbekendeKaarten(w)) {
+  const uit = uitsluitingen(w, onbekend);
+  const tegen = [0, 1, 2, 3].filter((p) => team(p) !== team(w.speler));
+  return onbekend.filter((c) => c.kleur === w.troef && tegen.some((p) => !uit[p].has(kaartId(c))));
+}
 export function trekKaarten(w, onbekend = onbekendeKaarten(w)) {
   if (w.slag.length || team(w.speler) !== w.spelendTeam) return [];
-  const elders = onbekend.filter((c) => c.kleur === w.troef);
+  const elders = troefBijTegenpartij(w, onbekend);
   if (!elders.length) return [];
   const mijn = w.hand.filter((c) => c.kleur === w.troef);
   const baas = mijn.filter((c) => elders.every((o) => sterkte(c, w.troef) > sterkte(o, w.troef)));
@@ -115,11 +123,12 @@ export function aasVoorTien(w, k, geldig) {
   return team(metAas) === team(w.speler) && team(metTien) === team(w.speler) && roem(aas) >= roem(k) ? aas : null;
 }
 
-// Geen troef uitkomen als niemand anders nog troef kan hebben (Rutger: bewaar die vrije troef, dan
-// haal je er later een slag mee, met een beetje geluk de laatste). Streng, net als doortrekken.
+// Geen troef uitkomen als de tegenpartij geen troef meer kan hebben (Rutger: bewaar die vrije troef,
+// dan haal je er later een slag mee, met een beetje geluk de laatste; en zit de rest bij je maat, dan
+// trek je die maar weg). Streng, net als doortrekken.
 export const TROEF_BEWAAR_MARGE = 40;
 export function isTroefZonderNut(w, k, onbekend = onbekendeKaarten(w)) {
-  return w.slag.length === 0 && k.kleur === w.troef && !onbekend.some((c) => c.kleur === w.troef)
+  return w.slag.length === 0 && k.kleur === w.troef && !troefBijTegenpartij(w, onbekend).length
     && w.hand.some((c) => c.kleur !== w.troef);
 }
 
@@ -241,6 +250,13 @@ export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, fact
 // Eigen keuze, na testen bij te stellen.
 export const DRAAI_DREMPEL = 10;
 export const DRAAI_SIMULATIES = 150;
+// Passen lezen: wie al gepast heeft op een kleur, heeft daarin waarschijnlijk geen sterke troef.
+// Een verdeling telt zwaarder naarmate die passen er beter bij passen (kans op passen volgens SPEELKANS).
+export function pasGewicht(handen, gepast, speler) {
+  let g = 1;
+  for (const [p, kleur] of gepast) if (p !== speler) g *= 1 - (SPEELKANS[kenmerk(handen[p], kleur)] ?? 0.5);
+  return g;
+}
 
 // ---------- Waarneming: alleen wat de speler mag weten ----------
 export function waarneming(potje, speler) {
@@ -614,6 +630,34 @@ function zoek(handen, slag, slagen, beurt, ctx, mijnTeam, alfa, beta) {
   return best;
 }
 
+// Exacte waarde (open kaarten) van elke geldige kaart voor de speler die aan de beurt is.
+// Gebruikt om oefenmateriaal voor het netwerk te maken (ontwikkeling/netwerk/).
+export function kaartWaarden(handen, slag, slagen, beurt, ctx) {
+  const h = handen.map((x) => x.slice());
+  const s = slag.slice();
+  const sl = slagen.slice();
+  const mijn = team(beurt);
+  return geldigeKaarten(h[beurt], s, ctx.troef, ctx.systeem).map((k) => {
+    const i = h[beurt].indexOf(k);
+    h[beurt].splice(i, 1);
+    s.push({ speler: beurt, kaart: k });
+    let v;
+    if (s.length < 4) v = zoek(h, s, sl, (beurt + 1) % 4, ctx, mijn, -Infinity, Infinity);
+    else {
+      const winnaar = huidigeWinnaar(s, ctx.troef).speler;
+      const kaarten = s.map((x) => x.kaart);
+      sl.push({ kaarten: s.slice(), winnaar, punten: slagPunten(kaarten, ctx.troef) + (sl.length === 7 ? PUNTEN_LAATSTE_SLAG : 0), roem: roemInSlag(kaarten, ctx.troef) });
+      const oud = s.splice(0, 4);
+      v = zoek(h, s, sl, winnaar, ctx, mijn, -Infinity, Infinity);
+      s.push(...oud);
+      sl.pop();
+    }
+    s.pop();
+    h[beurt].splice(i, 0, k);
+    return { kaart: k, waarde: v };
+  });
+}
+
 export function eindspelWaarde(handen, slag, slagen, beurt, ctx, mijnTeam) {
   return zoek(handen.map((h) => h.slice()), slag.slice(), slagen.slice(), beurt, ctx, mijnTeam, -Infinity, Infinity);
 }
@@ -627,7 +671,8 @@ function speelUit(handen, slag, slagen, beurt, ctx, rng) {
     const hand = handen[beurt];
     const k = ctx.strategie === 'simpel'
       ? kiesSimpel(hand, slag, troef, systeem, beurt, spelendTeam, rng)
-      : kiesSlim(handen, slag, ctx, beurt, rng);
+      : ctx.net && slagen.length >= (ctx.netVanaf ?? 0) ? kiesNet(ctx.net, handen, slag, slagen, beurt, ctx) // optie B (proef)
+        : kiesSlim(handen, slag, ctx, beurt, rng);
     const i = hand.findIndex((c) => c.kleur === k.kleur && c.rang === k.rang);
     hand.splice(i, 1);
     slag.push({ speler: beurt, kaart: k });
@@ -701,18 +746,18 @@ function opties(o = {}) {
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
   draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, troefUitMarge = TROEF_UIT_MARGE, troefBewaarMarge = TROEF_BEWAAR_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
-  exactVanaf = 0, exactTop = 3, exactSims = 40,
+  exactVanaf = 0, exactTop = 3, exactSims = 40, netwerk = null, netVanaf = 0,
   } = o;
   return { simulaties, rng, strategie, eindspel, seinGeven, seinLezen, seinFactor, bekendeHanden, trekken, trekBonus, seinStraf, seinStrafBekennen,
-    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims };
+    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims, netwerk, netVanaf };
 }
 
 // Rekent voor de gegeven kaarten de gewogen totalen uit over 'simulaties' verdelingen
 // (exact doorgerekend of met de snelle speelstijl). Los te gebruiken, zodat meerdere workers
 // tegelijk kunnen rekenen.
 export function rekenTotalen(w, o, geldig, simulaties, exact) {
-  const { rng, strategie, seinLezen, seinFactor, bekendeHanden, trekken, draaiInfo, tienLezen, tienFactor, slimOpties } = opties(o);
-  const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie, trekken, opties: slimOpties };
+  const { rng, strategie, seinLezen, seinFactor, bekendeHanden, trekken, draaiInfo, tienLezen, tienFactor, slimOpties, netwerk, netVanaf } = opties(o);
+  const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie, trekken, opties: slimOpties, net: netwerk, netVanaf };
   const onbekend = onbekendeKaarten(w);
   const uit = uitsluitingen(w, onbekend);
   const seinen = seinLezen && !bekendeHanden ? seinenVanAnderen(w, onbekend) : [];
@@ -1097,19 +1142,23 @@ export function kiesVerplicht(hand, opties = {}) {
 // verwachte verschil (wij − zij) boven de drempel ligt.
 export function kiesDraai(hand, kleur, {
   speler, deler, systeem = 'amsterdams', simulaties = DRAAI_SIMULATIES, drempel = DRAAI_DREMPEL, rng = Math.random, strategie = 'slim', trekken = true,
+  gepast = [], pasLezen = false, // gemeten: levert niets op (zie CLAUDE.md), daarom uit
 } = {}) {
   const ids = new Set(hand.map(kaartId));
   const rest = maakDeck().filter((k) => !ids.has(kaartId(k)));
   const ctx = { troef: kleur, systeem, spelendTeam: team(speler), strategie, trekken };
-  let som = 0;
+  let som = 0, gewichten = 0;
+  const lees = pasLezen && gepast.some(([p]) => p !== speler);
   for (let n = 0; n < simulaties; n++) {
     const geschud = schudIn(rest.slice(), rng);
     const handen = [[], [], [], []];
     handen[speler] = hand.slice();
     let pos = 0;
     for (let p = 0; p < 4; p++) if (p !== speler) handen[p] = geschud.slice(pos, (pos += 8));
-    som += verschil(speelUit(handen, [], [], (deler + 1) % 4, ctx, rng), speler);
+    const g = lees ? pasGewicht(handen, gepast, speler) : 1;
+    gewichten += g;
+    som += g * verschil(speelUit(handen, [], [], (deler + 1) % 4, ctx, rng), speler);
   }
-  const gemiddeld = som / simulaties;
+  const gemiddeld = som / gewichten;
   return { keuze: gemiddeld > drempel ? 'spelen' : 'passen', gemiddeld };
 }
