@@ -127,16 +127,20 @@ Met seinen vertel je je maat iets over je kaarten, zonder te praten.
 - Je seint alleen door **bij te spelen op een slag die je maat al heeft**, nooit met troef. Is er troef gevraagd, dan alleen als je maat zelf troef trekt en de slag heeft.
 - **Een kleintje (7, 8 of 9) bijspelen** betekent: "ik heb de aas van deze kleur".
 - **De aas bijspelen** betekent: "ik heb ook de tien van deze kleur".
-- Een tien, boer, vrouw of heer bijspelen is geen sein.
+- **Een tien, boer, vrouw of heer bijspelen** is afseinen: "ik heb de aas van deze kleur niet".
 - Een sein is een sterke aanwijzing, geen zekerheid: soms had iemand gewoon niets anders.
 
 **Opdracht 1** — Troef is klaveren. West komt uit met ♠9, Noord speelt ♠A, Oost ♠8. Noord heeft de slag.
 Jouw hand: ♥A ♥8 ♥V ♦10 ♦B ♣7 ♣H ♦8 (geen schoppen).
 Vraag: laat Noord weten dat je de aas van harten hebt. → **♥8**
 Fout met ♥A: "Daarmee zeg je: ik heb ook de tien van harten."
+Fout met ♥V: "Daarmee sein je juist af: \"ik heb de aas van harten niet\"."
 
 **Opdracht 2** — Troef is klaveren. Jij komt uit met ♠A en hebt de slag. Noord heeft geen schoppen en speelt ♦7 bij.
 Vraag: wat zegt Noord daarmee? Keuze: "ik heb ♦A" · "ik heb ♦10" · "ik heb geen ruiten" → **"ik heb ♦A"**.
+
+**Opdracht 3** (nieuw, 20 november 2026, nog te controleren door Rutger) — Troef is klaveren. Jij komt uit met ♠A en hebt de slag. Noord heeft geen schoppen en speelt ♦V bij.
+Vraag: wat zegt Noord daarmee? Keuze: "ik heb ♦A" · "ik heb ♦A niet" · "niets" → **"ik heb ♦A niet"**.
 
 ---
 

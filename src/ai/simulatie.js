@@ -117,7 +117,7 @@ export function trekKaarten(w, onbekend = onbekendeKaarten(w)) {
 }
 
 // Als tegenpartij kom je niet met troef uit (Rutger: dat moet je niet doen). Streng, net als spekken.
-export const TROEF_UIT_MARGE = 40;
+export const TROEF_UIT_MARGE = 60; // was 40; Rutger: als tegenpartij liever je troef bewaren om een slag te kapen
 export function isTroefUitTegen(w, k) {
   return w.slag.length === 0 && team(w.speler) !== w.spelendTeam && k.kleur === w.troef;
 }
@@ -153,8 +153,18 @@ export function isSpek(w, k) {
 }
 
 const KLEINTJES = new Set(['7', '8', '9']);
+const HOGE = new Set(['10', 'B', 'V', 'H']);
+
+// Klopt sein s met deze hand? Een afsein (niet: true) klopt als de kaart er juist niet in zit.
+export function seinKlopt(s, hand) {
+  const heeft = hand.some((c) => c.kleur === s.kaart.kleur && c.rang === s.kaart.rang);
+  return s.niet ? !heeft : heeft;
+}
 
 // Geeft het sein dat 'speler' geeft door 'kaart' te spelen op slag 'slagVoor', of null.
+//   kleintje (7, 8, 9)      → "ik heb de aas"
+//   aas                     → "ik heb ook de tien"
+//   tien, boer, vrouw, heer → afseinen: "ik heb de aas niet" (Rutger, 20 november 2026) → { niet: true }
 export function seinVan(slagVoor, speler, kaart, troef) {
   if (slagVoor.length === 0) return null;
   if (kaart.kleur === troef) return null;
@@ -164,6 +174,7 @@ export function seinVan(slagVoor, speler, kaart, troef) {
   if (slagVoor[0].kaart.kleur === troef && slagVoor[0].speler !== w.speler) return null;
   if (KLEINTJES.has(kaart.rang)) return { speler, kaart: { kleur: kaart.kleur, rang: 'A' } };
   if (kaart.rang === 'A') return { speler, kaart: { kleur: kaart.kleur, rang: '10' } };
+  if (HOGE.has(kaart.rang)) return { speler, kaart: { kleur: kaart.kleur, rang: 'A' }, niet: true };
   return null;
 }
 
@@ -232,9 +243,8 @@ function laterGespeeld(w, speler, voor) {
 // - bij bekennen (in plaats van afgooien) altijd hooguit een zwakke aanwijzing.
 export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, factorZwak = SEIN_FACTOR_ZWAK) {
   let g = 1;
-  const heeft = (hand, k) => hand.some((c) => c.kleur === k.kleur && c.rang === k.rang);
   for (const s of seinen) {
-    if (heeft(handen[s.speler], s.kaart)) continue;
+    if (seinKlopt(s, handen[s.speler])) continue;
     if (!s.context || !w) { g /= factor; continue; }
     const toen = [...handen[s.speler], ...laterGespeeld(w, s.speler, s.context.voor)];
     const opties = geldigeKaarten(toen, s.context.voor, w.troef, w.systeem);
@@ -242,7 +252,7 @@ export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, fact
     const eerlijk = opties.filter((k) => {
       if (k.kleur === gespeeld.kleur && k.rang === gespeeld.rang) return false;
       const ander = seinVan(s.context.voor, s.speler, k, w.troef);
-      return !ander || heeft(toen, ander.kaart);
+      return !ander || seinKlopt(ander, toen);
     });
     if (eerlijk.length === 0) continue; // gedwongen: de kaart zegt niets
     // Bij bekennen is een kleintje vaak gewoon de verstandige kaart: hooguit een zwakke aanwijzing.
@@ -831,8 +841,7 @@ function correcties(w, o, geldig, onbekend) {
     if (!seinGeven) return 0;
     const sein = seinVan(w.slag, w.speler, k, w.troef);
     if (!sein || gespeeld.has(kaartId(sein.kaart))) return 0;
-    const waar = w.hand.some((c) => c.kleur === sein.kaart.kleur && c.rang === sein.kaart.rang);
-    if (waar) return SEIN_BONUS;
+    if (seinKlopt(sein, w.hand)) return SEIN_BONUS;
     const bekent = w.slag.length > 0 && k.kleur === w.slag[0].kaart.kleur;
     return -(bekent ? seinStrafBekennen : seinStraf);
   });
@@ -1012,7 +1021,7 @@ const isVrijeKaart = (k, onbekend, troef) => !onbekend.some((c) => c.kleur === k
 function maatKleuren(w, onbekend) {
   const maat = (w.speler + 2) % 4;
   const kleuren = new Set();
-  for (const sein of seinenVanAnderen(w, onbekend)) if (sein.speler === maat) kleuren.add(sein.kaart.kleur);
+  for (const sein of seinenVanAnderen(w, onbekend)) if (sein.speler === maat && !sein.niet) kleuren.add(sein.kaart.kleur);
   for (const sl of w.slagen) if (sl.kaarten[0].speler === maat && sl.kaarten[0].kaart.kleur !== w.troef) kleuren.add(sl.kaarten[0].kaart.kleur);
   return kleuren;
 }

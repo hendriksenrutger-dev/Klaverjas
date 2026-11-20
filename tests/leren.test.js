@@ -53,7 +53,9 @@ describe('leerpad: uitleg', () => {
     assert.equal(roemUitleg({ totaal: 70, items: [{ soort: 'vierkaart', punten: 50 }, { soort: 'stuk', punten: 20 }] }),
       'Roem: vierkaart: vier opeenvolgende kaarten van één kleur (50) + stuk: heer en vrouw van troef (20).');
     const voor = [{ speler: 3, kaart: K('k9') }, { speler: 0, kaart: K('kA') }, { speler: 1, kaart: K('k8') }];
-    assert.match(seinUitleg(voor, 2, K('k7'), 'harten', 'Noord'), /Noord heeft waarschijnlijk de aas van klaveren/);
-    assert.equal(seinUitleg(voor, 2, K('kH'), 'harten', 'Noord'), '');
+    assert.equal(seinUitleg(voor, 2, K('kH'), 'harten', 'Noord'), ''); // de ♣A ligt al op tafel: zegt niets
+    const voor2 = [{ speler: 3, kaart: K('s9') }, { speler: 0, kaart: K('sA') }, { speler: 1, kaart: K('s8') }];
+    assert.match(seinUitleg(voor2, 2, K('k7'), 'harten', 'Noord'), /Noord heeft waarschijnlijk de aas van klaveren/);
+    assert.match(seinUitleg(voor2, 2, K('rV'), 'harten', 'Noord'), /Noord seint af.*heeft waarschijnlijk de aas van ruiten niet/);
   });
 });
