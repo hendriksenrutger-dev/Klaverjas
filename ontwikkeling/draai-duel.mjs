@@ -9,6 +9,7 @@ const V = {
   d5: [{ ...basis, drempel: 5 }, { ...basis }],
   d15: [{ ...basis, drempel: 15 }, { ...basis }],
   d20: [{ ...basis, drempel: 20 }, { ...basis }],
+  s300: [{ ...basis, draaiSims: 300 }, { ...basis }],
 }[welke];
 const start = Date.now();
 console.log(welke, JSON.stringify(duel(V[0], V[1], +n, +z)), `${Math.round((Date.now() - start) / 1000)} s`);
