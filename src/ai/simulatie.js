@@ -183,15 +183,20 @@ export function seinVan(slagVoor, speler, kaart, troef) {
 export function seinenVanAnderen(w, onbekend = onbekendeKaarten(w)) {
   const open = new Set(onbekend.map(kaartId));
   const lijst = [];
+  const aasGeseind = new Set(); // speler-kleur: eerder een kleintje bijgespeeld ("ik heb de aas")
   for (const kaarten of [...w.slagen.map((s) => s.kaarten), w.slag]) {
     for (let i = 1; i < kaarten.length; i++) {
       const { speler, kaart } = kaarten[i];
       if (speler === w.speler) continue;
       const voor = kaarten.slice(0, i);
       const sein = seinVan(voor, speler, kaart, w.troef);
+      if (sein && !sein.niet && sein.kaart.rang === 'A') aasGeseind.add(`${speler}-${kaart.kleur}`);
       if (sein && open.has(kaartId(sein.kaart))) {
+        // Bevestigd sein (Rutgers voorbeeld Zuid ♣9 en daarna ♣A): eerst "ik heb de aas", dan die
+        // aas bijspelen = "ik heb ook de tien". Dat is geen toeval, dus altijd een sterke aanwijzing.
+        const bevestigd = kaart.rang === 'A' && aasGeseind.has(`${speler}-${kaart.kleur}`);
         // Bewaar ook de situatie, om later per verdeling te beoordelen of de seiner keus had.
-        Object.defineProperty(sein, 'context', { value: { voor, kaart }, enumerable: false });
+        Object.defineProperty(sein, 'context', { value: { voor, kaart, bevestigd }, enumerable: false });
         lijst.push(sein);
       }
     }
@@ -246,7 +251,7 @@ export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, fact
   let g = 1;
   for (const s of seinen) {
     if (seinKlopt(s, handen[s.speler])) continue;
-    if (!s.context || !w) { g /= factor; continue; }
+    if (!s.context || !w || s.context.bevestigd) { g /= factor; continue; }
     const toen = [...handen[s.speler], ...laterGespeeld(w, s.speler, s.context.voor)];
     const opties = geldigeKaarten(toen, s.context.voor, w.troef, w.systeem);
     const gespeeld = s.context.kaart;

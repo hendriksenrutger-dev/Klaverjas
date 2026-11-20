@@ -857,3 +857,34 @@ describe('vuistregels: kaarten van de maat (vervolg, één voorbeeld per regel)'
     assert.equal(await extra(ww, K('s8'), 'troefGevraagd'), 1); // ook de ♠8 kan nog een slag worden (West en Oost hebben geen troef)
   });
 });
+
+describe('bevestigd sein (Rutgers potje: Zuid ♣9, ♥9 en daarna ♣A)', () => {
+  // Troef ruiten, Noord speelt. Zuid seinde ♣A (♣9), gooide ♥9 weg en speelde ♣A bij ("ook de tien").
+  // Slag 7: Noord heeft ♥8 en ♣V. Klaveren naar Zuid geeft pit; met ♥8 gaan twee slagen verloren.
+  const handen = [Ks('rH r10 s8 k9 h9 kA kH k10'), Ks('rV r8 sH s7 kB h7 hH hB'), Ks('r9 rB s10 sV sA sB h8 kV'), Ks('r7 rA s9 k8 k7 hV hA h10')];
+  const slagen = ['r9 r7 rH rV', 'rB rA r10 r8', 's10 s9 s8 sH', 'sV k8 k9 s7', 'sA k7 h9 kB', 'sB hV kA h7'].map(Ks);
+  function stand() {
+    let p = nieuwPotje({ handen: handen.map((h) => h.slice()), troef: 'ruiten', spelendTeam: 0, uitkomer: 2, kiezer: 2 });
+    for (const s of slagen) for (const k of s) p = speelKaart(p, p.beurt, k);
+    return p;
+  }
+
+  test('aas bijspelen na een kleintje in dezelfde kleur is een bevestigd sein', () => {
+    const seinen = seinenVanAnderen(waarneming(stand(), 2));
+    const tien = seinen.find((s) => s.kaart.kleur === 'klaveren' && s.kaart.rang === '10');
+    assert.ok(tien.context.bevestigd);
+    assert.ok(!seinen.find((s) => s.kaart.kleur === 'harten').context.bevestigd);
+  });
+
+  test('bevestigd sein telt ook als de seiner geen eerlijk alternatief had', () => {
+    const w = waarneming(stand(), 2);
+    const seinen = seinenVanAnderen(w).filter((s) => s.kaart.kleur === 'klaveren');
+    // Zuid met ♥A ♥H: toen had hij alleen valse alternatieven, maar het bevestigde sein klopt niet.
+    assert.equal(seinGewicht([Ks('hA hH'), [], [], []], seinen, 10, w), 1 / 10);
+  });
+
+  test('Noord speelt in slag 7 klaveren naar Zuid', () => {
+    const r = kiesKaart(waarneming(stand(), 2), { simulaties: 300, eindspel: 3, rng: maakRng(5) });
+    assert.equal(kaartId(r.kaart), 'klaveren-V');
+  });
+});
