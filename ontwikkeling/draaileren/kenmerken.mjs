@@ -1,4 +1,3 @@
-const TROEFVOLG = 0;
 export function kenmerkenDraai(r) {
   const h = r.hand.map((id) => { const [kleur, rang] = id.split('-'); return { kleur, rang }; });
   const tr = h.filter((k) => k.kleur === r.troef);
