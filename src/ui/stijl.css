@@ -184,6 +184,8 @@ button { font: inherit; }
 .draai-tekst { font-size: 21px; text-align: center; white-space: nowrap; }
 .draai-tekst strong { color: var(--goud); }
 .draai-knoppen { display: flex; gap: 12px; }
+.draai-knoppen:not(.troef-kiezen) { gap: 48px; } /* Passen links, Spelen rechts, ruim uit elkaar (Rutger) */
+.draai-keuze { min-width: 140px; } /* even groot en dezelfde kleur: geen knop die je naar zich toe trekt */
 .troef-kiezen .troefknop { min-width: 64px; min-height: 64px; padding: 0; display: grid; place-items: center; color: var(--zwart); background: var(--creme); border-color: rgba(232, 200, 115, 0.7); }
 .troef-kiezen .troefknop.rood { color: var(--rood); }
 .troef-kiezen .troefknop .sym { width: 34px; height: 34px; fill: currentColor; }
@@ -639,6 +641,7 @@ button { font: inherit; }
   .knop.goud { min-height: 42px; padding: 0 20px; font-size: 16px; }
   .draai-tekst { font-size: 15px; }
   .draai-knoppen { gap: 8px; }
+  .draai-knoppen:not(.troef-kiezen) { gap: 28px; }
   .troef-kiezen .troefknop { min-width: 44px; min-height: 44px; }
   .troef-kiezen .troefknop .sym { width: 24px; height: 24px; }
   .bubbel { font-size: 14px; padding: 5px 12px; border-radius: 16px; }

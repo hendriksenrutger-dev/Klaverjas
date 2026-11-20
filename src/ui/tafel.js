@@ -127,8 +127,8 @@ function midden(spel) {
       }
       if (i === 0 && jij) {
         return `<div class="bubbel-plek zuid" data-sleutel="bubbel-zuid-knoppen"><div class="draai-knoppen">
-          <button class="knop goud" data-actie="draai" data-keuze="spelen">Spelen</button>
-          <button class="knop licht" data-actie="draai" data-keuze="passen">Passen</button></div></div>`;
+          <button class="knop licht draai-keuze" data-actie="draai" data-keuze="passen">Passen</button>
+          <button class="knop licht draai-keuze" data-actie="draai" data-keuze="spelen">Spelen</button></div></div>`;
       }
       if (!inhoud) return '';
       return `<div class="bubbel-plek ${pl.plek}" data-sleutel="bubbel-${pl.plek}-${soort}"><div class="bubbel ${soort}">${inhoud}</div></div>`;
