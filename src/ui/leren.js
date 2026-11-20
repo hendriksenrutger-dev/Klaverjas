@@ -65,7 +65,8 @@ export function roemUitleg(roem) {
 // Melding bij een sein van je maat. slagVoor = de slag voordat de maat bijspeelde.
 export function seinUitleg(slagVoor, maat, kaart, troef, naam) {
   const sein = seinVan(slagVoor, maat, kaart, troef);
-  if (!sein) return '';
+  if (!sein || slagVoor.some((x) => x.kaart.kleur === sein.kaart.kleur && x.kaart.rang === sein.kaart.rang)) return ''; // ligt al op tafel
+  if (sein.niet) return `${naam} seint af: ${kaartTekst(kaart)} bijgespeeld op een slag van jullie. ${naam} heeft waarschijnlijk de aas van ${NAAM_KLEUR[kaart.kleur]} niet.`;
   const wat = sein.kaart.rang === 'A' ? `de aas van ${NAAM_KLEUR[kaart.kleur]}` : `ook de tien van ${NAAM_KLEUR[kaart.kleur]}`;
   const hoe = sein.kaart.rang === 'A' ? 'een kleintje' : 'de aas';
   return `${naam} seint: ${hoe} (${kaartTekst(kaart)}) bijgespeeld op een slag van jullie. ${naam} heeft waarschijnlijk ${wat}.`;
@@ -91,7 +92,11 @@ export function hintUitleg(w, geldig, kaart) {
     return STANDAARD_UITLEG;
   }
   const sein = seinVan(slag, speler, kaart, troef);
-  if (sein && w.hand.some((c) => c.kleur === sein.kaart.kleur && c.rang === sein.kaart.rang)) {
+  const opTafel = sein && [...slag, ...(w.slagen ?? []).flatMap((s) => s.kaarten)].some((x) => x.kaart.kleur === sein.kaart.kleur && x.kaart.rang === sein.kaart.rang);
+  if (sein && sein.niet && !opTafel && !w.hand.some((c) => c.kleur === sein.kaart.kleur && c.rang === 'A')) {
+    return `Afseinen: een tien, boer, vrouw of heer bijspelen op de slag van je maat betekent "ik heb de aas van ${NAAM_KLEUR[kaart.kleur]} niet".`;
+  }
+  if (sein && !sein.niet && w.hand.some((c) => c.kleur === sein.kaart.kleur && c.rang === sein.kaart.rang)) {
     return sein.kaart.rang === 'A'
       ? `Sein: een kleintje bijspelen op de slag van je maat betekent "ik heb de aas van ${NAAM_KLEUR[kaart.kleur]}".`
       : `Sein: de aas bijspelen op de slag van je maat betekent "ik heb ook de tien van ${NAAM_KLEUR[kaart.kleur]}".`;

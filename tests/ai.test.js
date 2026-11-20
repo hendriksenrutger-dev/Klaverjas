@@ -251,8 +251,15 @@ describe('seinen herkennen', () => {
     assert.deepEqual(sein(2, 'kA k8', 'sA'), { speler: 0, kaart: { kleur: 'schoppen', rang: '10' } });
   });
 
-  test('tien, boer, vrouw of heer: geen sein', () => {
-    for (const k of ['s10', 'sB', 'sV', 'sH']) assert.equal(sein(2, 'kA k8', k), null);
+  test('tien, boer, vrouw of heer: afseinen, "ik heb de aas niet" (Rutger)', () => {
+    for (const k of ['s10', 'sB', 'sV', 'sH']) assert.deepEqual(sein(2, 'kA k8', k), { speler: 0, kaart: { kleur: 'schoppen', rang: 'A' }, niet: true });
+  });
+
+  test('seinKlopt: een afsein klopt als de aas er juist niet in zit', async () => {
+    const { seinKlopt } = await import('../src/ai/simulatie.js');
+    const af = { speler: 2, kaart: { kleur: 'schoppen', rang: 'A' }, niet: true };
+    assert.equal(seinKlopt(af, Ks('s10 h7')), true);
+    assert.equal(seinKlopt(af, Ks('sA h7')), false);
   });
 
   test('maat heeft de slag niet: geen sein', () => {
