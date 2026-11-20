@@ -252,6 +252,11 @@ button { font: inherit; }
 
 /* ---------- Schudden en delen ---------- */
 .delen-midden { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
+/* De stapel ligt voor de deler, zodat het delen bij hem vandaan komt. */
+.delen-midden.deler-noord { transform: translate(-50%, calc(-50% - var(--kh) * 0.5)); }
+.delen-midden.deler-zuid { transform: translate(-50%, calc(-50% + var(--kh) * 1.2)); }
+.delen-midden.deler-west { transform: translate(calc(-50% - var(--kb-tafel) * 2.6), -50%); }
+.delen-midden.deler-oost { transform: translate(calc(-50% + var(--kb-tafel) * 2.6), -50%); }
 .stapel-delen { position: relative; width: var(--kb-tafel); height: var(--kh); }
 .stapel-delen .kaart.rug { position: absolute; left: 0; top: 0; }
 .stapel-delen .kaart.rug:nth-child(2) { left: 3px; top: -3px; }
@@ -262,6 +267,7 @@ button { font: inherit; }
 @keyframes schud-r { 50% { transform: translateX(22%) rotate(6deg); } }
 .vliegend { position: fixed; z-index: 20; pointer-events: none; }
 .vliegend .kaart { width: 100%; height: 100%; }
+.vliegend .pakje-kaart { position: absolute; inset: 0; transform-origin: 50% 90%; }
 
 /* ---------- Groot troefsymbool ---------- */
 .troef-groot {
@@ -599,6 +605,7 @@ button { font: inherit; }
    Alleen bij een schermhoogte onder 500 beeldpunten; op de tablet verandert niets.
    Verticale indeling: balk · Noord · slag (2 kaarthoogtes) · hint · hand. */
 @media (orientation: landscape) and (max-height: 500px) {
+  .delen-midden.deler-zuid { transform: translate(-50%, calc(-50% + var(--kh) * 0.6)); }
   :root {
     --balk-h: 40px;
     --noord-h: 40px;
