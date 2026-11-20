@@ -11,6 +11,8 @@ const V = {
   d15: [{ ...basis, drempel: 15 }, { ...basis }],
   d20: [{ ...basis, drempel: 20 }, { ...basis }],
   geleerd: [{ ...basis, geleerd: process.env.W && JSON.parse(fs.readFileSync(process.env.W)) }, { ...basis }],
+  twee: [{ ...basis, draaiGeleerd: true, tweeTroef: 'alle' }, { ...basis, draaiGeleerd: true }],
+  ba: [{ ...basis, draaiGeleerd: true, tweeTroef: 'BA' }, { ...basis, draaiGeleerd: true }],
   s300: [{ ...basis, draaiSims: 300 }, { ...basis }],
 }[welke];
 const start = Date.now();

@@ -38,6 +38,7 @@ export const NIVEAUS = {
 
 // Eigen ontwerpkeuzes, niet beproefd; bij te stellen na testen:
 export const SEIN_FACTOR = 10; // verdeling waarin een sein klopt telt zoveel keer zwaarder
+export const SEIN_FACTOR_AAS = 10; // idem voor een bijgespeelde aas: altijd sterk (Rutger)
 export const SEIN_FACTOR_ZWAK = 2; // idem, als de seiner geen goedkoop eerlijk alternatief had
 export const SEIN_BONUS = 3; // voorkeur (in punten) voor een kaart die een waar sein geeft
 // Afkeer (in punten) van een kaart die een vals sein zou geven. Bij afgooien kies je vrij welke kleur,
@@ -246,6 +247,10 @@ export function seinGewicht(handen, seinen, factor = SEIN_FACTOR, w = null, fact
   let g = 1;
   for (const s of seinen) {
     if (seinKlopt(s, handen[s.speler])) continue;
+    // Een aas bijspelen ("ik heb ook de tien") is altijd een sterk sein (Rutger: niemand gooit
+    // zomaar een aas weg). Een kleintje kan ook weg om een reeks in een andere kleur te houden;
+    // daarvoor blijft de beoordeling hieronder (keus gehad, goedkoop alternatief).
+    if (!s.niet && s.kaart.rang === '10') { g /= SEIN_FACTOR_AAS; continue; }
     if (!s.context || !w) { g /= factor; continue; }
     const toen = [...handen[s.speler], ...laterGespeeld(w, s.speler, s.context.voor)];
     const opties = geldigeKaarten(toen, s.context.voor, w.troef, w.systeem);
