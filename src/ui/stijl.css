@@ -267,6 +267,7 @@ button { font: inherit; }
 @keyframes schud-r { 50% { transform: translateX(22%) rotate(6deg); } }
 .vliegend { position: fixed; z-index: 20; pointer-events: none; }
 .vliegend .kaart { width: 100%; height: 100%; }
+.vliegend .pakje-kaart { position: absolute; inset: 0; transform-origin: 50% 90%; }
 
 /* ---------- Groot troefsymbool ---------- */
 .troef-groot {

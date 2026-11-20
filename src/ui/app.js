@@ -258,7 +258,7 @@ async function schudEnDeel(token) {
       for (let n = 1; n <= 4; n++) {
         if (token !== beurtToken) return;
         const speler = (spel.partij.deler + n) % 4;
-        vliegPakje(speler);
+        vliegPakje(speler, aantal);
         geluid.deelTik();
         await wacht(110);
         spel.zichtbaar[speler] += aantal;
@@ -280,7 +280,7 @@ async function schudEnDeel(token) {
 }
 
 // Een pakje kaartruggen vliegt van de stapel in het midden naar de plek van de speler.
-function vliegPakje(speler) {
+function vliegPakje(speler, aantal = 1) {
   const van = document.querySelector('.stapel-delen');
   const doelSel = speler === JIJ ? '.hand' : `.speler.${['zuid', 'west', 'noord', 'oost'][speler]} .ruggen`;
   const naar = document.querySelector(doelSel);
@@ -289,7 +289,12 @@ function vliegPakje(speler) {
   const b = naar.getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'vliegend';
-  el.innerHTML = van.querySelector('.kaart.rug')?.outerHTML ?? '';
+  // Een klein waaiertje van evenveel ruggen als er kaarten in het pakje zitten (3 of 2).
+  const rug = van.querySelector('.kaart.rug')?.outerHTML ?? '';
+  el.innerHTML = Array.from({ length: aantal }, (_, i) => {
+    const m = i - (aantal - 1) / 2;
+    return `<div class="pakje-kaart" style="transform: translateX(${m * 14}%) rotate(${m * 7}deg)">${rug}</div>`;
+  }).join('');
   el.style.left = `${a.left}px`;
   el.style.top = `${a.top}px`;
   el.style.width = `${a.width}px`;
