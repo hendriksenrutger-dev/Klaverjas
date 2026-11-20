@@ -99,7 +99,9 @@ function spelerHtml(spel, i) {
 // ---------- Midden van de tafel ----------
 function midden(spel) {
   if (spel.fase === 'delen') {
-    return `<div class="midden"><div class="delen-midden"><div class="stapel stapel-delen ${spel.schudt ? 'schudt' : ''}">${rugHtml()}${rugHtml()}${rugHtml()}</div></div></div>`;
+    // De stapel ligt voor de deler: de kaarten komen bij hem vandaan.
+    const deler = ['zuid', 'west', 'noord', 'oost'][spel.partij.deler];
+    return `<div class="midden"><div class="delen-midden deler-${deler}"><div class="stapel stapel-delen ${spel.schudt ? 'schudt' : ''}">${rugHtml()}${rugHtml()}${rugHtml()}</div></div></div>`;
   }
   if (spel.fase === 'draaien' || spel.fase === 'opnieuwDelen') {
     const d = spel.draaien;
