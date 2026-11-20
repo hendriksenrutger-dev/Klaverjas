@@ -6,7 +6,9 @@ const [, , oudMap, n = '150', z = '1'] = process.argv;
 const R = await import('../src/regels/index.js');
 const NIEUW = await import('../src/ai/simulatie.js');
 const OUD = await import(path.resolve(oudMap, 'src/ai/simulatie.js'));
-const speler = (A, rng) => ({ kaart: (p, s) => A.kiesKaart(A.waarneming(p, s), { ...A.NIVEAUS.normaal, rng }).kaart });
+// SEINF=<getal>: andere seinfactor (kleintjes) voor de nieuwe versie, om te meten.
+const extra = process.env.SEINF ? { seinFactor: +process.env.SEINF } : {};
+const speler = (A, rng) => ({ kaart: (p, s) => A.kiesKaart(A.waarneming(p, s), { ...A.NIVEAUS.normaal, ...(A === NIEUW ? extra : {}), rng }).kaart });
 let verschil = 0, gespeeld = 0;
 const per = [];
 for (let d = 0; d < +n; d++) {

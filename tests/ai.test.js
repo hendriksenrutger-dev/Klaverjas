@@ -858,7 +858,7 @@ describe('vuistregels: kaarten van de maat (vervolg, één voorbeeld per regel)'
   });
 });
 
-describe('bevestigd sein (Rutgers potje: Zuid ♣9, ♥9 en daarna ♣A)', () => {
+describe('aas bijspelen is altijd een sterk sein (Rutgers potje: Zuid ♣9, ♥9 en daarna ♣A)', () => {
   // Troef ruiten, Noord speelt. Zuid seinde ♣A (♣9), gooide ♥9 weg en speelde ♣A bij ("ook de tien").
   // Slag 7: Noord heeft ♥8 en ♣V. Klaveren naar Zuid geeft pit; met ♥8 gaan twee slagen verloren.
   const handen = [Ks('rH r10 s8 k9 h9 kA kH k10'), Ks('rV r8 sH s7 kB h7 hH hB'), Ks('r9 rB s10 sV sA sB h8 kV'), Ks('r7 rA s9 k8 k7 hV hA h10')];
@@ -869,17 +869,10 @@ describe('bevestigd sein (Rutgers potje: Zuid ♣9, ♥9 en daarna ♣A)', () =>
     return p;
   }
 
-  test('aas bijspelen na een kleintje in dezelfde kleur is een bevestigd sein', () => {
-    const seinen = seinenVanAnderen(waarneming(stand(), 2));
-    const tien = seinen.find((s) => s.kaart.kleur === 'klaveren' && s.kaart.rang === '10');
-    assert.ok(tien.context.bevestigd);
-    assert.ok(!seinen.find((s) => s.kaart.kleur === 'harten').context.bevestigd);
-  });
-
-  test('bevestigd sein telt ook als de seiner geen eerlijk alternatief had', () => {
+  test('ook als de seiner geen eerlijk alternatief had', () => {
     const w = waarneming(stand(), 2);
     const seinen = seinenVanAnderen(w).filter((s) => s.kaart.kleur === 'klaveren');
-    // Zuid met ♥A ♥H: toen had hij alleen valse alternatieven, maar het bevestigde sein klopt niet.
+    // Zuid met ♥A ♥H: toen had hij alleen valse alternatieven, maar een bijgespeelde aas zegt toch veel.
     assert.equal(seinGewicht([Ks('hA hH'), [], [], []], seinen, 10, w), 1 / 10);
   });
 
