@@ -84,6 +84,7 @@ Een reclamevrije klaverjas-app (PWA) waarin Rutger solo speelt tegen drie comput
 - Een kleintje kan ook gespeeld zijn omdat iemand niets anders had. **Een sein is een sterke aanwijzing, geen zekerheid.**
 - Kleintje boer en andere seinsystemen: niet gebruiken.
 - **Uitwerking in de AI (na Rutgers voorbeeld ♠H i.p.v. ♠8):** bij **afgooien** vermijden de computers een vals sein sterk (betrouwbaar sein). Bij **bekennen** maar licht: daar is een kleintje vaak gewoon de verstandige kaart, dus een kleintje bij bekennen is hooguit een zwakke aanwijzing. Zo lezen de computers het ook.
+- **Aas bijspelen** (Rutger, na het potje met Zuid ♣9, ♥9, ♣A: "een aas is een heel sterk sein") telt bij het lezen altijd als sterk sein (`SEIN_FACTOR_AAS` 10), ook als de speler verder alleen andere seinkaarten had. Een kleintje kan ook weg om een reeks in een andere kleur te houden; dat blijft beoordeeld zoals hierboven. Gemeten: aas +0,1 ± 0,8 punt per potje (komt weinig voor); kleintjes lichter laten tellen (factor 4 i.p.v. 10) −0,9 ± 1,2, dus niet gedaan.
 
 ## Computerspelers (AI)
 
