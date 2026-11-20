@@ -14,6 +14,7 @@ import { geldigeKaarten } from '../regels/geldig.js';
 import { huidigeWinnaar, slaatOver, slagPunten, punten, sterkte, PUNTEN_LAATSTE_SLAG } from '../regels/rangorde.js';
 import { roemInSlag } from '../regels/roem.js';
 import { uitslag } from '../regels/potje.js';
+import { kiesNet } from './netwerk.js';
 
 // Moeilijkheidsniveaus. Eigen voorstel, nog af te stemmen met Rutger (zie RAPPORT-FASE-4.md).
 // simulaties: aantal kaartverdelingen per zet; strategie: hoe de simulaties worden uitgespeeld;
@@ -655,7 +656,8 @@ function speelUit(handen, slag, slagen, beurt, ctx, rng) {
     const hand = handen[beurt];
     const k = ctx.strategie === 'simpel'
       ? kiesSimpel(hand, slag, troef, systeem, beurt, spelendTeam, rng)
-      : kiesSlim(handen, slag, ctx, beurt, rng);
+      : ctx.net ? kiesNet(ctx.net, handen, slag, slagen, beurt, ctx) // optie B (proef)
+        : kiesSlim(handen, slag, ctx, beurt, rng);
     const i = hand.findIndex((c) => c.kleur === k.kleur && c.rang === k.rang);
     hand.splice(i, 1);
     slag.push({ speler: beurt, kaart: k });
@@ -729,18 +731,18 @@ function opties(o = {}) {
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
   draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, troefUitMarge = TROEF_UIT_MARGE, troefBewaarMarge = TROEF_BEWAAR_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
-  exactVanaf = 0, exactTop = 3, exactSims = 40,
+  exactVanaf = 0, exactTop = 3, exactSims = 40, netwerk = null,
   } = o;
   return { simulaties, rng, strategie, eindspel, seinGeven, seinLezen, seinFactor, bekendeHanden, trekken, trekBonus, seinStraf, seinStrafBekennen,
-    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims };
+    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims, netwerk };
 }
 
 // Rekent voor de gegeven kaarten de gewogen totalen uit over 'simulaties' verdelingen
 // (exact doorgerekend of met de snelle speelstijl). Los te gebruiken, zodat meerdere workers
 // tegelijk kunnen rekenen.
 export function rekenTotalen(w, o, geldig, simulaties, exact) {
-  const { rng, strategie, seinLezen, seinFactor, bekendeHanden, trekken, draaiInfo, tienLezen, tienFactor, slimOpties } = opties(o);
-  const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie, trekken, opties: slimOpties };
+  const { rng, strategie, seinLezen, seinFactor, bekendeHanden, trekken, draaiInfo, tienLezen, tienFactor, slimOpties, netwerk } = opties(o);
+  const ctx = { troef: w.troef, systeem: w.systeem, spelendTeam: w.spelendTeam, strategie, trekken, opties: slimOpties, net: netwerk };
   const onbekend = onbekendeKaarten(w);
   const uit = uitsluitingen(w, onbekend);
   const seinen = seinLezen && !bekendeHanden ? seinenVanAnderen(w, onbekend) : [];
