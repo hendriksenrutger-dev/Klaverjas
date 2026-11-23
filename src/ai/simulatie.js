@@ -66,6 +66,15 @@ export const SPEK_MARGE = 20;
 // hoeft de aas niet bij te leggen, dat is een keuze).
 // Even streng als spekken. De kale-tienregel blijft daarnaast gewoon gelden.
 export const TIEN_UIT_MARGE = 20;
+
+// Niet over je maat heen troeven als laatste in de slag (Rutgers potje: Noord ♥A op Zuids ♣H).
+// Je maat heeft de slag dan zeker; troeven kost alleen je troef. Streng: alleen als elke andere
+// kaart minstens zoveel punten slechter scoort. Eigen ontwerpkeuze, bij te stellen.
+export const MAAT_TROEF_MARGE = 40;
+export function isTroefOpMaat(w, k) {
+  if (w.slag.length !== 3 || k.kleur !== w.troef || w.slag[0].kaart.kleur === w.troef) return false;
+  return team(huidigeWinnaar(w.slag, w.troef).speler) === team(w.speler);
+}
 export function isTienUitkomst(w, k, onbekend = onbekendeKaarten(w)) {
   return w.slag.length === 0 && k.rang === '10' && k.kleur !== w.troef
     && bijTegenpartij(w, onbekend).some((c) => c.kleur === k.kleur && c.rang === 'A');
@@ -773,11 +782,11 @@ function opties(o = {}) {
   simulaties = NIVEAUS.normaal.simulaties, rng = Math.random, strategie = 'slim', eindspel = EINDSPEL_SLAGEN,
   seinGeven = true, seinLezen = true, seinFactor = SEIN_FACTOR, bekendeHanden = null, trekken = true,
   trekBonus = TREK_BONUS, seinStraf = SEIN_STRAF, seinStrafBekennen = SEIN_STRAF_BEKENNEN,
-  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, troefUitMarge = TROEF_UIT_MARGE, troefBewaarMarge = TROEF_BEWAAR_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
+  draaiInfo = true, vuistregels = true, marge = VUISTREGEL_MARGE, spekMarge = SPEK_MARGE, tienUitMarge = TIEN_UIT_MARGE, trekMarge = TREK_MARGE, troefUitMarge = TROEF_UIT_MARGE, troefBewaarMarge = TROEF_BEWAAR_MARGE, maatTroefMarge = MAAT_TROEF_MARGE, tienLezen = true, tienFactor = TIEN_FACTOR, slimOpties = SLIM_OPTIES, gedektRegel = true, vuistregelSet = VUISTREGELS,
   exactVanaf = 0, exactTop = 3, exactSims = 40, netwerk = null, netVanaf = 0,
   } = o;
   return { simulaties, rng, strategie, eindspel, seinGeven, seinLezen, seinFactor, bekendeHanden, trekken, trekBonus, seinStraf, seinStrafBekennen,
-    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims, netwerk, netVanaf };
+    draaiInfo, vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, maatTroefMarge, tienLezen, tienFactor, slimOpties, gedektRegel, vuistregelSet, exactVanaf, exactTop, exactSims, netwerk, netVanaf };
 }
 
 // Rekent voor de gegeven kaarten de gewogen totalen uit over 'simulaties' verdelingen
@@ -918,7 +927,7 @@ export function kiesKaart(w, o = {}) {
 
 // De keuze zelf: berekening plus voorkeuren, vuistregels en de strenge regels.
 export function beslis(w, o, geldig, gemiddeld) {
-  const { vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, gedektRegel, vuistregelSet } = opties(o);
+  const { vuistregels, marge, spekMarge, tienUitMarge, trekMarge, troefUitMarge, troefBewaarMarge, maatTroefMarge, gedektRegel, vuistregelSet } = opties(o);
   const onbekend = onbekendeKaarten(w);
   const { seinCorrectie, trekCorrectie } = correcties(w, opties(o), geldig, onbekend);
   const totaal = (i) => gemiddeld[i] + seinCorrectie[i] + trekCorrectie[i];
@@ -939,6 +948,15 @@ export function beslis(w, o, geldig, gemiddeld) {
     let alt = -1;
     for (let i = 0; i < geldig.length; i++) {
       if (isSpek(w, geldig[i]) || geeftRoemWeg(w, geldig[i]) || totaal(best) - totaal(i) > spekMarge) continue;
+      if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
+    }
+    if (alt >= 0) best = alt;
+  }
+  // Niet over je maat heen troeven als laatste in de slag, tenzij elke andere kaart duidelijk slechter is.
+  if (vuistregels && maatTroefMarge > 0 && isTroefOpMaat(w, geldig[best])) {
+    let alt = -1;
+    for (let i = 0; i < geldig.length; i++) {
+      if (isTroefOpMaat(w, geldig[i]) || totaal(best) - totaal(i) > maatTroefMarge) continue;
       if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
     }
     if (alt >= 0) best = alt;
