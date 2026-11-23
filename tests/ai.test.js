@@ -1,5 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { isTroefOpMaat } from '../src/ai/simulatie.js';
 import { waarneming, uitsluitingen, trekVerdeling, kiesKaart, kiesDraai, kiesSimpel, kiesSlim, eindspelWaarde, seinVan, seinenVanAnderen, seinGewicht, SEIN_FACTOR, SEIN_BONUS, SEIN_STRAF, SEIN_STRAF_BEKENNEN } from '../src/ai/simulatie.js';
 import { slag } from './hulp.js';
 import { nieuwPotje, speelKaart, geldigVoor, uitslag } from '../src/regels/potje.js';
@@ -879,5 +880,28 @@ describe('aas bijspelen is altijd een sterk sein (Rutgers potje: Zuid ♣9, ♥9
   test('Noord speelt in slag 7 klaveren naar Zuid', () => {
     const r = kiesKaart(waarneming(stand(), 2), { simulaties: 300, eindspel: 3, rng: maakRng(5) });
     assert.equal(kaartId(r.kaart), 'klaveren-V');
+  });
+});
+
+describe('niet over je maat heen troeven als laatste (Rutgers potje: Noord ♥A op Zuids ♣H)', () => {
+  const handen = [Ks('sA s10 s9 rH rB k10 kH k9'), Ks('h10 sH sV sB rA r10 r9 kB'), Ks('hB hA h8 s8 s7 rV r8 kV'), Ks('h9 hH hV h7 kA k8 k7 r7')];
+  const slagen = ['hB h7 k10 h10', 'h8 hH s9 sH', 'kA k9 kB kV', 'k7 kH r9'].map(Ks);
+  function stand() {
+    let p = nieuwPotje({ handen: handen.map((h) => h.slice()), troef: 'harten', spelendTeam: 0, uitkomer: 2, kiezer: 2, systeem: 'amsterdams' });
+    for (const s of slagen) for (const k of s) p = speelKaart(p, p.beurt, k);
+    return p;
+  }
+
+  test('herkent troeven op de slag van je maat als laatste', () => {
+    const w = waarneming(stand(), 2);
+    assert.equal(isTroefOpMaat(w, K('hA')), true);
+    assert.equal(isTroefOpMaat(w, K('rV')), false);
+  });
+
+  test('Noord troeft niet in met ♥A (ook niet bij andere zaden)', () => {
+    for (let z = 0; z < 6; z++) {
+      const r = kiesKaart(waarneming(stand(), 2), { simulaties: 300, eindspel: 3, exactVanaf: 5, exactTop: 4, exactSims: 40, rng: maakRng(100 + z) });
+      assert.notEqual(kaartId(r.kaart), 'harten-A');
+    }
   });
 });
