@@ -859,6 +859,14 @@ export function rekenTotalen(w, o, geldig, simulaties, exact) {
 }
 
 // Voorkeuren bovenop de berekening: zelf seinen en troef trekken.
+// Wordt deze kaart zeker nog een slag? Een troef waar de tegenpartij niet meer boven kan, of de
+// hoogste kaart van een kleur terwijl de tegenpartij geen troef meer heeft.
+export function isZekereSlag(w, k, onbekend = onbekendeKaarten(w)) {
+  const tegen = bijTegenpartij(w, onbekend);
+  if (!isVrijeKaart(k, tegen, w.troef)) return false;
+  return k.kleur === w.troef || !tegen.some((c) => c.kleur === w.troef);
+}
+
 function correcties(w, o, geldig, onbekend) {
   const { seinGeven, trekBonus, seinStraf, seinStrafBekennen } = o;
   // Zelf seinen: een waar sein krijgt een kleine voorkeur, een vals sein een afkeer.
@@ -873,11 +881,8 @@ function correcties(w, o, geldig, onbekend) {
   });
   // Seinen gaat nooit voor zekere slagen (Rutger, na Noord ♦10 op Zuids vrije ♠V): zou je een vals
   // sein alleen vermijden door een kaart weg te geven die zeker nog een slag wordt, dan telt de straf niet.
-  if (seinCorrectie.some((c) => c < 0)) {
-    const tegen = bijTegenpartij(w, onbekend);
-    const geenTroefMeer = !tegen.some((c) => c.kleur === w.troef);
-    const zeker = (k) => isVrijeKaart(k, tegen, w.troef) && (k.kleur === w.troef || geenTroefMeer);
-    if (geldig.every((k, i) => seinCorrectie[i] < 0 || zeker(k))) seinCorrectie.forEach((c, i) => { if (c < 0) seinCorrectie[i] = 0; });
+  if (seinCorrectie.some((c) => c < 0) && geldig.every((k, i) => seinCorrectie[i] < 0 || isZekereSlag(w, k, onbekend))) {
+    seinCorrectie.forEach((c, i) => { if (c < 0) seinCorrectie[i] = 0; });
   }
   // Troef trekken: voorkeur als de spelende partij uitkomt en er nog troef bij anderen kan zitten.
   const trekCorrectie = geldig.map(() => 0);
@@ -1011,7 +1016,10 @@ export function beslis(w, o, geldig, gemiddeld) {
     if (alt >= 0) best = alt;
   }
   // Niet uitkomen met een tien zonder de aas, tenzij elke andere kaart duidelijk slechter is.
-  if (vuistregels && tienUitMarge > 0 && isTienUitkomst(w, geldig[best], onbekend)) {
+  // Zijn je andere kaarten allemaal zekere slagen, dan levert de tien bewaren niets op: hij moet toch
+  // nog uitkomen. Speel hem dan eerst (Rutgers potje: West ♥10 voor zijn kale ♦10, en zo de laatste slag kwijt).
+  const tienMoetToch = geldig.every((k) => isTienUitkomst(w, k, onbekend) || isZekereSlag(w, k, onbekend));
+  if (vuistregels && tienUitMarge > 0 && !tienMoetToch && isTienUitkomst(w, geldig[best], onbekend)) {
     let alt = -1;
     for (let i = 0; i < geldig.length; i++) {
       if (isTienUitkomst(w, geldig[i], onbekend) || totaal(best) - totaal(i) > tienUitMarge) continue;
