@@ -905,3 +905,41 @@ describe('niet over je maat heen troeven als laatste (Rutgers potje: Noord ♥A 
     }
   });
 });
+
+describe('niet troeven op een slag die je maat zeker heeft (Rutgers potje: Noord ♦10 op Zuids vrije ♠V)', () => {
+  const handen = [Ks('rA rV sA s10 sV hB h7 kA'), Ks('s7 sB sH hV k7 k9 k10 k8'), Ks('rB r10 rH r8 s9 s8 h10 h8'), Ks('r9 r7 kH kV kB hA hH h9')];
+  const slagen = ['rA s7 rB r7', 'r8 r9 rV hV', 'kV kA k7 h10', 'sA sB s8 h9', 's10 sH s9 kH'].map(Ks);
+  function stand() {
+    let p = nieuwPotje({ handen: handen.map((h) => h.slice()), troef: 'ruiten', spelendTeam: 0, uitkomer: 0, kiezer: 2, systeem: 'amsterdams' });
+    for (const s of slagen) for (const k of s) p = speelKaart(p, p.beurt, k);
+    p = speelKaart(p, 0, K('sV'));
+    return speelKaart(p, 1, K('k9'));
+  }
+
+  test('Oost kan ♠V niet meer slaan, dus troeven is troeven op je maat', () => {
+    assert.equal(isTroefOpMaat(waarneming(stand(), 2), K('r10')), true);
+  });
+
+  test('Noord gooit ♥8 bij en houdt zijn twee troeven', () => {
+    for (let z = 0; z < 4; z++) {
+      const r = kiesKaart(waarneming(stand(), 2), { simulaties: 300, eindspel: 3, exactVanaf: 5, exactTop: 4, exactSims: 40, rng: maakRng(z) });
+      assert.equal(kaartId(r.kaart), 'harten-8');
+    }
+  });
+
+  test('seinen gaat niet voor zekere slagen (ook zonder de troefregel)', () => {
+    for (let z = 0; z < 4; z++) {
+      const r = kiesKaart(waarneming(stand(), 2), { simulaties: 300, eindspel: 3, exactVanaf: 5, exactTop: 4, exactSims: 40, maatTroefMarge: 0, rng: maakRng(z) });
+      assert.equal(kaartId(r.kaart), 'harten-8');
+    }
+  });
+
+  test('wel troeven als de speler na je nog kan slaan', () => {
+    // Zelfde slag, maar Oost heeft nog niets laten zien: hij kan nog schoppen hebben.
+    const h = [Ks('sV rA rV hB h7 kA s10 sA'), Ks('k9 kB kH hV k7 k10 k8 hH'), Ks('r10 rB rH r8 h10 h8 kV hA'), Ks('r7 s7 sB sH s9 s8 r9 h9')];
+    let p = nieuwPotje({ handen: h, troef: 'ruiten', spelendTeam: 0, uitkomer: 0, kiezer: 2, systeem: 'amsterdams' });
+    p = speelKaart(p, 0, K('sV'));
+    p = speelKaart(p, 1, K('k9'));
+    assert.equal(isTroefOpMaat(waarneming(p, 2), K('r10')), false);
+  });
+});

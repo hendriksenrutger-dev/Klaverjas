@@ -44,7 +44,9 @@ export const SEIN_BONUS = 3; // voorkeur (in punten) voor een kaart die een waar
 // Afkeer (in punten) van een kaart die een vals sein zou geven. Bij afgooien kies je vrij welke kleur,
 // dus daar hoog (betrouwbare seinen). Bij bekennen is een kleintje vaak gewoon de verstandige kaart
 // (Rutgers voorbeeld: ♠H gespeeld om geen vals sein met ♠8 te geven), dus daar laag.
-export const SEIN_STRAF = 40; // afgooien
+// Rutger: "seinen is een tactiek, geen verplichting": afgooien was 40, sinds 25 november 2026 20
+// (gemeten: 20 tegen 40 +0,6 ± 0,8 punt per deling, 10 tegen 40 ook +0,6 ± 0,8).
+export const SEIN_STRAF = 20; // afgooien
 export const SEIN_STRAF_BEKENNEN = 15;
 
 // Troef trekken. In de simulaties kennen alle spelers elkaars kaarten; daardoor lijkt troef trekken
@@ -67,13 +69,22 @@ export const SPEK_MARGE = 20;
 // Even streng als spekken. De kale-tienregel blijft daarnaast gewoon gelden.
 export const TIEN_UIT_MARGE = 20;
 
-// Niet over je maat heen troeven als laatste in de slag (Rutgers potje: Noord ♥A op Zuids ♣H).
-// Je maat heeft de slag dan zeker; troeven kost alleen je troef. Streng: alleen als elke andere
-// kaart minstens zoveel punten slechter scoort. Eigen ontwerpkeuze, bij te stellen.
+// Niet over je maat heen troeven als hij de slag zeker heeft: je speelt als laatste (Rutgers potje:
+// Noord ♥A op Zuids ♣H), of wie na je komt kan zijn kaart niet meer slaan (Rutgers potje: Noord ♦10
+// op Zuids vrije ♠V). Troeven kost dan alleen je troef. Streng: alleen als elke andere kaart
+// minstens zoveel punten slechter scoort. Eigen ontwerpkeuze, bij te stellen.
 export const MAAT_TROEF_MARGE = 40;
-export function isTroefOpMaat(w, k) {
-  if (w.slag.length !== 3 || k.kleur !== w.troef || w.slag[0].kaart.kleur === w.troef) return false;
-  return team(huidigeWinnaar(w.slag, w.troef).speler) === team(w.speler);
+export function isTroefOpMaat(w, k, onbekend = onbekendeKaarten(w)) {
+  if (!w.slag.length || k.kleur !== w.troef || w.slag[0].kaart.kleur === w.troef) return false;
+  if (team(huidigeWinnaar(w.slag, w.troef).speler) !== team(w.speler)) return false;
+  if (w.slag.length === 3) return true;
+  // Kan een speler na mij nog een kaart hebben die de slag van mijn maat wint?
+  const uit = uitsluitingen(w, onbekend);
+  for (let i = 1; i <= 3 - w.slag.length; i++) {
+    const p = (w.speler + i) % 4;
+    if (onbekend.some((c) => !uit[p].has(kaartId(c)) && huidigeWinnaar([...w.slag, { speler: p, kaart: c }], w.troef).speler === p)) return false;
+  }
+  return true;
 }
 export function isTienUitkomst(w, k, onbekend = onbekendeKaarten(w)) {
   return w.slag.length === 0 && k.rang === '10' && k.kleur !== w.troef
@@ -860,6 +871,14 @@ function correcties(w, o, geldig, onbekend) {
     const bekent = w.slag.length > 0 && k.kleur === w.slag[0].kaart.kleur;
     return -(bekent ? seinStrafBekennen : seinStraf);
   });
+  // Seinen gaat nooit voor zekere slagen (Rutger, na Noord ♦10 op Zuids vrije ♠V): zou je een vals
+  // sein alleen vermijden door een kaart weg te geven die zeker nog een slag wordt, dan telt de straf niet.
+  if (seinCorrectie.some((c) => c < 0)) {
+    const tegen = bijTegenpartij(w, onbekend);
+    const geenTroefMeer = !tegen.some((c) => c.kleur === w.troef);
+    const zeker = (k) => isVrijeKaart(k, tegen, w.troef) && (k.kleur === w.troef || geenTroefMeer);
+    if (geldig.every((k, i) => seinCorrectie[i] < 0 || zeker(k))) seinCorrectie.forEach((c, i) => { if (c < 0) seinCorrectie[i] = 0; });
+  }
   // Troef trekken: voorkeur als de spelende partij uitkomt en er nog troef bij anderen kan zitten.
   const trekCorrectie = geldig.map(() => 0);
   if (trekBonus && w.slag.length === 0 && team(w.speler) === w.spelendTeam) {
@@ -953,10 +972,10 @@ export function beslis(w, o, geldig, gemiddeld) {
     if (alt >= 0) best = alt;
   }
   // Niet over je maat heen troeven als laatste in de slag, tenzij elke andere kaart duidelijk slechter is.
-  if (vuistregels && maatTroefMarge > 0 && isTroefOpMaat(w, geldig[best])) {
+  if (vuistregels && maatTroefMarge > 0 && isTroefOpMaat(w, geldig[best], onbekend)) {
     let alt = -1;
     for (let i = 0; i < geldig.length; i++) {
-      if (isTroefOpMaat(w, geldig[i]) || totaal(best) - totaal(i) > maatTroefMarge) continue;
+      if (isTroefOpMaat(w, geldig[i], onbekend) || totaal(best) - totaal(i) > maatTroefMarge) continue;
       if (alt < 0 || regel[i] < regel[alt] || (regel[i] === regel[alt] && totaal(i) > totaal(alt))) alt = i;
     }
     if (alt >= 0) best = alt;
