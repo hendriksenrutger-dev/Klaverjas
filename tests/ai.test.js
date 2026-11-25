@@ -943,3 +943,16 @@ describe('niet troeven op een slag die je maat zeker heeft (Rutgers potje: Noord
     assert.equal(isTroefOpMaat(waarneming(p, 2), K('r10')), false);
   });
 });
+
+describe('tien uitkomen als de rest zekere slagen zijn (Rutgers potje: West ♥10 voor zijn kale ♦10)', () => {
+  const handen = [Ks('s10 r7 h7 hA s8 sH r9 rV'), Ks('k9 k10 hB h8 sV hV h10 r10'), Ks('kA kH k7 s9 s7 rB kB rA'), Ks('k8 kV hH h9 sA sB rH r8')];
+  const slagen = ['kA k8 s10 k9', 'kH kV r7 k10', 'hB k7 hH h7', 'h8 s9 h9 hA', 'sA s8 sV s7', 'sB sH hV rB'].map(Ks);
+  test('West komt uit met ♦10 en bewaart de laatste troef voor de laatste slag', () => {
+    let p = nieuwPotje({ handen: handen.map((h) => h.slice()), troef: 'harten', spelendTeam: 1, uitkomer: 2, kiezer: 3, systeem: 'amsterdams' });
+    for (const s of slagen) for (const k of s) p = speelKaart(p, p.beurt, k);
+    for (let z = 0; z < 4; z++) {
+      const r = kiesKaart(waarneming(p, 1), { simulaties: 300, eindspel: 3, rng: maakRng(z) });
+      assert.equal(kaartId(r.kaart), 'ruiten-10');
+    }
+  });
+});
