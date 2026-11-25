@@ -44,7 +44,9 @@ export const SEIN_BONUS = 3; // voorkeur (in punten) voor een kaart die een waar
 // Afkeer (in punten) van een kaart die een vals sein zou geven. Bij afgooien kies je vrij welke kleur,
 // dus daar hoog (betrouwbare seinen). Bij bekennen is een kleintje vaak gewoon de verstandige kaart
 // (Rutgers voorbeeld: ♠H gespeeld om geen vals sein met ♠8 te geven), dus daar laag.
-export const SEIN_STRAF = 40; // afgooien
+// Rutger: "seinen is een tactiek, geen verplichting": afgooien was 40, sinds 25 november 2026 20
+// (gemeten: 20 tegen 40 +0,6 ± 0,8 punt per deling, 10 tegen 40 ook +0,6 ± 0,8).
+export const SEIN_STRAF = 20; // afgooien
 export const SEIN_STRAF_BEKENNEN = 15;
 
 // Troef trekken. In de simulaties kennen alle spelers elkaars kaarten; daardoor lijkt troef trekken
