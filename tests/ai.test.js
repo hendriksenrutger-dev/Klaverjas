@@ -927,6 +927,13 @@ describe('niet troeven op een slag die je maat zeker heeft (Rutgers potje: Noord
     }
   });
 
+  test('seinen gaat niet voor zekere slagen (ook zonder de troefregel)', () => {
+    for (let z = 0; z < 4; z++) {
+      const r = kiesKaart(waarneming(stand(), 2), { simulaties: 300, eindspel: 3, exactVanaf: 5, exactTop: 4, exactSims: 40, maatTroefMarge: 0, rng: maakRng(z) });
+      assert.equal(kaartId(r.kaart), 'harten-8');
+    }
+  });
+
   test('wel troeven als de speler na je nog kan slaan', () => {
     // Zelfde slag, maar Oost heeft nog niets laten zien: hij kan nog schoppen hebben.
     const h = [Ks('sV rA rV hB h7 kA s10 sA'), Ks('k9 kB kH hV k7 k10 k8 hH'), Ks('r10 rB rH r8 h10 h8 kV hA'), Ks('r7 s7 sB sH s9 s8 r9 h9')];

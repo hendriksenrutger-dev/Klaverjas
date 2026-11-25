@@ -869,6 +869,14 @@ function correcties(w, o, geldig, onbekend) {
     const bekent = w.slag.length > 0 && k.kleur === w.slag[0].kaart.kleur;
     return -(bekent ? seinStrafBekennen : seinStraf);
   });
+  // Seinen gaat nooit voor zekere slagen (Rutger, na Noord ♦10 op Zuids vrije ♠V): zou je een vals
+  // sein alleen vermijden door een kaart weg te geven die zeker nog een slag wordt, dan telt de straf niet.
+  if (seinCorrectie.some((c) => c < 0)) {
+    const tegen = bijTegenpartij(w, onbekend);
+    const geenTroefMeer = !tegen.some((c) => c.kleur === w.troef);
+    const zeker = (k) => isVrijeKaart(k, tegen, w.troef) && (k.kleur === w.troef || geenTroefMeer);
+    if (geldig.every((k, i) => seinCorrectie[i] < 0 || zeker(k))) seinCorrectie.forEach((c, i) => { if (c < 0) seinCorrectie[i] = 0; });
+  }
   // Troef trekken: voorkeur als de spelende partij uitkomt en er nog troef bij anderen kan zitten.
   const trekCorrectie = geldig.map(() => 0);
   if (trekBonus && w.slag.length === 0 && team(w.speler) === w.spelendTeam) {
